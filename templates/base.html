@@ -1,0 +1,1396 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
+<link rel="apple-touch-icon" href="{{ url_for('static', filename='favicon.png') }}">
+<title>{% block title %}โกเจมส์ ที่พักตากอากาศ{% endblock %}</title>
+<style>
+*{box-sizing:border-box;}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f5edff;color:#2f2442;}
+.navbar{background:#cdb4ff;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;position:relative;}
+.brand-link{display:flex;align-items:center;gap:12px;text-decoration:none;color:#2f2442;min-width:0;}
+.brand-logo{width:auto;height:48px;display:block;flex-shrink:0;object-fit:contain;filter:drop-shadow(0 4px 10px rgba(0,0,0,0.08));}
+.brand-text{display:flex;flex-direction:column;min-width:0;}
+.brand-th{font-size:20px;font-weight:800;line-height:1.15;white-space:nowrap;}
+.brand-en{font-size:12px;font-weight:600;line-height:1.2;color:#6d627f;letter-spacing:0.02em;white-space:nowrap;}
+.navbar-right{display:flex;align-items:center;gap:12px;margin-left:auto;}
+.mobile-only{display:none !important;}
+.desktop-only{display:inline-flex;}
+.icon-label{display:inline-flex;align-items:center;gap:8px;}
+.icon-svg{width:20px;height:20px;display:block;flex-shrink:0;}
+.menu-toggle{display:none;align-items:center;justify-content:center;background:#9d7cf7;color:#fff;border:none;border-radius:12px;padding:0;width:64px;height:64px;font-size:20px;font-weight:700;cursor:pointer;box-shadow:0 6px 16px rgba(0,0,0,0.12);}
+.menu-toggle:active{transform:scale(0.98);}
+.menu-toggle .icon-svg{width:28px;height:28px;color:#fff;}
+.nav-links{display:flex;flex-wrap:wrap;gap:12px;align-items:center;}
+.nav-links a{text-decoration:none;color:#2f2442;font-weight:600;}
+.nav-notification{position:relative;display:inline-flex;align-items:center;gap:8px;padding-right:4px;}
+.notification-badge{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:#e6487a;color:#fff;font-size:12px;font-weight:700;line-height:1;box-shadow:0 4px 10px rgba(0,0,0,0.12);}
+.container{width:min(1440px, calc(100vw - 24px));max-width:1440px;margin:24px auto;padding:0 8px;}
+.hero{background:#efe4ff;padding:20px;border-radius:20px;margin-bottom:20px;}
+.card{background:white;border-radius:18px;padding:18px;box-shadow:0 8px 20px rgba(0,0,0,0.08);}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-width:100px;padding:10px 14px;border-radius:10px;text-decoration:none;border:none;cursor:pointer;background:#9d7cf7;color:white;font-weight:bold;white-space:nowrap;}
+.btn-secondary{background:#7e6aa8;}
+.btn-danger{background:#e06c9f;}
+.btn-warning{background:#f0b429;color:#3d2b00;}
+input,select,textarea{width:100%;max-width:100%;min-width:0;padding:10px;border-radius:10px;border:1px solid #ccc;margin-bottom:12px;font:inherit;box-sizing:border-box;display:block;}
+input[type="file"]{padding:10px;background:#fff;}
+table{width:100%;border-collapse:collapse;background:white;}
+th,td{padding:12px 14px;border-bottom:1px solid #eee;text-align:center;vertical-align:middle;white-space:nowrap;}
+th{background:#e7dbff;}
+.table-wrap{overflow-x:auto;width:100%;}
+.bookings-table{width:100%;min-width:0;table-layout:auto;}
+.bookings-table th,.bookings-table td{white-space:nowrap;padding:10px 10px;font-size:15px;}
+.bookings-table td:nth-child(2){min-width:120px;}
+.bookings-table td:nth-child(3),.bookings-table td:nth-child(5),.bookings-table td:nth-child(11){min-width:110px;}
+.bookings-table td:nth-child(4),.bookings-table td:nth-child(6){min-width:80px;}
+.bookings-table td:nth-child(9){min-width:110px;}
+.bookings-table td:nth-child(10){min-width:130px;}
+.bookings-table td:nth-child(12){min-width:110px;}
+.room-cover{width:100%;height:180px;object-fit:cover;border-radius:12px;background:#f2f2f2;}
+.gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;}
+.gallery img{width:100%;height:180px;object-fit:cover;border-radius:10px;background:#f2f2f2;}
+.qr{max-width:260px;width:100%;border-radius:10px;}
+.flash{background:#fff4c2;padding:12px;border-radius:10px;margin-bottom:16px;}
+.theme-toggle-btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:46px;
+    height:46px;
+    border:none;
+    border-radius:999px;
+    background:#9d7cf7;
+    color:#fff;
+    font-size:20px;
+    cursor:pointer;
+    box-shadow:0 6px 16px rgba(0,0,0,0.12);
+    position:relative;
+}
+.theme-toggle-btn:hover{
+    filter:brightness(1.04);
+}
+.theme-icon{
+    width:20px;
+    height:20px;
+    display:block;
+    position:absolute;
+    transition:opacity .2s ease, transform .2s ease;
+}
+.theme-icon-sun{opacity:0; transform:scale(.8) rotate(-20deg);}
+.theme-icon-moon{opacity:1; transform:scale(1) rotate(0);}
+body.dark-mode .theme-icon-sun{opacity:1; transform:scale(1) rotate(0);}
+body.dark-mode .theme-icon-moon{opacity:0; transform:scale(.8) rotate(20deg);}
+
+body, .card, .navbar, .hero, input, select, textarea, table, th, td, .btn, .muted, .container{
+    transition:background-color .22s ease, color .22s ease, border-color .22s ease, box-shadow .22s ease;
+}
+body.dark-mode{
+    background:#171221;
+    color:#f2edff;
+}
+body.dark-mode .navbar{
+    background:#261d35;
+    box-shadow:0 6px 18px rgba(0,0,0,0.22);
+}
+body.dark-mode .brand-link,
+body.dark-mode .nav-links a{
+    color:#f8f4ff;
+}
+body.dark-mode .brand-en{
+    color:#c7b8e6;
+}
+body.dark-mode .container{
+    color:#f2edff;
+}
+body.dark-mode .hero{
+    background:linear-gradient(180deg, #2a203a 0%, #21182f 100%);
+    box-shadow:0 10px 24px rgba(0,0,0,0.16);
+}
+body.dark-mode .card,
+body.dark-mode table,
+body.dark-mode .calendar-wrap{
+    background:#241c32;
+    box-shadow:0 8px 24px rgba(0,0,0,0.24);
+}
+body.dark-mode input,
+body.dark-mode select,
+body.dark-mode textarea{
+    background:#312645;
+    color:#fff;
+    border:1px solid #5c4b7c;
+}
+body.dark-mode input::placeholder,
+body.dark-mode textarea::placeholder{
+    color:#d3c9e6;
+}
+body.dark-mode label,
+body.dark-mode h1,
+body.dark-mode h2,
+body.dark-mode h3,
+body.dark-mode h4,
+body.dark-mode p,
+body.dark-mode li,
+body.dark-mode span,
+body.dark-mode td,
+body.dark-mode th{
+    color:inherit;
+}
+body.dark-mode th{
+    background:#312347;
+}
+body.dark-mode td{
+    border-bottom:1px solid #382b4f;
+}
+body.dark-mode .muted{
+    color:#d2c6e8;
+}
+body.dark-mode .btn{
+    background:#8e72f0;
+    color:#fff;
+}
+body.dark-mode .btn-secondary{
+    background:#6f628d;
+}
+body.dark-mode .btn-warning{
+    background:#e3b548;
+    color:#2b1800;
+}
+body.dark-mode .btn-danger{
+    background:#d96b95;
+}
+body.dark-mode .flash{
+    background:#4a3c14;
+    color:#fff0b8;
+}
+body.dark-mode .theme-toggle-btn{
+    background:#f2d06d;
+    color:#4a3300;
+}
+body.dark-mode .status.waiting_approval{background:#57450f;color:#fff0b0;}
+body.dark-mode .status.approved{background:#26466e;color:#e2f0ff;}
+body.dark-mode .status.waiting_slip_approval{background:#50306f;color:#f1e4ff;}
+body.dark-mode .status.rejected{background:#663148;color:#ffe0ea;}
+body.dark-mode .status.deposit_paid{background:#26486d;color:#e1efff;}
+body.dark-mode .status.fully_paid{background:#235339;color:#dcffea;}
+body.dark-mode .status.cancelled{background:#5c2e3d;color:#ffe1ea;}
+body.dark-mode .status.waiting_approval{background:#4b3a09;color:#ffe9a0;}
+body.dark-mode .status.approved{background:#1d3d63;color:#d9edff;}
+body.dark-mode .status.waiting_slip_approval{background:#3f285f;color:#eedcff;}
+body.dark-mode .status.rejected{background:#572235;color:#ffd6e6;}
+body.dark-mode .status.deposit_paid{background:#203d61;color:#d8ecff;}
+body.dark-mode .status.fully_paid{background:#1d4a34;color:#d7ffe7;}
+body.dark-mode .status.cancelled{background:#4d2634;color:#ffdbe6;}
+
+.muted{color:#6d627f;}
+.center{text-align:center;}
+.status{display:inline-block;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:bold;white-space:nowrap;}
+.waiting_approval{background:#fff0b3;color:#7a5b00;}
+.approved{background:#d8ebff;color:#1f4f8c;}
+.waiting_slip_approval{background:#e8dcff;color:#5c2e91;}
+.rejected{background:#ffd6de;color:#8d2246;}
+.deposit_paid{background:#dcecff;color:#1c4a8c;}
+.fully_paid{background:#d4f6df;color:#17663a;}
+.cancelled{background:#f0d7df;color:#7b3b55;}
+.calendar-wrap{overflow-x:auto;background:white;border-radius:16px;padding:10px;}
+.calendar-table{min-width:980px;}
+.calendar-table th,.calendar-table td{text-align:center;padding:10px 8px;}
+.calendar-room{min-width:140px;text-align:left !important;font-weight:bold;}
+.cell-free{background:#eefbf1;color:#256b3a;border-radius:10px;font-size:12px;font-weight:bold;}
+.cell-booked{background:#dcecff;color:#1c4a8c;border-radius:10px;font-size:12px;font-weight:bold;}
+.cell-occupied{background:#e8dcff;color:#5c2e91;border-radius:10px;font-size:12px;font-weight:bold;}
+.cell-blocked{background:#ffe0ea;color:#8b244b;border-radius:10px;font-size:12px;font-weight:bold;}
+.flex-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.password-wrap{position:relative;margin-bottom:14px;}
+.password-wrap input{width:100%;padding-right:45px;margin-bottom:0;}
+.eye-btn{position:absolute;right:10px;top:50%;transform:translateY(-50%);border:none;background:transparent;cursor:pointer;padding:0;display:flex;align-items:center;}
+.eye-btn:hover svg{stroke:#7c5cff;}
+.bookings-table .btn{min-width:88px;padding:9px 12px;}
+.bookings-table td:nth-child(10) .status{font-size:11px;padding:6px 8px;}
+.mobile-bookings-view{display:none;}
+.booking-mobile-card{margin-bottom:16px;padding:16px;background:#fff;border:1px solid #eadff7;}
+.booking-mobile-head{display:flex;flex-direction:column;gap:10px;margin-bottom:12px;}
+.booking-mobile-room{font-size:24px;font-weight:800;color:#2f2442;line-height:1.2;}
+.booking-mobile-status .status{white-space:normal;display:inline-flex;align-items:center;justify-content:center;}
+.booking-mobile-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:14px 0;}
+.summary-item{background:#f7f0ff;border:1px solid #eadff7;border-radius:12px;padding:10px 12px;}
+.summary-item span{display:block;font-size:13px;color:#6d627f;margin-bottom:4px;}
+.summary-item strong{display:block;font-size:15px;color:#2f2442;word-break:break-word;}
+.booking-mobile-label{font-weight:800;margin-bottom:10px;color:#4b3b68;}
+.booking-mobile-segments{margin-top:8px;}
+.booking-segment-card{background:#fcfaff;border:1px solid #eadff7;border-radius:14px;padding:12px;margin-bottom:10px;}
+.booking-segment-card.is-dim{opacity:0.8;}
+.segment-range{font-size:18px;font-weight:700;line-height:1.35;word-break:break-word;}
+.segment-meta{margin-top:6px;color:#6d627f;line-height:1.45;word-break:break-word;}
+.segment-actions{margin-top:10px;}
+.segment-actions .btn{width:100%;}
+.booking-mobile-actions{margin-top:16px;display:flex;flex-direction:column;gap:10px;}
+.booking-mobile-actions .btn{width:100%;}
+.booking-mobile-actions .muted{display:block;line-height:1.45;}
+@media (max-width:1280px){.container{width:min(100%, calc(100vw - 12px));padding:0 4px;}.bookings-table th,.bookings-table td{padding:9px 8px;font-size:14px;}.bookings-table td:nth-child(2){min-width:110px;}.bookings-table td:nth-child(3),.bookings-table td:nth-child(5),.bookings-table td:nth-child(11){min-width:100px;}.bookings-table td:nth-child(4),.bookings-table td:nth-child(6){min-width:72px;}.bookings-table td:nth-child(9){min-width:100px;}.bookings-table td:nth-child(10){min-width:120px;}.bookings-table td:nth-child(12){min-width:95px;}.bookings-table .btn{min-width:80px;padding:8px 10px;font-size:14px;}}
+@media (max-width:860px){.flex-2{grid-template-columns:1fr;}}
+
+@media (max-width:768px){
+.table-wrap{overflow-x:auto;}
+.desktop-bookings-view{display:none;}
+.mobile-bookings-view{display:block;}
+}
+@media (min-width:769px){
+.desktop-bookings-view{display:block;}
+.mobile-bookings-view{display:none;}
+}
+
+@media (max-width:768px){
+.navbar{padding:16px;align-items:flex-start;}
+.brand-link{max-width:calc(100% - 150px);gap:10px;align-items:center;}
+.brand-logo{height:40px;}
+.brand-th{font-size:16px;white-space:normal;}
+.brand-en{font-size:11px;white-space:normal;}
+.navbar-right{display:flex;align-items:center;gap:10px;margin-left:auto;}
+.mobile-only{display:inline-flex !important;}
+.desktop-only{display:none !important;}
+.menu-toggle{display:inline-flex;margin-left:0;flex-shrink:0;}
+.nav-links{display:none;width:100%;flex-direction:column;align-items:stretch;gap:10px;margin-top:6px;background:rgba(255,255,255,0.35);padding:12px;border-radius:14px;order:3;}
+.nav-links.show{display:flex;}
+.nav-links a{display:block;padding:10px 12px;background:rgba(255,255,255,0.7);border-radius:10px;font-size:16px;}
+.nav-notification{justify-content:space-between;}
+.notification-badge{margin-left:auto;}
+}
+
+
+.admin-section-title{margin-top:0;}
+.admin-mini-table{width:100%;}
+.admin-bookings-wrap,.admin-blocks-wrap{width:100%;}
+.admin-bookings-table,.admin-blocks-table{width:100%;border-collapse:collapse;background:#fff;}
+.admin-bookings-table th,.admin-bookings-table td,.admin-blocks-table th,.admin-blocks-table td{white-space:nowrap;}
+@media (max-width:768px){
+.container{width:min(100%, calc(100vw - 12px));padding:0 4px;margin:16px auto;}
+.card{padding:16px;border-radius:16px;}
+.flex-2{gap:12px;}
+.admin-bookings-wrap,.admin-blocks-wrap{overflow:visible;}
+.admin-bookings-table,.admin-bookings-table thead,.admin-bookings-table tbody,.admin-bookings-table th,.admin-bookings-table td,.admin-bookings-table tr,
+.admin-blocks-table,.admin-blocks-table thead,.admin-blocks-table tbody,.admin-blocks-table th,.admin-blocks-table td,.admin-blocks-table tr{
+display:block;width:100%;
+}
+.admin-bookings-table thead,.admin-blocks-table thead{display:none;}
+.admin-bookings-table tr,.admin-blocks-table tr{
+background:#fff;
+border:1px solid #eadff7;
+border-radius:16px;
+padding:12px;
+margin-bottom:14px;
+box-shadow:0 2px 8px rgba(0,0,0,0.04);
+}
+.admin-bookings-table td,.admin-blocks-table td{
+border:none;
+padding:8px 0 8px 44%;
+position:relative;
+min-height:28px;
+text-align:left;
+white-space:normal;
+word-break:break-word;
+}
+.admin-bookings-table td::before,.admin-blocks-table td::before{
+position:absolute;
+left:0;
+top:8px;
+width:40%;
+font-weight:700;
+color:#4b3b68;
+white-space:normal;
+text-align:left;
+}
+.admin-bookings-table td:nth-child(1)::before{content:"ID";}
+.admin-bookings-table td:nth-child(2)::before{content:"ผู้จอง";}
+.admin-bookings-table td:nth-child(3)::before{content:"ห้อง";}
+.admin-bookings-table td:nth-child(4)::before{content:"วันเข้า";}
+.admin-bookings-table td:nth-child(5)::before{content:"เวลาเข้า";}
+.admin-bookings-table td:nth-child(6)::before{content:"วันออก";}
+.admin-bookings-table td:nth-child(7)::before{content:"เวลาออก";}
+.admin-bookings-table td:nth-child(8)::before{content:"ยอดชำระ";}
+.admin-bookings-table td:nth-child(9)::before{content:"สถานะ";}
+.admin-bookings-table td:nth-child(10)::before{content:"สลิป";}
+.admin-bookings-table td:nth-child(11)::before{content:"หมดเวลา";}
+.admin-bookings-table td:nth-child(12)::before{content:"จัดการ";}
+.admin-blocks-table td:nth-child(1)::before{content:"ห้อง";}
+.admin-blocks-table td:nth-child(2)::before{content:"ช่วงวันที่";}
+.admin-blocks-table td:nth-child(3)::before{content:"หมายเหตุ";}
+.admin-blocks-table td:nth-child(4)::before{content:"จัดการ";}
+.admin-bookings-table td:last-child .btn,
+.admin-blocks-table td:last-child .btn{
+display:inline-flex;
+margin:4px 8px 4px 0;
+}
+.admin-bookings-table td .status{white-space:normal;display:inline-flex;align-items:center;}
+}
+
+
+/* Admin bookings table tuning */
+.admin-bookings-wrap,.admin-blocks-wrap{
+    width:100%;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+}
+.admin-bookings-table,.admin-blocks-table{
+    width:100%;
+    border-collapse:separate;
+    border-spacing:0;
+    background:#fff;
+}
+.admin-bookings-table th,.admin-bookings-table td,
+.admin-blocks-table th,.admin-blocks-table td{
+    padding:12px 14px;
+    vertical-align:middle;
+    text-align:center;
+}
+.admin-bookings-table th,.admin-blocks-table th{
+    white-space:nowrap;
+}
+.admin-bookings-table td,.admin-blocks-table td{
+    white-space:nowrap;
+    border-bottom:1px solid #eee;
+}
+.admin-bookings-table td:nth-child(2),
+.admin-bookings-table td:nth-child(3){
+    white-space:normal;
+    text-align:left;
+}
+.admin-bookings-table td:nth-child(10){
+    white-space:normal;
+}
+.admin-bookings-table td:last-child{
+    min-width:210px;
+}
+.admin-bookings-actions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    justify-content:center;
+    align-items:center;
+}
+.admin-bookings-actions .btn{
+    min-width:92px;
+    padding:10px 12px;
+    border-radius:10px;
+    font-size:14px;
+    line-height:1.2;
+    white-space:nowrap;
+}
+.admin-bookings-table .status{
+    white-space:nowrap;
+    justify-content:center;
+}
+.admin-bookings-table .slip-link{
+    display:inline-block;
+    white-space:nowrap;
+}
+.admin-bookings-table tbody tr:hover{
+    background:rgba(157,124,247,0.04);
+}
+@media (max-width: 1100px){
+    .admin-bookings-table{
+        min-width:1200px;
+    }
+}
+@media (max-width:768px){
+    .admin-bookings-wrap,.admin-blocks-wrap{
+        overflow:visible;
+    }
+
+    .admin-bookings-table,.admin-bookings-table thead,.admin-bookings-table tbody,.admin-bookings-table th,.admin-bookings-table td,.admin-bookings-table tr,
+    .admin-blocks-table,.admin-blocks-table thead,.admin-blocks-table tbody,.admin-blocks-table th,.admin-blocks-table td,.admin-blocks-table tr{
+        display:block;
+        width:100%;
+    }
+
+    .admin-bookings-table thead,.admin-blocks-table thead{
+        display:none;
+    }
+
+    .admin-bookings-table,
+    .admin-blocks-table{
+        min-width:0;
+    }
+
+    .admin-bookings-table tr,
+    .admin-blocks-table tr{
+        background:#fff;
+        border:1px solid #eadff7;
+        border-radius:16px;
+        padding:12px;
+        margin-bottom:14px;
+        box-shadow:0 2px 8px rgba(0,0,0,0.04);
+    }
+
+    .admin-bookings-table td,
+    .admin-blocks-table td{
+        border:none;
+        padding:8px 0 8px 44%;
+        position:relative;
+        min-height:28px;
+        text-align:left;
+        white-space:normal;
+        word-break:break-word;
+    }
+
+    .admin-bookings-table td::before,
+    .admin-blocks-table td::before{
+        position:absolute;
+        left:0;
+        top:8px;
+        width:40%;
+        font-weight:700;
+        color:#4b3b68;
+        white-space:normal;
+        text-align:left;
+    }
+
+    .admin-bookings-table td:nth-child(1)::before{content:"ID";}
+    .admin-bookings-table td:nth-child(2)::before{content:"ผู้จอง";}
+    .admin-bookings-table td:nth-child(3)::before{content:"ห้อง";}
+    .admin-bookings-table td:nth-child(4)::before{content:"วันเข้า";}
+    .admin-bookings-table td:nth-child(5)::before{content:"เวลาเข้า";}
+    .admin-bookings-table td:nth-child(6)::before{content:"วันออก";}
+    .admin-bookings-table td:nth-child(7)::before{content:"เวลาออก";}
+    .admin-bookings-table td:nth-child(8)::before{content:"ยอดชำระ";}
+    .admin-bookings-table td:nth-child(9)::before{content:"สถานะ";}
+    .admin-bookings-table td:nth-child(10)::before{content:"สลิป";}
+    .admin-bookings-table td:nth-child(11)::before{content:"หมดเวลา";}
+    .admin-bookings-table td:nth-child(12)::before{content:"จัดการ";}
+
+    .admin-blocks-table td:nth-child(1)::before{content:"ห้อง";}
+    .admin-blocks-table td:nth-child(2)::before{content:"ช่วงวันที่";}
+    .admin-blocks-table td:nth-child(3)::before{content:"หมายเหตุ";}
+    .admin-blocks-table td:nth-child(4)::before{content:"จัดการ";}
+
+    .admin-bookings-actions{
+        justify-content:flex-start;
+    }
+
+    .admin-bookings-actions .btn{
+        min-width:unset;
+    }
+}
+
+
+.nav-notification-wrapper{position:relative;display:inline-flex;align-items:center;}
+.nav-notification-btn{
+    display:inline-flex;align-items:center;gap:8px;
+    border:none;background:transparent;color:#2f2442;
+    font:inherit;font-weight:600;cursor:pointer;padding:0;
+}
+.nav-notification-btn .icon-svg{width:19px;height:19px;color:currentColor;}
+.nav-notification-btn.mobile-bell{justify-content:center;width:52px;height:52px;padding:0;border-radius:16px;background:#9d7cf7;color:#fff;box-shadow:0 6px 16px rgba(0,0,0,0.12);}
+.nav-notification-btn.mobile-bell .icon-svg{width:24px;height:24px;}
+.nav-notification-btn.mobile-bell .notification-badge{position:absolute;top:-4px;right:-4px;margin-left:0;}
+.notification-popup{
+    display:none;position:absolute;right:0;top:calc(100% + 12px);
+    width:min(420px, calc(100vw - 24px));max-height:480px;overflow:auto;
+    background:#fff;border:1px solid #eadff7;border-radius:18px;
+    box-shadow:0 18px 40px rgba(0,0,0,0.14);padding:14px;z-index:9999;
+}
+.notification-popup.show{display:block;}
+.notification-popup-header,
+.notification-popup-footer{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+}
+.notification-popup-header{padding-bottom:10px;border-bottom:1px solid #eee;}
+.notification-popup-footer{padding-top:10px;border-top:1px solid #eee;flex-wrap:wrap;}
+.notification-popup-list{display:flex;flex-direction:column;gap:10px;padding:12px 0;}
+.notification-popup-item{
+    border:1px solid #eee;border-radius:14px;padding:12px;background:#fff;
+}
+.notification-popup-item.unread{background:#faf5ff;border-color:#eadff7;}
+.notification-popup-top{
+    display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;
+}
+.notification-time{color:#6d627f;font-size:12px;}
+.notification-message{margin:8px 0 10px 0;line-height:1.45;white-space:normal;word-break:break-word;}
+.notification-actions{display:flex;justify-content:flex-start;align-items:center;gap:8px;}
+.notification-empty{padding:10px 4px;}
+.btn-small{min-width:auto;padding:8px 12px;font-size:13px;border-radius:10px;}
+@media (max-width:768px){
+    .notification-popup{
+        position:fixed;right:12px;left:12px;top:72px;width:auto;max-height:70vh;
+    }
+    .notification-popup-list{
+        max-height:calc(70vh - 120px);
+    }
+}
+
+
+.nav-notification-wrapper{position:relative;display:inline-flex;align-items:center;}
+.nav-notification-btn{
+    display:inline-flex;align-items:center;gap:8px;
+    border:none;background:transparent;color:#2f2442;
+    font:inherit;font-weight:600;cursor:pointer;padding:0;
+}
+.nav-notification-btn .icon-svg{width:19px;height:19px;color:currentColor;}
+.nav-notification-btn.mobile-bell{justify-content:center;width:52px;height:52px;padding:0;border-radius:16px;background:#9d7cf7;color:#fff;box-shadow:0 6px 16px rgba(0,0,0,0.12);}
+.nav-notification-btn.mobile-bell .icon-svg{width:24px;height:24px;}
+.nav-notification-btn.mobile-bell .notification-badge{position:absolute;top:-4px;right:-4px;margin-left:0;}
+.notification-popup{
+    display:none;position:absolute;right:0;top:calc(100% + 12px);
+    width:min(420px, calc(100vw - 24px));max-height:480px;
+    background:#fff;border:1px solid #eadff7;border-radius:18px;
+    box-shadow:0 18px 40px rgba(0,0,0,0.14);z-index:9999;
+    overflow:hidden;
+}
+.notification-popup.show{display:flex;flex-direction:column;}
+.notification-popup-header,
+.notification-popup-footer{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+    background:#fff;
+}
+.notification-popup-header{
+    padding:14px 14px 10px 14px;
+    border-bottom:1px solid #eee;
+    position:sticky;
+    top:0;
+    z-index:2;
+}
+.notification-popup-footer{
+    padding:10px 14px 14px 14px;
+    border-top:1px solid #eee;
+    position:sticky;
+    bottom:0;
+    z-index:2;
+    box-shadow:0 -8px 18px rgba(0,0,0,0.04);
+}
+.notification-popup-list{
+    display:flex;flex-direction:column;gap:10px;
+    padding:12px 14px;
+    overflow-y:auto;
+    max-height:calc(480px - 120px);
+}
+.notification-popup-item{border:1px solid #eee;border-radius:14px;padding:12px;background:#fff;}
+.notification-popup-item.unread{background:#faf5ff;border-color:#eadff7;}
+.notification-popup-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;}
+.notification-time{color:#6d627f;font-size:12px;}
+.notification-message{margin:8px 0 10px 0;line-height:1.45;white-space:normal;word-break:break-word;}
+.notification-actions{display:flex;justify-content:flex-start;align-items:center;gap:8px;}
+.notification-empty{padding:10px 4px;}
+.btn-small{min-width:auto;padding:8px 12px;font-size:13px;border-radius:10px;}
+
+.booking-hint{
+    margin:-2px 0 10px 0;
+    color:#6d627f;
+    font-size:14px;
+    line-height:1.5;
+}
+.booking-summary{
+    margin:12px 0 16px 0;
+    padding:12px 14px;
+    border-radius:14px;
+    background:#f6f0ff;
+    color:#4b3b68;
+    font-weight:700;
+}
+@media (max-width:768px){
+    .notification-popup{
+        position:fixed;right:12px;left:12px;top:72px;width:auto;max-height:70vh;
+    }
+    .notification-popup-list{
+        max-height:calc(70vh - 120px);
+    }
+}
+
+
+.segment-card{
+    margin-bottom:16px;
+    padding:14px;
+    border:1px solid #eadff7;
+    border-radius:16px;
+    background:#fcf9ff;
+}
+.segment-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-bottom:8px;
+}
+.segment-header h3{
+    margin:0;
+    font-size:18px;
+}
+.segment-tools{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    flex-wrap:wrap;
+    margin:8px 0 14px 0;
+}
+.booking-summary-lines{
+    margin-top:6px;
+    font-weight:500;
+    line-height:1.6;
+}
+
+
+.menu-badge{
+    margin-left:8px;
+    vertical-align:middle;
+    flex-shrink:0;
+}
+
+
+.payment-calc{line-height:1.6;}
+
+@media (max-width:768px){
+.booking-mobile-card{padding:14px;border-radius:16px;}
+.booking-mobile-room{font-size:20px;}
+.summary-item{padding:10px;}
+.summary-item strong{font-size:14px;}
+.segment-range{font-size:16px;}
+}
+
+/* อ่านง่ายขึ้นในโหมดมืด */
+body.dark-mode{
+    background:#161224;
+    color:#f5f1ff;
+}
+body.dark-mode .hero,
+body.dark-mode .card,
+body.dark-mode table,
+body.dark-mode .calendar-wrap,
+body.dark-mode .notification-popup,
+body.dark-mode .login-card,
+body.dark-mode .booking-summary,
+body.dark-mode .segment-card,
+body.dark-mode .summary-item{
+    background:#f6f1ff !important;
+    color:#2f2442 !important;
+    box-shadow:0 10px 24px rgba(0,0,0,0.18);
+}
+body.dark-mode .hero h1,
+body.dark-mode .hero h2,
+body.dark-mode .hero h3,
+body.dark-mode .card h1,
+body.dark-mode .card h2,
+body.dark-mode .card h3,
+body.dark-mode .card h4,
+body.dark-mode .card p,
+body.dark-mode .card label,
+body.dark-mode .card li,
+body.dark-mode .card span,
+body.dark-mode .card td,
+body.dark-mode .card th,
+body.dark-mode .notification-popup strong,
+body.dark-mode .notification-message,
+body.dark-mode .notification-time,
+body.dark-mode .notification-empty,
+body.dark-mode .notification-popup .muted{
+    color:#2f2442 !important;
+}
+body.dark-mode .muted{
+    color:#6d627f !important;
+}
+body.dark-mode input,
+body.dark-mode select,
+body.dark-mode textarea{
+    background:#fff !important;
+    color:#2f2442 !important;
+    border:1px solid #cdbde7 !important;
+}
+body.dark-mode input::placeholder,
+body.dark-mode textarea::placeholder{
+    color:#756b88 !important;
+}
+body.dark-mode th{
+    background:#e7dbff !important;
+    color:#2f2442 !important;
+}
+body.dark-mode td{
+    border-bottom:1px solid #ede4ff !important;
+}
+body.dark-mode .booking-hint,
+body.dark-mode .gallery-hint{
+    color:#5e536f !important;
+}
+body.dark-mode .btn:not(.btn-warning):not(.btn-danger):not(.btn-secondary){
+    background:#8d70f1;
+}
+body.dark-mode .btn-secondary{
+    background:#74648d;
+}
+body.dark-mode .theme-toggle-btn{
+    background:#f2d06d;
+    color:#4a3300;
+}
+body.dark-mode .nav-links a,
+body.dark-mode .brand-link,
+body.dark-mode .navbar{
+    color:#f8f4ff;
+}
+body.dark-mode .notification-popup{
+    border:1px solid #e2d6fb;
+}
+body.dark-mode .notification-popup-item.unread{
+    background:#f0e8ff !important;
+}
+body.dark-mode .notification-popup-item{
+    border-color:#ece2ff !important;
+}
+body.dark-mode .maintenance-note{
+    background:#fff7df !important;
+    color:#6d5310 !important;
+    border-color:#efd58c !important;
+}
+body.dark-mode .booking-summary,
+body.dark-mode #payment_calc_box{
+    color:#2f2442 !important;
+}
+
+
+/* ทำให้สถานะในหน้าจัดการการจองอ่านง่ายขึ้นในโหมดมืด */
+body.dark-mode .status{
+    color:#ffffff !important;
+    font-weight:700;
+    border:1px solid rgba(255,255,255,0.18);
+    box-shadow:0 2px 8px rgba(0,0,0,0.12);
+}
+body.dark-mode .waiting_approval{
+    background:#6a4bb3 !important;
+    color:#ffffff !important;
+}
+body.dark-mode .approved{
+    background:#2f6fb2 !important;
+    color:#ffffff !important;
+}
+body.dark-mode .waiting_slip_approval{
+    background:#7f55c7 !important;
+    color:#ffffff !important;
+}
+body.dark-mode .rejected{
+    background:#b24368 !important;
+    color:#ffffff !important;
+}
+body.dark-mode .deposit_paid{
+    background:#1f7ed3 !important;
+    color:#ffffff !important;
+}
+body.dark-mode .fully_paid{
+    background:#2b8a57 !important;
+    color:#ffffff !important;
+}
+body.dark-mode .cancelled{
+    background:#7a4257 !important;
+    color:#ffffff !important;
+}
+body.dark-mode .refund_pending{
+    background:#b26f2f !important;
+    color:#ffffff !important;
+}
+body.dark-mode .remaining_counter_pending{
+    background:#8b5cf6 !important;
+    color:#ffffff !important;
+}
+body.dark-mode .counter_paid_waiting_confirmation{
+    background:#2563eb !important;
+    color:#ffffff !important;
+}
+
+
+/* ปรับ header บนมือถือให้พอดีจอมากขึ้น */
+@media (max-width: 768px){
+    .navbar{
+        padding:12px 14px;
+        align-items:flex-start;
+        gap:10px;
+    }
+    .brand-link{
+        gap:10px;
+        max-width:calc(100vw - 28px);
+        align-items:center;
+    }
+    .brand-logo{
+        height:42px;
+        max-width:34vw;
+    }
+    .brand-text{
+        min-width:0;
+        flex:1;
+    }
+    .brand-th{
+        font-size:16px;
+        line-height:1.12;
+        white-space:normal;
+        word-break:break-word;
+    }
+    .brand-en{
+        font-size:10px;
+        line-height:1.15;
+        white-space:normal;
+        word-break:break-word;
+    }
+    .navbar-right{
+        width:100%;
+        justify-content:flex-end;
+        gap:8px;
+        margin-left:0;
+    }
+    .theme-toggle-btn{
+        width:54px;
+        height:54px;
+        flex-shrink:0;
+    }
+    .nav-notification-btn.mobile-bell,
+    .menu-toggle{
+        width:54px;
+        height:54px;
+        flex-shrink:0;
+    }
+    .menu-toggle .icon-svg,
+    .nav-notification-btn.mobile-bell .icon-svg{
+        width:24px;
+        height:24px;
+    }
+    .notification-badge{
+        min-width:20px;
+        height:20px;
+        font-size:11px;
+        padding:0 5px;
+    }
+    .nav-links{
+        width:100%;
+        margin-top:2px;
+    }
+    .container{
+        width:min(100vw - 20px, 1440px);
+        margin:18px auto;
+        padding:0 4px;
+    }
+}
+
+/* ทำเมนูในโหมดมืดให้อ่านง่ายขึ้น */
+body.dark-mode .nav-links{
+    background:transparent;
+}
+@media (max-width: 768px){
+    body.dark-mode .nav-links{
+        background:#5a5267;
+        border:1px solid rgba(255,255,255,0.12);
+        border-radius:22px;
+        padding:12px;
+        box-shadow:0 10px 24px rgba(0,0,0,0.18);
+    }
+    body.dark-mode .nav-links a{
+        display:block;
+        width:100%;
+        background:#f7f3ff;
+        color:#2f2442 !important;
+        border-radius:16px;
+        padding:14px 18px;
+        font-weight:800;
+        box-shadow:none;
+    }
+    body.dark-mode .nav-links a + a{
+        margin-top:10px;
+    }
+    body.dark-mode .nav-links .menu-badge{
+        background:#e6487a;
+        color:#fff !important;
+        margin-left:8px;
+        vertical-align:middle;
+    }
+    body.dark-mode .notification-popup{
+        background:#f8f4ff !important;
+        color:#2f2442 !important;
+    }
+}
+
+
+/* ===== Navbar upgrade: sticky + fit better + notification clearer ===== */
+body{padding-top:0;}
+.navbar{
+    position:sticky;
+    top:0;
+    z-index:1200;
+    backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);
+}
+.navbar.scrolled{
+    box-shadow:0 10px 28px rgba(0,0,0,0.18);
+}
+.brand-link{
+    flex:0 1 auto;
+    min-width:0;
+    max-width:min(420px, 45vw);
+}
+.navbar-right{
+    flex:1 1 auto;
+    min-width:0;
+    justify-content:flex-end;
+}
+.nav-links{
+    flex:1 1 auto;
+    min-width:0;
+    justify-content:flex-end;
+    gap:10px;
+}
+.nav-links a,
+.nav-notification-btn{
+    font-size:15px;
+}
+.nav-notification-btn{
+    border:none;
+    background:transparent;
+    color:inherit;
+    font:inherit;
+    font-weight:700;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    cursor:pointer;
+    padding:8px 10px;
+    border-radius:12px;
+}
+.nav-notification-btn:hover{
+    background:rgba(157,124,247,0.12);
+}
+body.dark-mode .nav-notification-btn{
+    color:#f8f4ff !important;
+    background:rgba(255,255,255,0.04);
+}
+body.dark-mode .nav-notification-btn:hover{
+    background:rgba(255,255,255,0.10);
+}
+body.dark-mode .nav-notification-btn .icon-label span:last-child{
+    color:#ffe082 !important;
+    opacity:1 !important;
+    font-weight:800;
+}
+body.dark-mode .nav-links a{
+    color:#ffffff !important;
+    opacity:1 !important;
+}
+body.dark-mode .nav-links a:hover{
+    color:#ffe082 !important;
+}
+@media (max-width: 1180px){
+    .brand-link{
+        max-width:min(320px, 34vw);
+        gap:10px;
+    }
+    .brand-th{font-size:18px;}
+    .brand-en{font-size:11px;}
+    .nav-links{gap:8px;}
+    .nav-links a,
+    .nav-notification-btn{
+        font-size:14px;
+    }
+}
+@media (max-width: 980px){
+    .brand-link{
+        max-width:min(250px, 28vw);
+    }
+    .brand-th{font-size:16px;}
+    .brand-en{font-size:10px;}
+    .nav-links{gap:7px;}
+    .nav-links a,
+    .nav-notification-btn{
+        font-size:13px;
+    }
+}
+@media (max-width:768px){
+    .navbar{
+        padding:12px 14px;
+        gap:12px;
+        align-items:flex-start;
+    }
+    .brand-link{
+        max-width:calc(100vw - 28px);
+        width:100%;
+    }
+    .brand-logo{
+        height:42px;
+        max-width:30vw;
+    }
+    .brand-th{
+        font-size:16px;
+        line-height:1.1;
+        white-space:normal;
+        word-break:break-word;
+    }
+    .brand-en{
+        font-size:10px;
+        line-height:1.1;
+        white-space:normal;
+        word-break:break-word;
+    }
+    .navbar-right{
+        width:100%;
+        justify-content:flex-end;
+        gap:10px;
+    }
+    .mobile-only{display:inline-flex !important;}
+    .desktop-only{display:none !important;}
+    .menu-toggle{
+        display:inline-flex;
+    }
+    .nav-notification-btn.mobile-bell,
+    .menu-toggle,
+    .theme-toggle-btn{
+        width:58px;
+        height:58px;
+        border-radius:18px;
+        flex-shrink:0;
+    }
+    .nav-notification-btn.mobile-bell{
+        position:relative;
+        justify-content:center;
+        background:#9d7cf7;
+        color:#fff !important;
+        padding:0;
+        box-shadow:0 6px 16px rgba(0,0,0,0.12);
+    }
+    body.dark-mode .nav-notification-btn.mobile-bell{
+        background:#9d7cf7;
+        color:#fff !important;
+    }
+    .nav-notification-btn.mobile-bell .icon-svg,
+    .menu-toggle .icon-svg{
+        width:26px;
+        height:26px;
+    }
+    .nav-links{
+        width:100%;
+        display:flex;
+        flex-direction:column;
+        align-items:stretch;
+        gap:10px;
+        max-height:0;
+        opacity:0;
+        overflow:hidden;
+        pointer-events:none;
+        transform:translateY(-10px);
+        transition:max-height .28s ease, opacity .22s ease, transform .22s ease, margin-top .22s ease, padding .22s ease;
+        margin-top:0;
+        padding:0;
+    }
+    .nav-links.show{
+        max-height:420px;
+        opacity:1;
+        pointer-events:auto;
+        transform:translateY(0);
+        margin-top:4px;
+        padding:12px;
+    }
+    body.dark-mode .nav-links{
+        background:#5a5267;
+        border:1px solid rgba(255,255,255,0.12);
+        border-radius:22px;
+        box-shadow:0 10px 24px rgba(0,0,0,0.18);
+    }
+    .nav-links a{
+        display:block;
+        width:100%;
+        border-radius:16px;
+        padding:15px 18px;
+        font-weight:800;
+    }
+    body.dark-mode .nav-links a{
+        background:#f7f3ff;
+        color:#2f2442 !important;
+    }
+    body.dark-mode .nav-links a:hover{
+        color:#2f2442 !important;
+        background:#efe7ff;
+    }
+    body.dark-mode .nav-links .menu-badge{
+        background:#e6487a;
+        color:#fff !important;
+        margin-left:8px;
+        vertical-align:middle;
+    }
+    .container{
+        width:min(100vw - 18px, 1440px);
+        margin:18px auto;
+        padding:0 4px;
+    }
+}
+
+</style>
+</head>
+<body>
+<div class="navbar">
+    <a href="/" class="brand-link" aria-label="หน้าแรก GoJames Vacation Home">
+        <img src="{{ url_for('static', filename='gojames_logo.png') }}" alt="GoJames logo" class="brand-logo">
+        <div class="brand-text">
+            <span class="brand-th">โกเจมส์ ที่พักตากอากาศ</span>
+            <span class="brand-en">GoJames Vacation Home</span>
+        </div>
+    </a>
+    <div class="navbar-right">
+<button id="themeToggle" class="theme-toggle-btn" type="button" aria-label="สลับโหมดสี">
+<svg class="theme-icon theme-icon-moon" viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 1 0 9.8 9.8Z" fill="currentColor"></path>
+</svg>
+<svg class="theme-icon theme-icon-sun" viewBox="0 0 24 24" aria-hidden="true">
+    <circle cx="12" cy="12" r="4.2" fill="currentColor"></circle>
+    <g stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+        <path d="M12 2.5v2.2"></path>
+        <path d="M12 19.3v2.2"></path>
+        <path d="M21.5 12h-2.2"></path>
+        <path d="M4.7 12H2.5"></path>
+        <path d="M18.7 5.3l-1.6 1.6"></path>
+        <path d="M6.9 17.1l-1.6 1.6"></path>
+        <path d="M18.7 18.7l-1.6-1.6"></path>
+        <path d="M6.9 6.9L5.3 5.3"></path>
+    </g>
+</svg>
+</button>
+        {% if session.get('user') %}
+        <div class="nav-notification-wrapper mobile-only">
+            <button type="button" class="nav-notification-btn mobile-bell" onclick="toggleNotificationPopup(event)">
+                <svg class="icon-svg" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M15 17H9m9-1V11a6 6 0 10-12 0v5l-2 2h16l-2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M10 21a2 2 0 004 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span class="notification-badge" id="mobileUnreadBadge" {% if unread_notification_count <= 0 %}style="display:none"{% endif %}>{{ unread_notification_count if unread_notification_count > 0 else "" }}</span>
+            </button>
+            <div class="notification-popup">
+                <div class="notification-popup-header">
+                    <strong>แจ้งเตือนของฉัน</strong>
+                    <span class="notification-badge" id="mobilePopupUnreadBadge" {% if unread_notification_count <= 0 %}style="display:none"{% endif %}>{{ unread_notification_count if unread_notification_count > 0 else "" }}</span>
+                </div>
+                <div class="notification-popup-list">
+                    {% if latest_notifications %}
+                        {% for n in latest_notifications %}
+                        <div class="notification-popup-item {% if n['is_read'] == 0 %}unread{% endif %}">
+                            <div class="notification-popup-top">
+                                <strong>{{ n["title"] }}</strong>
+                                <span class="notification-time">{{ n["created_at"] }}</span>
+                            </div>
+                            <div class="notification-message">{{ n["message"] }}</div>
+                            <div class="notification-actions">
+                                {% if n["is_read"] == 0 %}
+                                    <a class="btn btn-small" href="/notifications/read/{{ n['id'] }}">อ่านแล้ว</a>
+                                {% else %}
+                                    <span class="muted">อ่านแล้ว</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="notification-empty muted">ยังไม่มีการแจ้งเตือน</div>
+                    {% endif %}
+                </div>
+                <div class="notification-popup-footer">
+                    <a class="btn btn-small btn-secondary" href="/notifications/read-all">อ่านทั้งหมดแล้ว</a>
+                    <a class="btn btn-small" href="/notifications">ดูทั้งหมด</a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        <button class="menu-toggle" type="button" onclick="toggleMenu()" aria-label="เปิดเมนู">
+            <svg class="icon-svg" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+            </svg>
+        </button>
+    </div>
+    <div class="nav-links" id="mobileNav">
+        <a href="/">หน้าแรก</a>
+        {% if session.get('user') %}
+            {% if session.get('role') == 'admin' %}
+                <a href="/admin">จัดการการจอง<span class="notification-badge menu-badge" id="adminBookingBadge" {% if admin_nav_badge_count <= 0 %}style="display:none"{% endif %}>{{ admin_nav_badge_count if admin_nav_badge_count > 0 else "" }}</span></a>
+                <a href="/admin/calendar">ปฏิทินห้องพัก</a>
+            {% else %}
+                <a href="/my-bookings">การจองของฉัน<span class="notification-badge menu-badge" id="userBookingBadge" {% if user_nav_badge_count <= 0 %}style="display:none"{% endif %}>{{ user_nav_badge_count if user_nav_badge_count > 0 else "" }}</span></a>
+            {% endif %}
+            <div class="nav-notification-wrapper desktop-only">
+                <button type="button" class="nav-notification-btn" onclick="toggleNotificationPopup(event)">
+                    <span class="icon-label">
+                        <svg class="icon-svg" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M15 17H9m9-1V11a6 6 0 10-12 0v5l-2 2h16l-2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M10 21a2 2 0 004 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span>แจ้งเตือน</span>
+                    </span>
+                    <span class="notification-badge" id="desktopUnreadBadge" {% if unread_notification_count <= 0 %}style="display:none"{% endif %}>{{ unread_notification_count if unread_notification_count > 0 else "" }}</span>
+                </button>
+                <div class="notification-popup">
+                    <div class="notification-popup-header">
+                        <strong>แจ้งเตือนของฉัน</strong>
+                        <span class="notification-badge" id="desktopPopupUnreadBadge" {% if unread_notification_count <= 0 %}style="display:none"{% endif %}>{{ unread_notification_count if unread_notification_count > 0 else "" }}</span>
+                    </div>
+                    <div class="notification-popup-list">
+                        {% if latest_notifications %}
+                            {% for n in latest_notifications %}
+                            <div class="notification-popup-item {% if n['is_read'] == 0 %}unread{% endif %}">
+                                <div class="notification-popup-top">
+                                    <strong>{{ n["title"] }}</strong>
+                                    <span class="notification-time">{{ n["created_at"] }}</span>
+                                </div>
+                                <div class="notification-message">{{ n["message"] }}</div>
+                                <div class="notification-actions">
+                                    {% if n["is_read"] == 0 %}
+                                        <a class="btn btn-small" href="/notifications/read/{{ n['id'] }}">อ่านแล้ว</a>
+                                    {% else %}
+                                        <span class="muted">อ่านแล้ว</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="notification-empty muted">ยังไม่มีการแจ้งเตือน</div>
+                        {% endif %}
+                    </div>
+                    <div class="notification-popup-footer">
+                        <a class="btn btn-small btn-secondary" href="/notifications/read-all">อ่านทั้งหมดแล้ว</a>
+                        <a class="btn btn-small" href="/notifications">ดูทั้งหมด</a>
+                    </div>
+                </div>
+            </div>
+            <a href="/logout">ออกจากระบบ ({{ session.get('user') }})</a>
+        {% else %}
+            <a href="/login">เข้าสู่ระบบ</a>
+            <a href="/register">สมัครสมาชิก</a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="container">
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+        {% for message in messages %}
+            <div class="flash">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+</div>
+<script>
+function toggleMenu() {
+    const nav = document.getElementById("mobileNav");
+    if (nav) {
+        nav.classList.toggle("show");
+    }
+}
+window.addEventListener("resize", function () {
+    const nav = document.getElementById("mobileNav");
+    if (window.innerWidth > 768 && nav) {
+        nav.classList.remove("show");
+    }
+});
+document.addEventListener("DOMContentLoaded", function(){
+    const navbar = document.querySelector(".navbar");
+    const nav = document.getElementById("mobileNav");
+    if(nav){
+        nav.querySelectorAll("a").forEach(function(link){
+            link.addEventListener("click", function(){
+                nav.classList.remove("show");
+            });
+        });
+    }
+    function syncNavbarShadow(){
+        if(!navbar) return;
+        if(window.scrollY > 6) navbar.classList.add("scrolled");
+        else navbar.classList.remove("scrolled");
+    }
+    syncNavbarShadow();
+    window.addEventListener("scroll", syncNavbarShadow, {passive:true});
+});
+</script>
+
+
+
+<script>
+function toggleNotificationPopup(event){
+    event.stopPropagation();
+    const wrapper = event.currentTarget.closest(".nav-notification-wrapper");
+    if(!wrapper) return;
+    const popup = wrapper.querySelector(".notification-popup");
+    if(!popup) return;
+    document.querySelectorAll(".notification-popup.show").forEach(function(openPopup){
+        if(openPopup !== popup){
+            openPopup.classList.remove("show");
+        }
+    });
+    popup.classList.toggle("show");
+}
+document.addEventListener("click", function(event){
+    document.querySelectorAll(".nav-notification-wrapper").forEach(function(wrapper){
+        const popup = wrapper.querySelector(".notification-popup");
+        if(popup && !wrapper.contains(event.target)){
+            popup.classList.remove("show");
+        }
+    });
+});
+</script>
+
+
+<script>
+(function(){
+    function applyTheme(mode){
+        const btn = document.getElementById("themeToggle");
+        if(mode === "dark"){
+            document.body.classList.add("dark-mode");
+            
+        }else{
+            document.body.classList.remove("dark-mode");
+            
+        }
+        localStorage.setItem("gojames-theme", mode);
+    }
+
+    window.setGoJamesTheme = applyTheme;
+
+    document.addEventListener("DOMContentLoaded", function(){
+        const savedTheme = localStorage.getItem("gojames-theme") || "light";
+        applyTheme(savedTheme);
+
+        const btn = document.getElementById("themeToggle");
+        if(btn){
+            btn.addEventListener("click", function(){
+                const next = document.body.classList.contains("dark-mode") ? "light" : "dark";
+                applyTheme(next);
+            });
+        }
+    });
+})();
+</script>
+
+<script>
+(function(){
+    function setBadge(el, count){
+        if(!el) return;
+        if(count && count > 0){
+            el.style.display = "inline-flex";
+            el.textContent = count;
+        }else{
+            el.style.display = "none";
+            el.textContent = "";
+        }
+    }
+
+    async function refreshLiveBadges(){
+        try{
+            const res = await fetch("/api/live-badges", {headers: {"X-Requested-With":"fetch"}, cache: "no-store"});
+            if(!res.ok) return;
+            const data = await res.json();
+            if(!data.ok || !data.logged_in) return;
+
+            setBadge(document.getElementById("mobileUnreadBadge"), data.unread_notification_count);
+            setBadge(document.getElementById("mobilePopupUnreadBadge"), data.unread_notification_count);
+            setBadge(document.getElementById("desktopUnreadBadge"), data.unread_notification_count);
+            setBadge(document.getElementById("desktopPopupUnreadBadge"), data.unread_notification_count);
+            setBadge(document.getElementById("userBookingBadge"), data.user_nav_badge_count);
+            setBadge(document.getElementById("adminBookingBadge"), data.admin_nav_badge_count);
+        }catch(err){
+            console.log("live badges error", err);
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", function(){
+        refreshLiveBadges();
+        setInterval(refreshLiveBadges, 4000);
+    });
+})();
+</script>
+</body>
+</html>

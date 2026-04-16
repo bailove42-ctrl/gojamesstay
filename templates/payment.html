@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}ชำระเงิน{% endblock %}
+{% block content %}
+<div class="card center" style="max-width:720px; margin:auto;">
+    <h2>{% if payment_mode == "remaining" %}ชำระส่วนที่เหลือ{% else %}ชำระเงินด้วย PromptPay QR จริง{% endif %}</h2>
+    <p>รหัสอ้างอิง: <b>#{{ booking_id }}</b></p>
+
+    {% if batch_bookings|length > 1 %}
+    <div class="card" style="text-align:left; margin:16px 0; background:#faf5ff;">
+        <h3 style="margin-top:0;">รายการช่วงวันทั้งหมดในชุดนี้</h3>
+        <ul style="padding-left:18px; margin-bottom:0;">
+            {% for b in batch_bookings %}
+            <li style="margin-bottom:8px;">
+                {{ b["room_name"] }} : {{ b["checkin"] }} {{ b["checkin_time"] }} ถึง {{ b["checkout"] }} {{ b["checkout_time"] }}
+                ({{ b["nights"] }} คืน)
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% else %}
+    <p>ห้องพัก: <b>{{ booking["room_name"] }}</b></p>
+    {% endif %}
+
+    <p>ยอดเต็มรวมทุกช่วง: <b>{{ total }} บาท</b></p>
+
+    {% if payment_mode == "remaining" %}
+        <p>ยอดที่ชำระมาแล้ว: <b>{{ paid_so_far }} บาท</b></p>
+        <p>ยอดที่ต้องชำระส่วนที่เหลือตอนนี้: <b>{{ amount }} บาท</b></p>
+    {% else %}
+        <p>รูปแบบการชำระ: <b>{% if paytype == 'deposit' %}มัดจำ 25%{% else %}จ่ายเต็ม{% endif %}</b></p>
+        <p>ยอดที่ต้องจ่ายตอนนี้รวมทุกช่วง: <b>{{ amount }} บาท</b></p>
+        <p>ยอดคงเหลือหลังชำระครั้งนี้: <b>{{ remaining_due }} บาท</b></p>
+    {% endif %}
+
+    {% if booking["payment_deadline"] and payment_mode != "remaining" %}
+    <p><b>กรุณาสแกนคิวอาร์โค้ดภายใน 15 นาที</b></p>
+    <p class="muted">หมดเวลา: {{ booking["payment_deadline"] }}</p>
+    {% endif %}
+
+    <img class="qr" src="{{ url_for('static', filename=qr_filename) }}" alt="QR Code">
+
+    <div style="text-align:center;margin-top:10px;">
+        <div style="font-weight:bold;font-size:18px;">ชื่อบัญชี: ธเนศ สมโพยม</div>
+        <div class="muted">กรุณาตรวจสอบชื่อบัญชีให้ตรงก่อนทำการโอนเงิน</div>
+    </div>
+
+    <hr style="margin:20px 0;">
+
+    <h3>{% if payment_mode == "remaining" %}อัปโหลดสลิปหรือเลือกวิธีชำระยอดคงเหลือ{% else %}แนบสลิปการโอน{% endif %}</h3>
+    <form action="/upload_slip/{{ booking_id }}" method="post" enctype="multipart/form-data" style="max-width:420px;margin:0 auto; text-align:left;">
+        {% if payment_mode == "remaining" and paytype == "deposit" %}
+        <div class="card" style="margin-bottom:14px;background:#f6f6ff;">
+            <h3 style="margin-top:0; font-size:18px;">วิธีชำระยอดส่วนที่เหลือ</h3>
+            <label style="display:block; margin-bottom:8px;">
+                <input type="radio" name="remain_method" value="qr" {% if booking["remaining_payment_method"] != "counter" %}checked{% endif %}>
+                ชำระผ่านการสแกน QR ด้านบน
+            </label>
+            <label style="display:block; margin-bottom:8px;">
+                <input type="radio" name="remain_method" value="counter" {% if booking["remaining_payment_method"] == "counter" %}checked{% endif %}>
+                ชำระหน้าเคาน์เตอร์ที่พักในวันเข้าพัก
+            </label>
+            <p class="muted" style="margin-bottom:0;">หากเลือกจ่ายหน้าเคาน์เตอร์ ระบบจะบันทึกว่าเหลือยอดชำระในวันเข้าพัก และไม่ต้องอัปโหลดสลิปตอนนี้</p>
+        </div>
+        {% endif %}
+
+        <input id="slipInput" type="file" name="slip" accept=".png,.jpg,.jpeg,.webp" {% if payment_mode != "remaining" %}required{% endif %}>
+        <button class="btn" type="submit" style="margin-top:8px; width:100%;">{% if payment_mode == "remaining" %}ยืนยันการชำระยอดคงเหลือ{% else %}อัปโหลดสลิป{% endif %}</button>
+    </form>
+
+    <p class="muted">
+    {% if payment_mode == "remaining" %}
+        หากเลือกสแกน QR ให้อัปโหลดสลิปเพื่อรอแอดมินตรวจสอบ หรือเลือกจ่ายหน้าเคาน์เตอร์เพื่อแจ้งระบบว่าคุณจะชำระยอดส่วนที่เหลือในวันเข้าพัก
+    {% else %}
+        หลังอัปโหลดสลิปแล้ว ระบบจะใช้สลิปนี้กับทุกช่วงวันในชุดเดียวกัน และแอดมินจะตรวจสอบอีกครั้ง
+    {% endif %}
+    </p>
+    <p><a class="btn-secondary btn" href="/my-bookings">กลับไปหน้าการจองของฉัน</a></p>
+</div>
+{% endblock %}
+
+{% if payment_mode == "remaining" and paytype == "deposit" %}
+<script>
+(function(){
+    const form = document.querySelector('form[action="/upload_slip/{{ booking_id }}"]');
+    if (!form) return;
+    const slipInput = document.getElementById('slipInput');
+    const radios = form.querySelectorAll('input[name="remain_method"]');
+    function sync(){
+        const selected = form.querySelector('input[name="remain_method"]:checked');
+        const isCounter = selected && selected.value === 'counter';
+        if (slipInput){
+            slipInput.required = !isCounter;
+            slipInput.disabled = isCounter;
+            if (isCounter) slipInput.value = '';
+        }
+    }
+    radios.forEach(r => r.addEventListener('change', sync));
+    sync();
+})();
+</script>
+{% endif %}

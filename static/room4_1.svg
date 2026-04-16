@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
+<defs>
+  <linearGradient id="g" x1="0" x2="1">
+    <stop offset="0%" stop-color="#fbcfe8"/>
+    <stop offset="100%" stop-color="#e9d5ff"/>
+  </linearGradient>
+</defs>
+<rect width="1200" height="800" fill="url(#g)"/>
+<rect x="70" y="80" width="1060" height="640" rx="36" fill="rgba(255,255,255,0.18)"/>
+<text x="600" y="330" text-anchor="middle" font-size="64" font-family="Arial" fill="#2f2442" font-weight="700">Iris</text>
+<text x="600" y="400" text-anchor="middle" font-size="30" font-family="Arial" fill="#4a3c63">ห้องพักสำหรับครอบครัว</text>
+<text x="600" y="470" text-anchor="middle" font-size="22" font-family="Arial" fill="#5c4a79">ภาพตัวอย่างสำหรับโปรเจกต์</text>
+</svg>

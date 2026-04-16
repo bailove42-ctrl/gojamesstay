@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% block title %}เข้าสู่ระบบ{% endblock %}
+{% block content %}
+<div class="login-page">
+    <div class="login-card gojames-login-card">
+        <div class="login-header">
+            <img src="{{ url_for('static', filename='gojames_logo.png') }}" alt="GoJames" class="login-brand-logo">
+            <h2>เข้าสู่ระบบ</h2>
+            <p>GoJames Vacation Home</p>
+        </div>
+
+        <form method="post" class="login-form">
+            <label>ชื่อผู้ใช้</label>
+            <input name="username" placeholder="กรอกชื่อผู้ใช้" required>
+
+            <label>รหัสผ่าน</label>
+            <div class="password-wrap">
+                <input id="login_password" name="password" type="password" placeholder="กรอกรหัสผ่าน" required>
+                <button type="button" class="eye-btn" onclick="toggleLoginPassword()">
+                    <svg id="login_eye_icon" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6d627f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                </button>
+            </div>
+
+            <button class="btn login-submit-btn" type="submit">เข้าสู่ระบบ</button>
+        </form>
+
+        <div class="login-links">
+            <a href="{{ url_for('forgot_password') }}">ลืมรหัสผ่าน?</a>
+            <span>•</span>
+            <a href="{{ url_for('register') }}">สมัครสมาชิก</a>
+        </div>
+    </div>
+</div>
+
+<style>
+.login-page{
+    display:flex;
+    justify-content:center;
+    padding:32px 16px 48px;
+}
+.gojames-login-card{
+    width:100%;
+    max-width:460px;
+    margin:auto;
+    border-radius:24px;
+    padding:28px 24px 24px;
+    box-shadow:0 18px 45px rgba(91, 58, 130, 0.10);
+    border:1px solid rgba(168, 128, 255, 0.15);
+    background:rgba(255,255,255,0.96);
+}
+.login-header{
+    text-align:center;
+    margin-bottom:18px;
+}
+.login-brand-logo{
+    display:block;
+    height:68px;
+    width:auto;
+    margin:0 auto 8px;
+}
+.login-header h2{
+    margin:0;
+    font-size:2rem;
+}
+.login-header p{
+    margin:4px 0 0;
+    color:#7b6d90;
+    font-size:0.98rem;
+}
+.login-form input{
+    width:100%;
+    box-sizing:border-box;
+    padding:13px 14px;
+    border-radius:14px;
+    border:1px solid #ddd4ea;
+    background:#fff;
+    font-size:1rem;
+}
+.login-form label{
+    display:block;
+    margin:14px 0 6px;
+    font-weight:700;
+}
+.password-wrap{
+    position:relative;
+}
+.eye-btn{
+    position:absolute;
+    right:10px;
+    top:50%;
+    transform:translateY(-50%);
+    border:none;
+    background:none;
+    cursor:pointer;
+    padding:6px;
+}
+.login-submit-btn{
+    width:100%;
+    margin-top:18px;
+    border-radius:14px;
+    padding:13px 16px;
+    font-size:1rem;
+    background:linear-gradient(135deg, #a97cff, #7f63e6);
+}
+.login-links{
+    margin-top:16px;
+    text-align:center;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+}
+.login-links a{
+    color:#6b52cf;
+    font-weight:700;
+    text-decoration:none;
+}
+.login-links a:hover{
+    text-decoration:underline;
+}
+@media (max-width: 768px){
+    .gojames-login-card{
+        max-width:100%;
+        padding:24px 18px 20px;
+        border-radius:22px;
+    }
+    .login-brand-logo{
+        height:60px;
+    }
+    .login-header h2{
+        font-size:1.9rem;
+    }
+}
+</style>
+
+<script>
+function toggleLoginPassword(){
+    const password=document.getElementById("login_password");
+    const icon=document.getElementById("login_eye_icon");
+    if(password.type==="password"){
+        password.type="text";
+        icon.innerHTML=`<path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a21.8 21.8 0 0 1 5.17-5.94"></path><path d="M1 1l22 22"></path>`;
+    }else{
+        password.type="password";
+        icon.innerHTML=`<path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"></path><circle cx="12" cy="12" r="3"></circle>`;
+    }
+}
+</script>
+{% endblock %}

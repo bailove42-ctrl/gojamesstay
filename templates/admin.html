@@ -1,0 +1,529 @@
+{% extends "base.html" %}
+{% block title %}จัดการการจอง{% endblock %}
+{% block content %}
+<style>
+.admin-room-status-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+    gap:14px;
+}
+.admin-room-status-card{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    padding:14px;
+    border:1px solid #e6def8;
+    border-radius:16px;
+    background:#faf7ff;
+}
+.admin-room-name{
+    font-weight:800;
+    margin-bottom:6px;
+}
+.admin-room-state{
+    font-weight:700;
+}
+.admin-room-state.open{
+    color:#1f7a3f;
+}
+.admin-room-state.closed{
+    color:#9a6a00;
+}
+@media (max-width: 768px){
+    .admin-room-status-card{
+        flex-direction:column;
+        align-items:flex-start;
+    }
+}
+
+.admin-bookings-desktop{display:none;}
+.admin-bookings-mobile{display:block;}
+.admin-booking-card{
+    background:#fff;
+    border:1px solid #eadff7;
+    border-radius:18px;
+    padding:16px;
+    margin-bottom:16px;
+    box-shadow:0 8px 20px rgba(0,0,0,0.06);
+}
+.admin-booking-card-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:12px;
+    margin-bottom:14px;
+}
+.admin-booking-id{
+    font-size:13px;
+    color:#6d627f;
+    margin-bottom:4px;
+}
+.admin-booking-room{
+    font-size:22px;
+    font-weight:800;
+    color:#2f2442;
+    line-height:1.2;
+}
+.admin-booking-grid{
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:12px;
+    margin-bottom:14px;
+}
+.admin-booking-grid > div{
+    background:#f8f2ff;
+    border:1px solid #eadff7;
+    border-radius:12px;
+    padding:10px 12px;
+    line-height:1.45;
+    word-break:break-word;
+}
+.admin-booking-grid strong{
+    display:block;
+    margin-bottom:4px;
+}
+.admin-booking-actions{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+}
+.admin-booking-actions .btn{
+    width:100%;
+}
+.admin-booking-refund{
+    margin-top:12px;
+    margin-bottom:12px;
+    padding:12px;
+    background:#fcf9ff;
+    border:1px solid #eadff7;
+    border-radius:12px;
+}
+.admin-booking-refund .admin-refund-amount{
+    font-weight:800;
+    margin-bottom:4px;
+}
+.admin-booking-status .status{
+    white-space:normal;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+}
+
+@media (max-width: 640px){
+    .admin-booking-grid{grid-template-columns:1fr;}
+    .admin-booking-room{font-size:20px;}
+}
+body.dark-mode .admin-booking-card{
+    background:#f6f1ff;
+    border-color:#e5d9ff;
+    color:#2f2442;
+}
+body.dark-mode .admin-booking-room{color:#2f2442;}
+body.dark-mode .admin-booking-grid > div,
+body.dark-mode .admin-booking-refund{
+    background:#fff;
+    border-color:#e8dcff;
+    color:#2f2442;
+}
+
+
+.admin-bookings-wrap{
+    overflow-x:auto;
+    max-width:100%;
+}
+.admin-bookings-table{
+    width:100%;
+    table-layout:auto;
+}
+body{
+    overflow-x:hidden;
+}
+
+
+.admin-bookings-mobile{
+    display:block;
+}
+.admin-bookings-desktop{
+    display:none !important;
+}
+.admin-booking-card{
+    max-width:100%;
+}
+.admin-booking-grid{
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+}
+.admin-booking-actions{
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0,1fr));
+    gap:10px;
+}
+.admin-booking-actions .btn,
+.admin-booking-actions .muted{
+    width:100%;
+}
+@media (max-width: 1100px){
+    .admin-booking-grid{
+        grid-template-columns:repeat(2, minmax(0, 1fr));
+    }
+}
+@media (max-width: 640px){
+    .admin-booking-grid{
+        grid-template-columns:1fr;
+    }
+    .admin-booking-actions{
+        grid-template-columns:1fr;
+    }
+}
+
+</style>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;"><h2 style="margin:0;">จัดการการจอง</h2><a class="btn btn-secondary" href="/admin/export-refunds">ดาวน์โหลดรายการคืนเงิน Excel</a></div>
+
+<div class="card" style="margin-bottom:20px;">
+    <h3>จัดการสถานะห้องพัก</h3>
+    <div class="admin-room-status-grid">
+        {% for room in rooms %}
+        <div class="admin-room-status-card">
+            <div>
+                <div class="admin-room-name">{{ room.name }}</div>
+                {% if room.get('is_open', True) %}
+                    <div class="admin-room-state open">🟢 เปิดให้จอง</div>
+                {% else %}
+                    <div class="admin-room-state closed">🟡 ยังไม่พร้อมให้บริการ</div>
+                {% endif %}
+            </div>
+            <a class="btn {% if room.get('is_open', True) %}btn-warning{% endif %}" href="/admin/toggle-room/{{ room.id }}">
+                {% if room.get('is_open', True) %}ปิดห้องชั่วคราว{% else %}เปิดให้จอง{% endif %}
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    <p class="muted" style="margin-top:12px;">เมื่อซ่อมบำรุงเสร็จ แอดมินสามารถกด "เปิดให้จอง" เพื่อให้ลูกค้ากลับมาจองห้องได้ทันที</p>
+</div>
+
+
+<div class="flex-2" style="margin-bottom:20px;">
+    <div class="card">
+        <h3>ตั้งค่าห้องไม่ว่าง</h3>
+        <form method="post" action="/block-room">
+            <label>ห้องพัก</label>
+            <select name="room_id" required>
+                <option value="">-- เลือกห้อง --</option>
+                {% for room in rooms %}
+                <option value="{{ room.id }}">{{ room.name }}</option>
+                {% endfor %}
+            </select>
+
+            <label>วันที่เริ่ม</label>
+            <input type="date" name="start_date" required>
+
+            <label>วันที่สิ้นสุด</label>
+            <input type="date" name="end_date" required>
+
+            <label>หมายเหตุ</label>
+            <textarea name="note" rows="3" placeholder="เช่น ปิดซ่อมห้อง / ห้องเต็ม / ทำความสะอาดใหญ่"></textarea>
+
+            <button class="btn btn-warning" type="submit">บล็อกห้อง</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h3>รายการห้องที่ถูกบล็อก</h3>
+        {% if blocks %}
+            <div class="admin-blocks-wrap">
+            <table class="admin-blocks-table">
+                <thead>
+                <tr>
+                    <th>ห้อง</th>
+                    <th>ช่วงวันที่</th>
+                    <th>หมายเหตุ</th>
+                    <th>จัดการ</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for block in blocks %}
+                <tr>
+                    <td>
+                        {% for room in rooms %}
+                            {% if room.id == block["room_id"] %}
+                                {{ room.name }}
+                            {% endif %}
+                        {% endfor %}
+                    </td>
+                    <td>{{ block["start_date"] }} ถึง {{ block["end_date"] }}</td>
+                    <td>{{ block["note"] if block["note"] else "-" }}</td>
+                    <td><a class="btn btn-danger" href="/unblock-room/{{ block['id'] }}">ยกเลิกบล็อก</a></td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            </div>
+        {% else %}
+            <p class="muted">ยังไม่มีการบล็อกห้อง</p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card">
+    <h3 class="admin-section-title">รายการจองทั้งหมด</h3>
+    <div class="admin-bookings-desktop"><div class="admin-bookings-wrap">
+    <table class="admin-bookings-table">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>ผู้จอง</th>
+            <th>ห้อง</th>
+            <th>วันเข้า</th>
+            <th>เวลาเข้า</th>
+            <th>วันออก</th>
+            <th>เวลาออก</th>
+            <th>ยอดชำระ</th>
+            <th>สถานะ</th>
+            <th>สลิป</th>
+            <th>หมดเวลา</th>
+            <th>คืนเงิน</th>
+            <th>จัดการ</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for b in bookings %}
+        <tr>
+            <td>{{ b["id"] }}</td>
+            <td>
+                {% if b["first_name"] and b["last_name"] %}
+                    {{ b["first_name"] }} {{ b["last_name"] }}
+                {% else %}
+                    {{ b["username"] }}
+                {% endif %}
+            </td>
+            <td>{{ b["room_name"] }}</td>
+            <td>{{ b["checkin"] }}</td>
+            <td>{{ b["checkin_time"] }}</td>
+            <td>{{ b["checkout"] }}</td>
+            <td>{{ b["checkout_time"] }}</td>
+            <td>{{ b["paid"] }}</td>
+            <td>
+                {% if b["status"] == "waiting_approval" %}
+                    <span class="status waiting_approval">🟡 รออนุมัติการจอง</span>
+                {% elif b["status"] == "approved" %}
+                    <span class="status approved">🟠 รอการชำระเงิน</span>
+                {% elif b["status"] == "waiting_slip_approval" %}
+                    <span class="status waiting_slip_approval">🟣 รอตรวจสอบสลิป</span>
+                {% elif b["status"] == "deposit_paid" %}
+                    <span class="status deposit_paid">🔵 ชำระมัดจำแล้ว</span>
+                {% elif b["status"] == "waiting_remaining_slip_approval" %}
+                    <span class="status waiting_slip_approval">🟣 รอตรวจสลิปส่วนที่เหลือ</span>
+                {% elif b["status"] == "remaining_counter_pending" %}
+                    <span class="status approved">🟠 รอชำระยอดคงเหลือหน้าเคาน์เตอร์</span>
+                {% elif b["status"] == "fully_paid" %}
+                    <span class="status fully_paid">🟢 ชำระเงินครบแล้ว</span>
+                {% elif b["status"] == "cancel_requested" %}
+                    <span class="status waiting_slip_approval">🟣 รออนุมัติการยกเลิก</span>
+                {% elif b["status"] == "refund_pending" %}
+                    <span class="status approved">🟠 รอคืนเงิน</span>
+                {% elif b["status"] == "refunded" %}
+                    <span class="status deposit_paid">🔵 คืนเงินแล้ว</span>
+                {% elif b["status"] == "rejected" %}
+                    <span class="status rejected">🔴 ปฏิเสธการจอง</span>
+                {% elif b["status"] == "cancelled" %}
+                    <span class="status cancelled">⚫ ยกเลิกแล้ว</span>
+                {% else %}
+                    <span class="status">{{ b["status"] }}</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if b["slip_filename"] %}
+                    <a href="{{ url_for('static', filename='slips/' + b['slip_filename']) }}" target="_blank" class="slip-link">ดูสลิป</a>
+                {% else %}
+                    -
+                {% endif %}
+            </td>
+            <td>{{ b["payment_deadline"] if b["payment_deadline"] else "-" }}</td>
+            <td class="admin-refund-cell">
+                {% if b["refund_amount"] and b["refund_amount"] > 0 %}
+                    <div class="admin-refund-amount">{{ "%.2f"|format(b["refund_amount"]) }} บาท</div>
+                    {% if b["refund_method"] %}
+                        <div class="admin-refund-line muted">วิธีรับเงินคืน: {% if b["refund_method"] == "promptpay" %}PromptPay{% else %}บัญชีธนาคาร{% endif %}</div>
+                    {% endif %}
+                    {% if b["refund_bank"] %}
+                        {% set bank = get_bank_meta(b["refund_bank"]) %}
+                        <div class="bank-mini">
+                            <span class="bank-mini-logo" style="background:{{ bank['color'] }};">{{ bank["short"] }}</span>
+                            <span>{{ bank["name"] }}</span>
+                        </div>
+                    {% endif %}
+                    {% if b["refund_account"] %}
+                        <div class="admin-refund-line muted">เลขรับเงินคืน: {{ b["refund_account"] }}</div>
+                    {% endif %}
+                    {% if b["refund_note"] %}
+                        <div class="admin-refund-line muted">{{ b["refund_note"] }}</div>
+                    {% endif %}
+                {% elif b["status"] in ["cancel_requested", "refund_pending", "refunded"] %}
+                    <span class="muted">ไม่มีคืนเงิน</span>
+                {% else %}
+                    <span class="muted">-</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if b["status"] == "waiting_approval" %}
+                    <a class="btn" href="/approve/{{ b['id'] }}">อนุมัติ</a>
+                    <a class="btn btn-danger" href="/reject/{{ b['id'] }}">ปฏิเสธ</a>
+                {% elif b["status"] == "waiting_slip_approval" %}
+                    <a class="btn" href="/approve_slip/{{ b['id'] }}">อนุมัติสลิป</a>
+                    <a class="btn btn-danger" href="/reject_slip/{{ b['id'] }}">ปฏิเสธสลิป</a>
+                {% elif b["status"] == "waiting_remaining_slip_approval" %}
+                    <a class="btn" href="/approve_slip/{{ b['id'] }}">อนุมัติสลิปส่วนที่เหลือ</a>
+                    <a class="btn btn-danger" href="/reject_slip/{{ b['id'] }}">ปฏิเสธสลิป</a>
+                {% elif b["status"] == "remaining_counter_pending" %}
+                    <a class="btn btn-warning" href="/admin/mark-counter-paid/{{ b['id'] }}">ยืนยันว่าจ่ายหน้าเคาน์เตอร์แล้ว</a>
+                {% elif b["status"] == "cancel_requested" %}
+                    <a class="btn" href="/admin/approve-cancel/{{ b['id'] }}">อนุมัติยกเลิก</a>
+                    <a class="btn btn-danger" href="/admin/reject-cancel/{{ b['id'] }}">ไม่อนุมัติ</a>
+                {% elif b["status"] == "refund_pending" %}
+                    <a class="btn btn-warning" href="/admin/refund-done/{{ b['id'] }}">คืนเงินแล้ว</a>
+                {% elif b["status"] in ["approved"] %}
+                    <a class="btn btn-danger" href="/cancel/{{ b['id'] }}">ยกเลิก</a>
+                {% else %}
+                    -
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div></div>
+
+
+<div class="admin-bookings-mobile">
+    {% for b in bookings %}
+    <div class="admin-booking-card">
+        <div class="admin-booking-card-head">
+            <div>
+                <div class="admin-booking-id">#{{ b["id"] }}</div>
+                <div class="admin-booking-room">{{ b["room_name"] }}</div>
+            </div>
+            <div class="admin-booking-status">
+                {% if b["status"] == "waiting_approval" %}
+                    <span class="status waiting_approval">🟡 รออนุมัติการจอง</span>
+                {% elif b["status"] == "approved" %}
+                    <span class="status approved">🟠 รอการชำระเงิน</span>
+                {% elif b["status"] == "waiting_slip_approval" %}
+                    <span class="status waiting_slip_approval">🟣 รอตรวจสอบสลิป</span>
+                {% elif b["status"] == "deposit_paid" %}
+                    <span class="status deposit_paid">🔵 ชำระมัดจำแล้ว</span>
+                {% elif b["status"] == "waiting_remaining_slip_approval" %}
+                    <span class="status waiting_slip_approval">🟣 รอตรวจสลิปส่วนที่เหลือ</span>
+                {% elif b["status"] == "remaining_counter_pending" %}
+                    <span class="status approved">🟠 รอชำระยอดคงเหลือหน้าเคาน์เตอร์</span>
+                {% elif b["status"] == "fully_paid" %}
+                    <span class="status fully_paid">🟢 ชำระเงินครบแล้ว</span>
+                {% elif b["status"] == "cancel_requested" %}
+                    <span class="status waiting_slip_approval">🟣 รออนุมัติการยกเลิก</span>
+                {% elif b["status"] == "refund_pending" %}
+                    <span class="status approved">🟠 รอคืนเงิน</span>
+                {% elif b["status"] == "refunded" %}
+                    <span class="status deposit_paid">🔵 คืนเงินแล้ว</span>
+                {% elif b["status"] == "rejected" %}
+                    <span class="status rejected">🔴 ปฏิเสธการจอง</span>
+                {% elif b["status"] == "cancelled" %}
+                    <span class="status cancelled">⚫ ยกเลิกแล้ว</span>
+                {% else %}
+                    <span class="status">{{ b["status"] }}</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="admin-booking-grid">
+            <div>
+                <strong>ผู้จอง</strong>
+                {% if b["first_name"] and b["last_name"] %}
+                    {{ b["first_name"] }} {{ b["last_name"] }}
+                {% else %}
+                    {{ b["username"] }}
+                {% endif %}
+            </div>
+            <div>
+                <strong>ยอดชำระ</strong>
+                {{ b["paid"] }} บาท
+            </div>
+            <div>
+                <strong>วันเข้า</strong>
+                {{ b["checkin"] }} {{ b["checkin_time"] }}
+            </div>
+            <div>
+                <strong>วันออก</strong>
+                {{ b["checkout"] }} {{ b["checkout_time"] }}
+            </div>
+            <div>
+                <strong>หมดเวลา</strong>
+                {{ b["payment_deadline"] if b["payment_deadline"] else "-" }}
+            </div>
+            <div>
+                <strong>สลิป</strong>
+                {% if b["slip_filename"] %}
+                    <a href="{{ url_for('static', filename='slips/' + b['slip_filename']) }}" target="_blank" class="slip-link">ดูสลิป</a>
+                {% else %}
+                    -
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="admin-booking-refund">
+            <div class="admin-refund-amount">
+                {% if b["refund_amount"] and b["refund_amount"] > 0 %}
+                    {{ "%.2f"|format(b["refund_amount"]) }} บาท
+                {% elif b["status"] in ["cancel_requested", "refund_pending", "refunded"] %}
+                    ไม่มีคืนเงิน
+                {% else %}
+                    -
+                {% endif %}
+            </div>
+
+            {% if b["refund_method"] %}
+                <div class="muted">วิธีรับเงินคืน: {% if b["refund_method"] == "promptpay" %}PromptPay{% else %}บัญชีธนาคาร{% endif %}</div>
+            {% endif %}
+            {% if b["refund_bank"] %}
+                {% set bank = get_bank_meta(b["refund_bank"]) %}
+                <div class="bank-mini" style="margin-top:6px;">
+                    <span class="bank-mini-logo" style="background:{{ bank['color'] }};">{{ bank["short"] }}</span>
+                    <span>{{ bank["name"] }}</span>
+                </div>
+            {% endif %}
+            {% if b["refund_account"] %}
+                <div class="muted" style="margin-top:6px;">เลขรับเงินคืน: {{ b["refund_account"] }}</div>
+            {% endif %}
+            {% if b["refund_note"] %}
+                <div class="muted" style="margin-top:6px;">{{ b["refund_note"] }}</div>
+            {% endif %}
+        </div>
+
+        <div class="admin-booking-actions">
+            {% if b["status"] == "waiting_approval" %}
+                <a class="btn" href="/approve/{{ b['id'] }}">อนุมัติ</a>
+                <a class="btn btn-danger" href="/reject/{{ b['id'] }}">ปฏิเสธ</a>
+            {% elif b["status"] == "waiting_slip_approval" %}
+                <a class="btn" href="/approve_slip/{{ b['id'] }}">อนุมัติสลิป</a>
+                <a class="btn btn-danger" href="/reject_slip/{{ b['id'] }}">ปฏิเสธสลิป</a>
+            {% elif b["status"] == "waiting_remaining_slip_approval" %}
+                <a class="btn" href="/approve_slip/{{ b['id'] }}">อนุมัติสลิปส่วนที่เหลือ</a>
+                <a class="btn btn-danger" href="/reject_slip/{{ b['id'] }}">ปฏิเสธสลิป</a>
+            {% elif b["status"] == "remaining_counter_pending" %}
+                <a class="btn btn-warning" href="/admin/mark-counter-paid/{{ b['id'] }}">ยืนยันว่าจ่ายหน้าเคาน์เตอร์แล้ว</a>
+            {% elif b["status"] == "cancel_requested" %}
+                <a class="btn" href="/admin/approve-cancel/{{ b['id'] }}">อนุมัติยกเลิก</a>
+                <a class="btn btn-danger" href="/admin/reject-cancel/{{ b['id'] }}">ไม่อนุมัติ</a>
+            {% elif b["status"] == "refund_pending" %}
+                <a class="btn btn-warning" href="/admin/refund-done/{{ b['id'] }}">คืนเงินแล้ว</a>
+            {% elif b["status"] in ["approved"] %}
+                <a class="btn btn-danger" href="/cancel/{{ b['id'] }}">ยกเลิก</a>
+            {% else %}
+                <span class="muted">ไม่มีการดำเนินการ</span>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+</div>
+{% endblock %}

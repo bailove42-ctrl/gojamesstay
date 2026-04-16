@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}ปฏิทินห้องพัก{% endblock %}
+{% block content %}
+<h2>ปฏิทินห้องพัก</h2>
+
+<div class="card">
+<h3>ปฏิทินสถานะห้องพัก (14 วันข้างหน้า)</h3>
+
+<div class="calendar-wrap">
+<table class="calendar-table">
+<tr>
+<th class="calendar-room">ห้องพัก</th>
+{% for d in day_list %}
+<th>{{ d.strftime("%d/%m") }}</th>
+{% endfor %}
+</tr>
+
+{% for row in room_rows %}
+<tr>
+<td class="calendar-room">{{ row.room.name }}</td>
+{% for cell in row.cells %}
+<td>
+{% if cell.detail %}
+<button
+class="calendar-btn"
+title="ชื่อผู้จอง: {{ cell.detail.guest_name }}"
+data-guest="{{ cell.detail.guest_name }}"
+data-room="{{ cell.detail.room_name }}"
+data-checkin="{{ cell.detail.checkin }}"
+data-checkin-time="{{ cell.detail.checkin_time }}"
+data-checkout="{{ cell.detail.checkout }}"
+data-checkout-time="{{ cell.detail.checkout_time }}"
+data-status="{{ cell.detail.status_text }}"
+data-note="{{ cell.detail.note }}"
+onclick="showBookingDetail(this)"
+>
+    {% if cell.state == "booked" %}
+    <div class="cell-booked">มีผู้จอง</div>
+    {% elif cell.state == "occupied" %}
+    <div class="cell-occupied">มีผู้พักอยู่</div>
+    {% elif cell.state == "blocked" %}
+    <div class="cell-blocked">ไม่ว่าง</div>
+    {% else %}
+    <div class="cell-free">ว่าง</div>
+    {% endif %}
+</button>
+{% else %}
+<div class="cell-free">ว่าง</div>
+{% endif %}
+</td>
+{% endfor %}
+</tr>
+{% endfor %}
+</table>
+</div>
+
+<p class="muted" style="margin-top:12px;">
+สีเขียว = ว่าง สีฟ้า = มีผู้จอง สีม่วง = มีผู้พักอยู่ สีชมพู = แอดมินตั้งค่าไม่ว่าง
+</p>
+</div>
+
+<div class="card" style="margin-top:20px;">
+<h3>รายละเอียดการจอง</h3>
+<div id="booking-detail-box" class="muted">
+กดที่ช่องในปฏิทินเพื่อดูรายละเอียดการจอง
+</div>
+</div>
+
+<style>
+.calendar-btn{border:none;background:transparent;padding:0;width:100%;cursor:pointer;transition:0.15s;}
+.calendar-btn:hover{transform:scale(1.05);}
+.calendar-btn div{transition:0.15s;}
+.detail-grid{display:grid;grid-template-columns:160px 1fr;gap:10px 16px;margin-top:10px;}
+.detail-label{font-weight:bold;color:#4c3b63;}
+.detail-value{color:#2f2442;}
+</style>
+
+<script>
+function showBookingDetail(btn){
+    const guest = btn.dataset.guest;
+    const room = btn.dataset.room;
+    const checkin = btn.dataset.checkin;
+    const checkinTime = btn.dataset.checkinTime;
+    const checkout = btn.dataset.checkout;
+    const checkoutTime = btn.dataset.checkoutTime;
+    const status = btn.dataset.status;
+    const note = btn.dataset.note;
+
+    const box = document.getElementById("booking-detail-box");
+
+    box.innerHTML = `
+        <div style="font-size:18px;font-weight:bold;margin-bottom:10px;">
+            รายละเอียดการจอง
+        </div>
+        <div class="detail-grid">
+            <div class="detail-label">ชื่อผู้จอง</div>
+            <div class="detail-value">${guest}</div>
+            <div class="detail-label">ห้องพัก</div>
+            <div class="detail-value">${room}</div>
+            <div class="detail-label">วันเข้า</div>
+            <div class="detail-value">${checkin}</div>
+            <div class="detail-label">เวลาเข้า</div>
+            <div class="detail-value">${checkinTime}</div>
+            <div class="detail-label">วันออก</div>
+            <div class="detail-value">${checkout}</div>
+            <div class="detail-label">เวลาออก</div>
+            <div class="detail-value">${checkoutTime}</div>
+            <div class="detail-label">สถานะ</div>
+            <div class="detail-value">${status}</div>
+            <div class="detail-label">หมายเหตุ</div>
+            <div class="detail-value">${note}</div>
+        </div>
+    `;
+}
+</script>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}แจ้งเตือน{% endblock %}
+{% block content %}
+<div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+        <h2 style="margin:0;">แจ้งเตือนของฉัน {% if unread_notification_count > 0 %}<span class="notification-badge" style="vertical-align:middle;">{{ unread_notification_count }}</span>{% endif %}</h2>
+        <a class="btn btn-secondary" href="/notifications/read-all">อ่านทั้งหมดแล้ว</a>
+    </div>
+
+    <div style="margin-top:16px;">
+        {% if notifications %}
+            {% for n in notifications %}
+            <div style="padding:14px; border:1px solid #eee; border-radius:14px; margin-bottom:12px; background:{% if n['is_read'] == 0 %}#faf5ff{% else %}white{% endif %};">
+                <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+                    <strong>{{ n["title"] }}</strong>
+                    <span class="muted">{{ n["created_at"] }}</span>
+                </div>
+
+                <p style="margin:10px 0 12px 0;">{{ n["message"] }}</p>
+
+                {% if n["is_read"] == 0 %}
+                    <a class="btn" href="/notifications/read/{{ n['id'] }}">ทำเครื่องหมายว่าอ่านแล้ว</a>
+                {% else %}
+                    <span class="muted">อ่านแล้ว</span>
+                {% endif %}
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="muted">ยังไม่มีการแจ้งเตือน</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

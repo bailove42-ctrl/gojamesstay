@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}สมัครสมาชิก{% endblock %}
+{% block content %}
+<div class="card" style="max-width:460px;margin:auto;">
+    <h2>สมัครสมาชิก</h2>
+    <form method="post">
+        <label>ชื่อ</label>
+        <input name="first_name" required>
+
+        <label>นามสกุล</label>
+        <input name="last_name" required>
+
+        <label>ชื่อเล่น</label>
+        <input name="nickname" required>
+
+        <label>เพศ</label>
+        <select name="gender" required>
+            <option value="">-- เลือกเพศ --</option>
+            <option value="ชาย">ชาย</option>
+            <option value="หญิง">หญิง</option>
+            <option value="อื่นๆ">อื่นๆ</option>
+        </select>
+
+        <label>เบอร์โทร</label>
+        <input name="phone" required>
+
+        <label>อีเมล</label>
+        <input name="email" type="email" required>
+
+        <label>ชื่อผู้ใช้</label>
+        <input name="username" required>
+
+        <label>รหัสผ่าน</label>
+        <div class="password-wrap">
+            <input id="password" name="password" type="password" required>
+            <button type="button" class="eye-btn" onclick="togglePassword()">
+                <svg id="eye_icon1" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6d627f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+            </button>
+        </div>
+
+        <label>ยืนยันรหัสผ่าน</label>
+        <div class="password-wrap">
+            <input id="confirm_password" name="confirm_password" type="password" required>
+            <button type="button" class="eye-btn" onclick="toggleConfirmPassword()">
+                <svg id="eye_icon2" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6d627f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+            </button>
+        </div>
+
+        <button class="btn" type="submit">สมัครสมาชิก</button>
+    </form>
+</div>
+
+<script>
+function togglePassword(){
+    const password=document.getElementById("password");
+    const icon=document.getElementById("eye_icon1");
+    if(password.type==="password"){
+        password.type="text";
+        icon.innerHTML=`<path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a21.8 21.8 0 0 1 5.17-5.94"></path><path d="M1 1l22 22"></path>`;
+    }else{
+        password.type="password";
+        icon.innerHTML=`<path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"></path><circle cx="12" cy="12" r="3"></circle>`;
+    }
+}
+function toggleConfirmPassword(){
+    const password=document.getElementById("confirm_password");
+    const icon=document.getElementById("eye_icon2");
+    if(password.type==="password"){
+        password.type="text";
+        icon.innerHTML=`<path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a21.8 21.8 0 0 1 5.17-5.94"></path><path d="M1 1l22 22"></path>`;
+    }else{
+        password.type="password";
+        icon.innerHTML=`<path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"></path><circle cx="12" cy="12" r="3"></circle>`;
+    }
+}
+</script>
+{% endblock %}

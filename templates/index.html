@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}หน้าแรก{% endblock %}
+{% block content %}
+<style>
+.room-card{
+    position:relative;
+}
+.room-image-wrapper{
+    position:relative;
+    overflow:hidden;
+    border-radius:18px;
+    margin-bottom:14px;
+}
+.room-card-maintenance .room-cover{
+    filter: grayscale(100%) brightness(0.12);
+}
+.coming-soon-badge{
+    position:absolute;
+    top:12px;
+    left:12px;
+    background:#FFD54F;
+    color:#5A4300;
+    font-weight:800;
+    padding:8px 12px;
+    border-radius:10px;
+    font-size:13px;
+    line-height:1;
+    box-shadow:0 4px 10px rgba(0,0,0,0.25);
+}
+.maintenance-note{
+    color:#7c5f12;
+    background:#fff8e8;
+    border:1px solid #f2dfaa;
+    padding:10px 12px;
+    border-radius:12px;
+    margin:10px 0 12px;
+    line-height:1.5;
+}
+.btn-disabled{
+    display:inline-block;
+    background:#d7cce9 !important;
+    color:#6f6284 !important;
+    cursor:not-allowed;
+    pointer-events:none;
+    text-decoration:none;
+}
+</style>
+<div class="hero">
+    <h1>โกเจมส์ ที่พักตากอากาศ</h1>
+    <p class="muted">บรรยากาศเงียบสงบ เหมาะสำหรับการพักผ่อนท่ามกลางความเป็นส่วนตัวและธรรมชาติที่ผ่อนคลาย</p>
+    <p class="muted">สัมผัสการพักผ่อนที่เรียบง่าย อบอุ่น และเป็นกันเอง พร้อมห้องพักหลากหลายรูปแบบให้เลือกตามสไตล์ของคุณ</p>
+</div>
+
+<div class="grid">
+    {% for room in rooms %}
+    <div class="card room-card {% if not room.get('is_open', True) %}room-card-maintenance{% endif %}">
+        <div class="room-image-wrapper">
+            <img class="room-cover" src="{{ url_for('static', filename=room.cover) }}" alt="{{ room.name }}">
+            {% if not room.get('is_open', True) %}
+            <div class="coming-soon-badge">🚧 COMING SOON</div>
+            {% endif %}
+        </div>
+        <h3>{{ room.name }}</h3>
+        <p class="muted">{{ room.detail }}</p>
+        <p><b>{{ room.price }} บาท / คืน</b></p>
+        {% if not room.get('is_open', True) %}
+            <p class="maintenance-note">{{ room.get('maintenance_note', 'ห้องนี้ยังไม่พร้อมให้บริการ และจะเปิดให้จองในภายหลัง') }}</p>
+            <span class="btn btn-disabled">ยังไม่เปิดให้จอง</span>
+        {% elif session.get('user') %}
+            <a class="btn" href="/booking/{{ room.id }}">จองห้องนี้</a>
+        {% else %}
+            <a class="btn" href="/login">เข้าสู่ระบบก่อนจอง</a>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+<style>
+.room-card{
+    position:relative;
+}
+.room-image-wrapper{
+    position:relative;
+    overflow:hidden;
+    border-radius:18px;
+    margin-bottom:14px;
+}
+.room-card-maintenance .room-cover{
+    filter: grayscale(100%) brightness(0.12);
+}
+.coming-soon-badge{
+    position:absolute;
+    top:12px;
+    left:12px;
+    background:#FFD54F;
+    color:#5A4300;
+    font-weight:800;
+    padding:8px 12px;
+    border-radius:10px;
+    font-size:13px;
+    line-height:1;
+    box-shadow:0 4px 10px rgba(0,0,0,0.25);
+}
+.maintenance-note{
+    color:#7c5f12;
+    background:#fff8e8;
+    border:1px solid #f2dfaa;
+    padding:10px 12px;
+    border-radius:12px;
+    margin:10px 0 12px;
+    line-height:1.5;
+}
+.btn-disabled{
+    display:inline-block;
+    background:#d7cce9 !important;
+    color:#6f6284 !important;
+    cursor:not-allowed;
+    pointer-events:none;
+    text-decoration:none;
+}
+</style>
+
+
+{% endblock %}

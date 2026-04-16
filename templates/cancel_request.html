@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}ยืนยันการขอยกเลิก{% endblock %}
+{% block content %}
+<style>
+.refund-bank-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.bank-preview{display:flex;align-items:center;gap:10px;margin:10px 0 14px;padding:12px;border:1px solid #e6dbff;border-radius:14px;background:#faf7ff;min-height:56px;}
+.bank-logo-chip{width:34px;height:34px;border-radius:10px;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;}
+.bank-preview-text strong{display:block;}
+.bank-preview-text span{color:#6d627f;font-size:13px;}
+.hidden{display:none !important;}
+@media (max-width: 768px){
+  .refund-bank-grid{grid-template-columns:1fr;}
+}
+</style>
+<div class="card" style="max-width:680px;margin:auto;">
+    <h2>ยืนยันการขอยกเลิก</h2>
+    <p class="muted">สำหรับรายการที่ชำระเงินแล้ว กรุณากรอกข้อมูลรับเงินคืนให้ครบ</p>
+
+    <div class="card" style="background:#faf5ff;margin-bottom:14px;">
+        <p><b>ห้อง:</b> {{ booking["room_name"] }}</p>
+        <p><b>วันที่เข้าพัก:</b> {{ booking["checkin"] }} {{ booking["checkin_time"] }}</p>
+        <p><b>วันที่ออก:</b> {{ booking["checkout"] }} {{ booking["checkout_time"] }}</p>
+        <p><b>รูปแบบการชำระ:</b> {% if booking["paytype"] == "full" %}จ่ายเต็ม{% else %}มัดจำ 25%{% endif %}</p>
+        <p><b>ยอดที่ชำระ:</b> {{ booking["paid"] }} บาท</p>
+        <p><b>ยอดคืนตามนโยบาย:</b> {{ refund_preview }} บาท</p>
+        <p class="muted">นโยบาย: ลูกค้ายกเลิกหลังชำระเงิน — จ่ายเต็มคืน 50% / มัดจำไม่คืน</p>
+    </div>
+
+    <form method="post" id="refundForm">
+        <label>วิธีรับเงินคืน</label>
+        <select name="refund_method" id="refundMethod" required>
+            <option value="">-- เลือกวิธีรับเงินคืน --</option>
+            <option value="promptpay">PromptPay</option>
+            <option value="bank">บัญชีธนาคาร</option>
+        </select>
+
+        <div id="bankSection" class="hidden">
+            <label>ธนาคาร</label>
+            <select name="refund_bank" id="refundBank">
+                <option value="">-- ตรวจจับจากเลขบัญชีอัตโนมัติ หรือเลือกเอง --</option>
+                {% for code, meta in banks.items() %}
+                    {% if code != "promptpay" %}
+                    <option value="{{ code }}">{{ meta["name"] }} ({{ meta["short"] }})</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+        </div>
+
+        <label id="refundAccountLabel">เลขพร้อมเพย์ / เลขบัญชี</label>
+        <input type="text" name="refund_account" id="refundAccount" placeholder="กรอกเบอร์พร้อมเพย์หรือเลขบัญชี" required>
+
+        <div class="bank-preview" id="bankPreview">
+            <span class="bank-logo-chip" id="bankPreviewIcon" style="background:#6b7280;">-</span>
+            <div class="bank-preview-text">
+                <strong id="bankPreviewName">ยังไม่ได้เลือก</strong>
+                <span id="bankPreviewHint">กรอกข้อมูลเพื่อให้ระบบช่วยตรวจสอบ</span>
+            </div>
+        </div>
+
+        <button class="btn btn-warning" type="submit">ยืนยันส่งคำขอยกเลิก</button>
+        <a class="btn btn-secondary" href="/my-bookings">กลับ</a>
+    </form>
+</div>
+
+<script>
+const BANKS = {{ banks|tojson }};
+function normalizeDigits(value){
+    return (value || "").replace(/\D/g, "");
+}
+function detectBankFromAccount(account){
+    const digits = normalizeDigits(account);
+    if ((digits.length === 10 && digits.startsWith("0")) || digits.length === 13){
+        return "promptpay";
+    }
+    const prefix = digits.slice(0, 3);
+    for (const [code, meta] of Object.entries(BANKS)){
+        if (code === "promptpay") continue;
+        if ((meta.prefixes || []).includes(prefix)) return code;
+    }
+    return "";
+}
+function updateRefundUI(){
+    const method = document.getElementById("refundMethod").value;
+    const bankSection = document.getElementById("bankSection");
+    const bankSelect = document.getElementById("refundBank");
+    const account = document.getElementById("refundAccount").value;
+    const detected = detectBankFromAccount(account);
+    const preview = document.getElementById("bankPreview");
+    const icon = document.getElementById("bankPreviewIcon");
+    const nameEl = document.getElementById("bankPreviewName");
+    const hintEl = document.getElementById("bankPreviewHint");
+    const label = document.getElementById("refundAccountLabel");
+
+    if (method === "bank"){
+        bankSection.classList.remove("hidden");
+        label.textContent = "เลขบัญชี";
+        if (!bankSelect.value && detected && detected !== "promptpay"){
+            bankSelect.value = detected;
+        }
+        const activeCode = bankSelect.value || (detected !== "promptpay" ? detected : "");
+        if (activeCode && BANKS[activeCode]){
+            const meta = BANKS[activeCode];
+            icon.style.background = meta.color;
+            icon.textContent = meta.short;
+            nameEl.textContent = meta.name;
+            hintEl.textContent = detected === activeCode ? "ตรวจจับจากเลขบัญชีอัตโนมัติ" : "คุณเลือกธนาคารนี้เอง";
+        } else {
+            icon.style.background = "#6b7280";
+            icon.textContent = "?";
+            nameEl.textContent = "ยังไม่ทราบธนาคาร";
+            hintEl.textContent = "กรอกเลขบัญชี 10-12 หลัก หรือเลือกธนาคารเอง";
+        }
+    } else if (method === "promptpay"){
+        bankSection.classList.add("hidden");
+        bankSelect.value = "";
+        label.textContent = "เลขพร้อมเพย์";
+        icon.style.background = BANKS.promptpay.color;
+        icon.textContent = BANKS.promptpay.short;
+        nameEl.textContent = BANKS.promptpay.name;
+        hintEl.textContent = "รองรับเบอร์โทร 10 หลัก หรือเลขบัตรประชาชน 13 หลัก";
+    } else {
+        bankSection.classList.add("hidden");
+        bankSelect.value = "";
+        label.textContent = "เลขพร้อมเพย์ / เลขบัญชี";
+        icon.style.background = "#6b7280";
+        icon.textContent = "-";
+        nameEl.textContent = "ยังไม่ได้เลือก";
+        hintEl.textContent = "กรอกข้อมูลเพื่อให้ระบบช่วยตรวจสอบ";
+    }
+}
+document.getElementById("refundMethod").addEventListener("change", updateRefundUI);
+document.getElementById("refundBank").addEventListener("change", updateRefundUI);
+document.getElementById("refundAccount").addEventListener("input", updateRefundUI);
+window.addEventListener("load", updateRefundUI);
+</script>
+{% endblock %}

@@ -1,0 +1,481 @@
+{% extends "base.html" %}
+{% block title %}จองห้องพัก{% endblock %}
+{% block content %}
+<div class="card" style="max-width:760px; margin:auto;">
+    <h2>{{ room.name }}</h2>
+    <p class="muted">{{ room.detail }}</p>
+
+
+    <div class="room-carousel" id="roomCarousel">
+        <button type="button" class="carousel-btn prev" onclick="moveSlide(-1)">‹</button>
+        <div class="carousel-track-wrap">
+            <div class="carousel-track" id="carouselTrack">
+                {% for img in room.images %}
+                <div class="carousel-slide">
+                    <img src="{{ url_for('static', filename=img) }}" alt="{{ room.name }}" onclick="openZoom({{ loop.index0 }})">
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        <button type="button" class="carousel-btn next" onclick="moveSlide(1)">›</button>
+    </div>
+
+    <div class="carousel-dots" id="carouselDots">
+        {% for img in room.images %}
+        <button type="button" class="carousel-dot {% if loop.first %}active{% endif %}" onclick="goToSlide({{ loop.index0 }})"></button>
+        {% endfor %}
+    </div>
+
+    <div class="gallery-hint">แตะหรือคลิกที่รูปเพื่อซูมดูภาพ</div>
+
+    <div class="image-zoom-modal" id="imageZoomModal" onclick="closeZoom(event)">
+        <button type="button" class="zoom-close" onclick="closeZoom(event); return false;">×</button>
+        <button type="button" class="zoom-nav prev" onclick="moveZoom(-1, event); return false;">‹</button>
+        <img id="zoomedImage" src="" alt="{{ room.name }}">
+        <button type="button" class="zoom-nav next" onclick="moveZoom(1, event); return false;">›</button>
+    </div>
+
+    <p><b>ราคา {{ room.price }} บาท / คืน</b></p>
+    <p class="booking-hint">จองได้ทั้งแบบช่วงวันต่อเนื่อง และแบบหลายช่วงวันที่ไม่ติดกัน เช่น พักวันที่ 13 แล้วจองเพิ่มอีกช่วงวันที่ 16 ได้</p>
+
+    <form method="post" id="bookingForm">
+        <div id="segmentsContainer">
+            <div class="segment-card" data-segment-index="0">
+                <div class="segment-header">
+                    <h3>ช่วงเข้าพักหลัก</h3>
+                </div>
+
+                <label>วันเข้าพัก</label>
+                <input type="date" class="checkin" name="checkin" min="{{ today_str }}" required>
+
+                <label>เวลาเข้าพัก</label>
+                <select class="checkin_time" name="checkin_time" required></select>
+
+                <label>วันออก</label>
+                <p class="booking-hint">เลือกได้ทั้งวันเดียวกันหรือวันหลังจากวันเข้าพัก</p>
+                <input type="date" class="checkout" name="checkout" min="{{ today_str }}" required>
+
+                <label>เวลาออก</label>
+                <select class="checkout_time" name="checkout_time" required></select>
+            </div>
+        </div>
+
+        <input type="hidden" name="extra_segments" id="extra_segments">
+
+        <div class="segment-tools">
+            <button class="btn btn-secondary" type="button" id="addSegmentBtn">+ เพิ่มช่วงวันพัก</button>
+            <span class="muted">ใช้กรณีต้องการจองหลายวันแบบไม่ต่อเนื่อง เช่น 13 และ 16</span>
+        </div>
+
+        <div class="booking-summary" id="booking_summary">สรุปการจอง: 1 ช่วงวัน</div>
+        <div class="card" style="background:#faf5ff; margin-bottom:14px;">
+            <div id="payment_calc_box" class="muted">ระบบจะคำนวณยอดชำระให้อัตโนมัติ</div>
+        </div>
+
+        <label>รูปแบบการชำระเงิน</label>
+        <select name="paytype" id="paytype" onchange="updateBookingSummary()">
+            <option value="full">จ่ายเต็ม 100%</option>
+            <option value="deposit">มัดจำ 25%</option>
+        </select>
+
+        <button class="btn" type="submit">ส่งคำขอจอง</button>
+    </form>
+</div>
+
+
+<style>
+.room-carousel{
+    position:relative;
+    margin:14px 0 8px;
+}
+.carousel-track-wrap{
+    overflow:hidden;
+    border-radius:18px;
+}
+.carousel-track{
+    display:flex;
+    transition:transform .28s ease;
+}
+.carousel-slide{
+    min-width:100%;
+}
+.carousel-slide img{
+    display:block;
+    width:100%;
+    height:420px;
+    object-fit:cover;
+    cursor:zoom-in;
+    background:#eee7fb;
+}
+.carousel-btn{
+    position:absolute;
+    top:50%;
+    transform:translateY(-50%);
+    width:42px;
+    height:42px;
+    border:none;
+    border-radius:999px;
+    background:rgba(47,36,66,.72);
+    color:#fff;
+    font-size:30px;
+    line-height:1;
+    cursor:pointer;
+    z-index:2;
+}
+.carousel-btn.prev{left:10px;}
+.carousel-btn.next{right:10px;}
+.carousel-dots{
+    display:flex;
+    justify-content:center;
+    gap:8px;
+    margin:10px 0 14px;
+}
+.carousel-dot{
+    width:10px;
+    height:10px;
+    border-radius:999px;
+    border:none;
+    background:#d3c3f7;
+    cursor:pointer;
+}
+.carousel-dot.active{
+    background:#8c6cf1;
+    transform:scale(1.15);
+}
+.gallery-hint{
+    text-align:center;
+    color:#7a6f8f;
+    font-size:14px;
+    margin-bottom:10px;
+}
+.image-zoom-modal{
+    position:fixed;
+    inset:0;
+    background:rgba(13,10,20,.92);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:9999;
+    padding:20px;
+}
+.image-zoom-modal.open{
+    display:flex;
+}
+.image-zoom-modal img{
+    max-width:min(96vw, 1200px);
+    max-height:88vh;
+    object-fit:contain;
+    border-radius:16px;
+    box-shadow:0 12px 32px rgba(0,0,0,.35);
+}
+.zoom-close{
+    position:absolute;
+    top:18px;
+    right:18px;
+    width:44px;
+    height:44px;
+    border:none;
+    border-radius:999px;
+    background:rgba(255,255,255,.15);
+    color:#fff;
+    font-size:28px;
+    cursor:pointer;
+}
+.zoom-nav{
+    position:absolute;
+    top:50%;
+    transform:translateY(-50%);
+    width:48px;
+    height:48px;
+    border:none;
+    border-radius:999px;
+    background:rgba(255,255,255,.14);
+    color:#fff;
+    font-size:34px;
+    cursor:pointer;
+}
+.zoom-nav.prev{left:18px;}
+.zoom-nav.next{right:18px;}
+@media (max-width: 768px){
+    .carousel-slide img{
+        height:260px;
+    }
+    .carousel-btn{
+        width:38px;
+        height:38px;
+        font-size:28px;
+    }
+    .zoom-nav{
+        width:42px;
+        height:42px;
+        font-size:30px;
+    }
+}
+</style>
+
+<script>
+const todayStr = "{{ today_str }}";
+const roomImages = [{% for img in room.images %}"{{ url_for('static', filename=img) }}"{% if not loop.last %}, {% endif %}{% endfor %}];
+let currentSlide = 0;
+let currentZoom = 0;
+
+const todayTimeOptions = {{ today_time_options|tojson }};
+const allTimeOptions = {{ all_time_options|tojson }};
+const roomPrice = {{ room.price|tojson }};
+
+
+function updateCarousel(){
+    const track = document.getElementById("carouselTrack");
+    const dots = document.querySelectorAll(".carousel-dot");
+    if (!track) return;
+    track.style.transform = `translateX(-${currentSlide * 100}%)`;
+    dots.forEach((dot, i) => {
+        if (i === currentSlide) dot.classList.add("active");
+        else dot.classList.remove("active");
+    });
+}
+
+function moveSlide(direction){
+    currentSlide = (currentSlide + direction + roomImages.length) % roomImages.length;
+    updateCarousel();
+}
+
+function goToSlide(index){
+    currentSlide = index;
+    updateCarousel();
+}
+
+function openZoom(index){
+    currentZoom = index;
+    const modal = document.getElementById("imageZoomModal");
+    const img = document.getElementById("zoomedImage");
+    if (!modal || !img) return;
+    img.src = roomImages[currentZoom];
+    modal.classList.add("open");
+    document.body.style.overflow = "hidden";
+}
+
+function moveZoom(direction, event){
+    if (event) event.stopPropagation();
+    currentZoom = (currentZoom + direction + roomImages.length) % roomImages.length;
+    const img = document.getElementById("zoomedImage");
+    if (img) img.src = roomImages[currentZoom];
+}
+
+function closeZoom(event){
+    if (event) event.stopPropagation();
+    const modal = document.getElementById("imageZoomModal");
+    if (!modal) return;
+    modal.classList.remove("open");
+    document.body.style.overflow = "";
+}
+
+document.addEventListener("keydown", function(e){
+    const modal = document.getElementById("imageZoomModal");
+    const zoomOpen = modal && modal.classList.contains("open");
+
+    if (zoomOpen) {
+        if (e.key === "Escape") closeZoom();
+        if (e.key === "ArrowLeft") moveZoom(-1);
+        if (e.key === "ArrowRight") moveZoom(1);
+        return;
+    }
+
+    if (e.key === "ArrowLeft") moveSlide(-1);
+    if (e.key === "ArrowRight") moveSlide(1);
+});
+
+window.addEventListener("load", function(){
+    updateCarousel();
+
+    const modal = document.getElementById("imageZoomModal");
+    if (modal) {
+        modal.addEventListener("click", function(e){
+            if (e.target === modal) closeZoom();
+        });
+    }
+});
+
+
+function fillSelectOptions(selectEl, options) {
+    const currentValue = selectEl.value;
+    selectEl.innerHTML = "";
+    if (options.length === 0) {
+        const opt = document.createElement("option");
+        opt.value = "";
+        opt.textContent = "วันนี้ไม่มีช่วงเวลาว่างแล้ว";
+        selectEl.appendChild(opt);
+        return;
+    }
+    options.forEach(t => {
+        const opt = document.createElement("option");
+        opt.value = t;
+        opt.textContent = t;
+        selectEl.appendChild(opt);
+    });
+    if (currentValue && options.includes(currentValue)) {
+        selectEl.value = currentValue;
+    }
+}
+
+function setupSegment(segmentEl) {
+    const checkinInput = segmentEl.querySelector(".checkin");
+    const checkoutInput = segmentEl.querySelector(".checkout");
+    const checkinTimeSelect = segmentEl.querySelector(".checkin_time");
+    const checkoutTimeSelect = segmentEl.querySelector(".checkout_time");
+
+    function updateCheckinTimeOptions() {
+        if (checkinInput.value === todayStr) {
+            fillSelectOptions(checkinTimeSelect, todayTimeOptions);
+        } else {
+            fillSelectOptions(checkinTimeSelect, allTimeOptions);
+        }
+    }
+
+    function updateCheckoutTimeOptions() {
+        let options = [...allTimeOptions];
+        if (checkinInput.value && checkoutInput.value && checkinInput.value === checkoutInput.value) {
+            const checkinTime = checkinTimeSelect.value;
+            options = allTimeOptions.filter(t => t > checkinTime);
+        }
+        fillSelectOptions(checkoutTimeSelect, options);
+    }
+
+    function handleDateChange() {
+        checkoutInput.min = checkinInput.value || todayStr;
+        if (!checkoutInput.value || (checkinInput.value && checkoutInput.value < checkinInput.value)) {
+            checkoutInput.value = checkinInput.value;
+        }
+        updateCheckinTimeOptions();
+        updateCheckoutTimeOptions();
+        updateBookingSummary();
+    }
+
+    checkinInput.value = todayStr;
+    checkoutInput.value = todayStr;
+
+    checkinInput.addEventListener("change", handleDateChange);
+    checkoutInput.addEventListener("change", () => {
+        updateCheckoutTimeOptions();
+        updateBookingSummary();
+    });
+    checkinTimeSelect.addEventListener("change", () => {
+        updateCheckoutTimeOptions();
+        updateBookingSummary();
+    });
+    checkoutTimeSelect.addEventListener("change", updateBookingSummary);
+
+    handleDateChange();
+}
+
+function createExtraSegment(index) {
+    const wrapper = document.createElement("div");
+    wrapper.className = "segment-card extra-segment";
+    wrapper.dataset.segmentIndex = index;
+    wrapper.innerHTML = `
+        <div class="segment-header">
+            <h3>ช่วงวันพักเพิ่มเติม ${index}</h3>
+            <button type="button" class="btn btn-danger btn-small remove-segment">ลบช่วงนี้</button>
+        </div>
+
+        <label>วันเข้าพัก</label>
+        <input type="date" class="checkin" min="${todayStr}" required>
+
+        <label>เวลาเข้าพัก</label>
+        <select class="checkin_time" required></select>
+
+        <label>วันออก</label>
+        <input type="date" class="checkout" min="${todayStr}" required>
+
+        <label>เวลาออก</label>
+        <select class="checkout_time" required></select>
+    `;
+    wrapper.querySelector(".remove-segment").addEventListener("click", function() {
+        wrapper.remove();
+        updateBookingSummary();
+    });
+    return wrapper;
+}
+
+function updateBookingSummary() {
+    const summary = document.getElementById("booking_summary");
+    const segments = document.querySelectorAll("#segmentsContainer .segment-card");
+    let validSegments = 0;
+    let totalNights = 0;
+    let lines = [];
+
+    segments.forEach((segmentEl, idx) => {
+        const checkin = segmentEl.querySelector(".checkin").value;
+        const checkout = segmentEl.querySelector(".checkout").value;
+        const checkinTime = segmentEl.querySelector(".checkin_time").value;
+        const checkoutTime = segmentEl.querySelector(".checkout_time").value;
+
+        if (!checkin || !checkout || !checkinTime || !checkoutTime) return;
+
+        const start = new Date(`${checkin}T${checkinTime}:00`);
+        const end = new Date(`${checkout}T${checkoutTime}:00`);
+        if (isNaN(start.getTime()) || isNaN(end.getTime()) || end <= start) return;
+
+        const dayMs = 1000 * 60 * 60 * 24;
+        const dayDiff = Math.floor((new Date(checkout + "T00:00:00") - new Date(checkin + "T00:00:00")) / dayMs);
+        const nights = Math.max(1, dayDiff);
+        validSegments += 1;
+        totalNights += nights;
+        lines.push(`ช่วงที่ ${idx + 1}: ${checkin} ${checkinTime} ถึง ${checkout} ${checkoutTime} (${nights} คืน)`);
+    });
+
+    const calcBox = document.getElementById("payment_calc_box");
+    const paytype = document.getElementById("paytype").value || "full";
+
+    if (validSegments === 0) {
+        summary.textContent = "สรุปการจอง: 1 ช่วงวัน";
+        if (calcBox) calcBox.textContent = "ระบบจะคำนวณยอดชำระให้อัตโนมัติ";
+        return;
+    }
+
+    const totalAmount = totalNights * roomPrice;
+    const dueNow = paytype === "deposit" ? +(totalAmount * 0.25).toFixed(2) : totalAmount;
+    const remaining = +(totalAmount - dueNow).toFixed(2);
+
+    summary.innerHTML = `<div>สรุปการจอง: ${validSegments} ช่วงวัน รวม ${totalNights} คืน</div><div class="booking-summary-lines">${lines.join("<br>")}</div>`;
+    if (calcBox) {
+        calcBox.innerHTML = `<strong>ระบบคำนวณเงินอัตโนมัติ</strong><br>
+        ยอดรวมทั้งหมด: ${totalAmount} บาท<br>
+        ยอดที่ต้องชำระตอนนี้: ${dueNow} บาท<br>
+        ยอดคงเหลือ: ${remaining} บาท`;
+    }
+}
+
+function syncExtraSegments() {
+    const extraSegments = [];
+    document.querySelectorAll("#segmentsContainer .extra-segment").forEach(segmentEl => {
+        extraSegments.push({
+            checkin: segmentEl.querySelector(".checkin").value,
+            checkout: segmentEl.querySelector(".checkout").value,
+            checkin_time: segmentEl.querySelector(".checkin_time").value,
+            checkout_time: segmentEl.querySelector(".checkout_time").value
+        });
+    });
+    document.getElementById("extra_segments").value = JSON.stringify(extraSegments);
+}
+
+window.addEventListener("load", () => {
+    setupSegment(document.querySelector('#segmentsContainer .segment-card'));
+
+    document.getElementById("addSegmentBtn").addEventListener("click", () => {
+        const currentExtras = document.querySelectorAll("#segmentsContainer .extra-segment").length;
+        const nextIndex = currentExtras + 1;
+        const extra = createExtraSegment(nextIndex);
+        document.getElementById("segmentsContainer").appendChild(extra);
+        setupSegment(extra);
+        updateBookingSummary();
+    });
+
+    document.getElementById("bookingForm").addEventListener("submit", () => {
+        syncExtraSegments();
+    });
+
+    updateBookingSummary();
+});
+</script>
+{% endblock %}

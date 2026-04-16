@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+{% block title %}การจองของฉัน{% endblock %}
+{% block content %}
+<h2>การจองของฉัน</h2>
+
+{% macro segment_status_text(segment) -%}
+    {% if segment["status"] == "waiting_approval" %}รอแอดมินอนุมัติ
+    {% elif segment["status"] == "approved" %}รอชำระเงิน
+    {% elif segment["status"] == "waiting_slip_approval" %}รอตรวจสอบสลิป
+    {% elif segment["status"] == "deposit_paid" %}ชำระมัดจำแล้ว
+    {% elif segment["status"] == "waiting_remaining_slip_approval" %}รอตรวจสอบสลิปส่วนที่เหลือ
+    {% elif segment["status"] == "remaining_counter_pending" %}ยอดคงเหลือชำระหน้าเคาน์เตอร์
+    {% elif segment["status"] == "fully_paid" %}ชำระครบแล้ว
+    {% elif segment["status"] == "cancel_requested" %}ส่งคำขอยกเลิกแล้ว
+    {% elif segment["status"] == "refund_pending" %}รอคืนเงิน
+    {% elif segment["status"] == "refunded" %}คืนเงินแล้ว
+    {% elif segment["status"] == "cancelled" %}ยกเลิกแล้ว
+    {% elif segment["status"] == "rejected" %}ถูกปฏิเสธ
+    {% else %}{{ segment["status"] }}{% endif %}
+{%- endmacro %}
+
+{% macro booking_status_badge(status) -%}
+    {% if status == "waiting_approval" %}<span class="status waiting_approval">รอแอดมินอนุมัติ</span>
+    {% elif status == "approved" %}<span class="status approved">รอชำระเงิน</span>
+    {% elif status == "waiting_slip_approval" %}<span class="status waiting_slip_approval">รอตรวจสอบสลิป</span>
+    {% elif status == "deposit_paid" %}<span class="status deposit_paid">ชำระมัดจำแล้ว</span>
+    {% elif status == "waiting_remaining_slip_approval" %}<span class="status waiting_slip_approval">รอตรวจสอบสลิปส่วนที่เหลือ</span>
+    {% elif status == "remaining_counter_pending" %}<span class="status approved">ยอดคงเหลือชำระหน้าเคาน์เตอร์</span>
+    {% elif status == "fully_paid" %}<span class="status fully_paid">ชำระเงินเรียบร้อย</span>
+    {% elif status == "cancel_requested" %}<span class="status waiting_slip_approval">ส่งคำขอยกเลิกแล้ว</span>
+    {% elif status == "refund_pending" %}<span class="status approved">ยกเลิกแล้ว</span>
+    {% elif status == "refunded" %}<span class="status deposit_paid">คืนเงินแล้ว</span>
+    {% elif status == "rejected" %}<span class="status rejected">ถูกปฏิเสธ</span>
+    {% elif status == "cancelled" %}<span class="status cancelled">ยกเลิกแล้ว</span>
+    {% else %}<span class="status">{{ status }}</span>{% endif %}
+{%- endmacro %}
+
+{% macro booking_actions(b) -%}
+    {% if b["status"] == "approved" %}
+        <a class="btn" href="/payment/{{ b['action_id'] }}">ชำระเงิน</a>
+        {% if b["is_grouped"] %}
+            <span class="muted" style="display:block;margin-top:6px;">ยกเลิกแยกแต่ละช่วงในส่วนช่วงที่จอง</span>
+        {% else %}
+            <a class="btn btn-danger" href="/cancel/{{ b['action_id'] }}" onclick="return confirm('ต้องการยกเลิกการจองนี้ใช่หรือไม่?')">ยกเลิก</a>
+        {% endif %}
+    {% elif b["status"] == "waiting_approval" %}
+        {% if b["is_grouped"] %}
+            <span class="muted">ยกเลิกแยกแต่ละช่วงในส่วนช่วงที่จอง</span>
+        {% else %}
+            <a class="btn btn-danger" href="/cancel/{{ b['action_id'] }}" onclick="return confirm('ต้องการยกเลิกการจองนี้ใช่หรือไม่?')">ยกเลิก</a>
+        {% endif %}
+    {% elif b["status"] == "waiting_slip_approval" %}
+        {% if b["is_grouped"] %}
+            <span class="muted">ยกเลิกแยกแต่ละช่วงในส่วนช่วงที่จอง</span>
+        {% else %}
+            <a class="btn btn-danger" href="/cancel/{{ b['action_id'] }}" onclick="return confirm('ต้องการยกเลิกการจองนี้ใช่หรือไม่?')">ยกเลิก</a>
+        {% endif %}
+    {% elif b["status"] == "deposit_paid" %}
+        <a class="btn" href="/remaining-payment/{{ b['action_id'] }}">ชำระส่วนที่เหลือ</a>
+        {% if b["is_grouped"] %}
+            <span class="muted" style="display:block;margin-top:6px;">ส่งคำขอยกเลิกแยกแต่ละช่วงในส่วนช่วงที่จอง</span>
+        {% else %}
+            <a class="btn btn-warning" href="/cancel/{{ b['action_id'] }}" onclick="return confirm('ต้องการส่งคำขอยกเลิกการจองนี้ใช่หรือไม่? หากแอดมินอนุมัติ ระบบจะคืนเงินภายใน 2-4 วันทำการ')">ส่งคำขอยกเลิก</a>
+        {% endif %}
+    {% elif b["status"] == "waiting_remaining_slip_approval" %}
+        <span class="muted">รอตรวจสอบสลิปส่วนที่เหลือ</span>
+    {% if b["refund_amount"] and b["refund_amount"] > 0 %}<span class="muted" style="display:block;margin-bottom:6px;">ยอดคืน: {{ "%.2f"|format(b["refund_amount"]) }} บาท</span>{% endif %}{% if b["refund_method"] %}<span class="muted" style="display:block;margin-bottom:6px;">รับเงินคืนทาง {{ b["refund_method"] }} / {{ b["refund_account"] }}</span>{% endif %}
+    {% if b["refund_amount"] and b["refund_amount"] > 0 %}<span class="muted" style="display:block;margin-bottom:6px;">ยอดคืน: {{ "%.2f"|format(b["refund_amount"]) }} บาท</span>{% endif %}{% if b["refund_method"] %}<span class="muted" style="display:block;margin-bottom:6px;">วิธีรับเงินคืน: {% if b["refund_method"] == "promptpay" %}PromptPay{% else %}บัญชีธนาคาร{% endif %}</span>{% endif %}{% if b["refund_bank"] %}<span class="muted" style="display:block;margin-bottom:6px;">ธนาคาร: {{ get_bank_meta(b["refund_bank"])["name"] }}</span>{% endif %}{% if b["refund_account"] %}<span class="muted" style="display:block;margin-bottom:6px;">ปลายทางคืนเงิน: {{ b["refund_account"] }}</span>{% endif %}
+    {% elif b["status"] == "remaining_counter_pending" %}
+        <a class="btn" href="/remaining-payment/{{ b['action_id'] }}">เปลี่ยนเป็นสแกน QR</a>
+        {% if b["is_grouped"] %}
+            <span class="muted" style="display:block;margin-top:6px;">ส่งคำขอยกเลิกแยกแต่ละช่วงในส่วนช่วงที่จอง</span>
+        {% else %}
+            <a class="btn btn-warning" href="/cancel/{{ b['action_id'] }}" onclick="return confirm('ต้องการส่งคำขอยกเลิกการจองนี้ใช่หรือไม่? หากแอดมินอนุมัติ ระบบจะคืนเงินภายใน 2-4 วันทำการ')">ส่งคำขอยกเลิก</a>
+        {% endif %}
+        <span class="muted" style="display:block;margin-top:6px;">เลือกจ่ายยอดคงเหลือหน้าเคาน์เตอร์แล้ว</span>
+    {% elif b["status"] == "fully_paid" %}
+        {% if b["is_grouped"] %}
+            <span class="muted">ส่งคำขอยกเลิกแยกแต่ละช่วงในส่วนช่วงที่จอง</span>
+        {% else %}
+            <a class="btn btn-warning" href="/cancel/{{ b['action_id'] }}" onclick="return confirm('ต้องการส่งคำขอยกเลิกการจองนี้ใช่หรือไม่? หากแอดมินอนุมัติ ระบบจะคืนเงินภายใน 2-4 วันทำการ')">ส่งคำขอยกเลิก</a>
+        {% endif %}
+    {% elif b["status"] == "cancel_requested" %}
+        <span class="muted">ส่งคำขอยกเลิกแล้ว</span>
+    {% elif b["status"] == "refund_pending" %}
+        <span class="muted">รอคืนเงินภายใน 2-4 วัน</span>
+    {% elif b["status"] == "refunded" %}
+        <span class="muted">คืนเงินแล้ว</span>
+    {% else %}
+        <span class="muted">-</span>
+    {% endif %}
+{%- endmacro %}
+
+{% if bookings %}
+<div class="desktop-bookings-view table-wrap">
+<table class="bookings-table">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>ห้อง</th>
+        <th>ช่วงที่จอง</th>
+        <th>คืน</th>
+        <th>ยอดรวม</th>
+        <th>รูปแบบจ่าย</th>
+        <th>สถานะ</th>
+        <th>หมดเวลา</th>
+        <th>จัดการ</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for b in bookings %}
+    <tr>
+        <td>{{ b["display_id"] }}</td>
+        <td>
+            {{ b["room_name"] }}
+            {% if b["is_grouped"] %}
+                <div class="muted" style="margin-top:6px;">รวม {{ b["segment_count"] }} ช่วงที่จองในรายการเดียว</div>
+                {% if b["active_segment_count"] != b["segment_count"] %}
+                    <div class="muted" style="margin-top:4px;">คำนวณยอดจากช่วงที่ยังไม่ถูกยกเลิก</div>
+                {% endif %}
+            {% endif %}
+        </td>
+        <td>
+            {% for segment in b["segments"] %}
+                <div{% if not loop.first %} style="margin-top:10px;padding-top:10px;border-top:1px dashed #ddd;"{% endif %}>
+                    <div>{{ segment["range_text"] }}</div>
+                    <div class="muted" style="margin-top:4px;">{{ segment["nights"] }} คืน · {{ "%.2f"|format(segment["total"]) }} บาท</div>
+                    <div class="muted" style="margin-top:4px;">สถานะช่วงนี้: {{ segment_status_text(segment) }}</div>
+                    {% if b["is_grouped"] and segment["cancel_allowed"] %}
+                        <div style="margin-top:6px;">
+                            <a class="btn btn-danger" href="/cancel/{{ segment['id'] }}" onclick="return confirm('ต้องการยกเลิกเฉพาะช่วงนี้ใช่หรือไม่?')">ยกเลิกเฉพาะช่วงนี้</a>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </td>
+        <td>{{ b["nights"]|int }}</td>
+        <td>{{ "%.2f"|format(b["total"]) }}</td>
+        <td>{% if b["paytype"] == "deposit" %}มัดจำ 25%{% else %}จ่ายเต็ม{% endif %}</td>
+        <td>{{ booking_status_badge(b["status"]) }}</td>
+        <td>{{ b["payment_deadline"] if b["payment_deadline"] else "-" }}</td>
+        <td>{{ booking_actions(b) }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+
+<div class="mobile-bookings-view">
+    {% for b in bookings %}
+    <div class="booking-mobile-card card">
+        <div class="booking-mobile-head">
+            <div>
+                <div class="booking-mobile-room">{{ b["room_name"] }}</div>
+                <div class="muted">รหัสรายการ #{{ b["display_id"] }}</div>
+                {% if b["is_grouped"] %}
+                    <div class="muted" style="margin-top:6px;">รวม {{ b["segment_count"] }} ช่วงที่จองในรายการเดียว</div>
+                    {% if b["active_segment_count"] != b["segment_count"] %}
+                        <div class="muted" style="margin-top:4px;">คำนวณยอดจากช่วงที่ยังไม่ถูกยกเลิก</div>
+                    {% endif %}
+                {% endif %}
+            </div>
+            <div class="booking-mobile-status">{{ booking_status_badge(b["status"]) }}</div>
+        </div>
+
+        <div class="booking-mobile-summary">
+            <div class="summary-item"><span>คืน</span><strong>{{ b["nights"]|int }}</strong></div>
+            <div class="summary-item"><span>ยอดรวม</span><strong>{{ "%.2f"|format(b["total"]) }} บาท</strong></div>
+            <div class="summary-item"><span>รูปแบบจ่าย</span><strong>{% if b["paytype"] == "deposit" %}มัดจำ 25%{% else %}จ่ายเต็ม{% endif %}</strong></div>
+            <div class="summary-item"><span>หมดเวลา</span><strong>{{ b["payment_deadline"] if b["payment_deadline"] else "-" }}</strong></div>
+        </div>
+
+        <div class="booking-mobile-segments">
+            <div class="booking-mobile-label">ช่วงที่จอง</div>
+            {% for segment in b["segments"] %}
+            <div class="booking-segment-card{% if segment['status'] in ['cancelled','cancel_requested','refunded','refund_pending','rejected'] %} is-dim{% endif %}">
+                <div class="segment-range">{{ segment["range_text"] }}</div>
+                <div class="segment-meta">{{ segment["nights"] }} คืน · {{ "%.2f"|format(segment["total"]) }} บาท</div>
+                <div class="segment-meta">สถานะช่วงนี้: {{ segment_status_text(segment) }}</div>
+                {% if b["is_grouped"] and segment["cancel_allowed"] %}
+                <div class="segment-actions">
+                    <a class="btn btn-danger" href="/cancel/{{ segment['id'] }}" onclick="return confirm('ต้องการยกเลิกเฉพาะช่วงนี้ใช่หรือไม่?')">ยกเลิกเฉพาะช่วงนี้</a>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="booking-mobile-actions">
+            {{ booking_actions(b) }}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card">ยังไม่มีรายการจอง</div>
+{% endif %}
+{% endblock %}
