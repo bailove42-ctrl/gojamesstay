@@ -1,124 +1,72 @@
 {% extends "base.html" %}
-{% block title %}หน้าแรก{% endblock %}
+{% block title %}ห้องพัก{% endblock %}
 {% block content %}
 <style>
-.room-card{
-    position:relative;
-}
-.room-image-wrapper{
-    position:relative;
-    overflow:hidden;
-    border-radius:18px;
-    margin-bottom:14px;
-}
-.room-card-maintenance .room-cover{
-    filter: grayscale(100%) brightness(0.12);
-}
-.coming-soon-badge{
-    position:absolute;
-    top:12px;
-    left:12px;
-    background:#FFD54F;
-    color:#5A4300;
-    font-weight:800;
-    padding:8px 12px;
-    border-radius:10px;
-    font-size:13px;
-    line-height:1;
-    box-shadow:0 4px 10px rgba(0,0,0,0.25);
-}
-.maintenance-note{
-    color:#7c5f12;
-    background:#fff8e8;
-    border:1px solid #f2dfaa;
-    padding:10px 12px;
-    border-radius:12px;
-    margin:10px 0 12px;
-    line-height:1.5;
-}
-.btn-disabled{
-    display:inline-block;
-    background:#d7cce9 !important;
-    color:#6f6284 !important;
-    cursor:not-allowed;
-    pointer-events:none;
-    text-decoration:none;
-}
-</style>
-<div class="hero">
-    <h1>โกเจมส์ ที่พักตากอากาศ</h1>
-    <p class="muted">บรรยากาศเงียบสงบ เหมาะสำหรับการพักผ่อนท่ามกลางความเป็นส่วนตัวและธรรมชาติที่ผ่อนคลาย</p>
-    <p class="muted">สัมผัสการพักผ่อนที่เรียบง่าย อบอุ่น และเป็นกันเอง พร้อมห้องพักหลากหลายรูปแบบให้เลือกตามสไตล์ของคุณ</p>
+.rooms-page{max-width:1120px;margin:0 auto;}
+.rooms-page-hero{margin:8px 0 20px;display:flex;justify-content:space-between;align-items:flex-end;gap:16px;}
+.rooms-page-hero h1{font-size:34px;margin:0 0 6px;display:flex;align-items:center;gap:10px;color:#24143a;}
+.rooms-page-hero p{margin:0;color:#5e5873;font-weight:600;}
+.rooms-hero-note{display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border-radius:999px;background:#fff7d8;color:#614300;border:1px solid #f2d77c;font-weight:900;white-space:nowrap;}
+.modern-room-list{display:flex;flex-direction:column;gap:18px;}
+.modern-room-card{display:grid;grid-template-columns:340px minmax(240px,1fr) 170px;gap:22px;align-items:center;background:#fff;border:1px solid #eadcff;border-radius:22px;padding:14px;box-shadow:0 14px 36px rgba(20,14,31,.18);overflow:hidden;}
+.modern-room-card:hover{transform:translateY(-2px);box-shadow:0 18px 44px rgba(20,14,31,.22);transition:.18s ease;}
+.modern-room-image{width:100%;height:210px;object-fit:cover;border-radius:17px;background:#eee7fb;display:block;}
+.modern-room-main{min-width:0;padding:6px 0;display:flex;flex-direction:column;gap:10px;justify-content:center;}
+.modern-room-title{margin:0;font-size:27px;color:#5f32ad;display:flex;align-items:center;gap:12px;line-height:1.2;word-break:break-word;}
+.modern-room-mark{width:38px;height:38px;border-radius:14px;background:linear-gradient(135deg,#eadcff,#cdb5ff);display:inline-flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(111,66,193,.14);flex-shrink:0;}
+.modern-room-mark::before{content:"";width:16px;height:16px;border-radius:50%;background:#7b4fe0;box-shadow:0 0 0 6px rgba(123,79,224,.14);}
+.modern-room-tags{display:flex;flex-wrap:wrap;gap:8px;}
+.modern-room-tags span{font-size:13px;font-weight:800;padding:7px 10px;border-radius:999px;background:#f5efff;color:#5f32ad;border:1px solid #eadcff;}
+.modern-room-action{display:flex;flex-direction:column;justify-content:center;align-items:flex-end;gap:12px;border-left:1px solid #eee3ff;padding-left:20px;}
+.modern-price{font-size:17px;font-weight:900;color:#5f32ad;white-space:nowrap;background:#f3ecff;border-radius:999px;padding:9px 13px;}
+.modern-room-card .btn{min-width:128px;padding:12px 16px;border-radius:13px;background:#6f42c1;box-shadow:0 8px 18px rgba(111,66,193,.18);}
+.coming-soon-badge{display:inline-flex;background:#FFD54F;color:#5A4300;font-weight:900;padding:8px 12px;border-radius:999px;font-size:13px;}
+.room-card-maintenance .modern-room-image{filter:grayscale(100%) brightness(.55);}@media (max-width:980px){.rooms-page-hero{align-items:flex-start;flex-direction:column;}.modern-room-card{grid-template-columns:1fr;}.modern-room-image{height:250px;}.modern-room-action{align-items:flex-start;border-left:0;border-top:1px solid #eee3ff;padding:14px 4px 4px;}.modern-room-title{font-size:26px;}}
+
+/* ปรับหน้าแรกให้ไม่ล้นและดูเหมือนเว็บจองที่พักมากขึ้น */
+.rooms-page{max-width:1180px;}
+.modern-room-card{grid-template-columns:minmax(260px,330px) minmax(0,1fr) minmax(150px,180px);gap:18px;padding:16px;overflow:visible;}
+.modern-room-main{min-width:0;}
+.modern-room-title{font-size:25px;overflow-wrap:anywhere;}
+.modern-room-action{width:100%;min-width:0;align-items:flex-end;border-left:1px solid rgba(234,227,255,.7);padding-left:16px;}
+.modern-price{max-width:100%;white-space:normal;text-align:center;line-height:1.35;padding:8px 12px;}
+.modern-room-card .btn{max-width:100%;white-space:nowrap;text-align:center;}
+@media (max-width:1120px){.modern-room-card{grid-template-columns:300px minmax(0,1fr);}.modern-room-action{grid-column:2;align-items:flex-start;border-left:0;border-top:1px solid #eee3ff;padding:12px 0 0;}.modern-price{text-align:left;}}
+@media (max-width:720px){.modern-room-card{grid-template-columns:1fr;}.modern-room-action{grid-column:auto}.modern-room-image{height:230px;}.modern-room-title{font-size:23px;}}</style>
+
+<div class="rooms-page">
+<div class="rooms-page-hero">
+    <h1>ห้องพัก</h1>
+    <p>เลือกห้องพักที่ตอบโจทย์การพักผ่อนของคุณ</p>
 </div>
 
-<div class="grid">
+<div class="modern-room-list">
     {% for room in rooms %}
-    <div class="card room-card {% if not room.get('is_open', True) %}room-card-maintenance{% endif %}">
-        <div class="room-image-wrapper">
-            <img class="room-cover" src="{{ url_for('static', filename=room.cover) }}" alt="{{ room.name }}">
-            {% if not room.get('is_open', True) %}
-            <div class="coming-soon-badge">🚧 COMING SOON</div>
+    <div class="modern-room-card {% if not room.get('is_open', True) %}room-card-maintenance{% endif %}">
+        <img class="modern-room-image" src="{{ url_for('static', filename=room.cover) }}" alt="{{ room.name }}">
+        <div class="modern-room-main">
+            <h2 class="modern-room-title"><span class="modern-room-mark" aria-hidden="true"></span>{{ room.name }}</h2>
+            {% if room.get('is_open', True) %}
+            <div class="modern-room-tags"><span>สำหรับ 2 ท่าน</span><span>เตียงใหญ่</span><span>ห้องน้ำส่วนตัว</span></div>
+            {% else %}
+            <div class="modern-room-tags"><span>{{ room.status_text or 'ยังไม่พร้อมให้บริการ' }}</span></div>
             {% endif %}
         </div>
-        <h3>{{ room.name }}</h3>
-        <p class="muted">{{ room.detail }}</p>
-        <p><b>{{ room.price }} บาท / คืน</b></p>
-        {% if not room.get('is_open', True) %}
-            <p class="maintenance-note">{{ room.get('maintenance_note', 'ห้องนี้ยังไม่พร้อมให้บริการ และจะเปิดให้จองในภายหลัง') }}</p>
-            <span class="btn btn-disabled">ยังไม่เปิดให้จอง</span>
-        {% elif session.get('user') %}
-            <a class="btn" href="/booking/{{ room.id }}">จองห้องนี้</a>
-        {% else %}
-            <a class="btn" href="/login">เข้าสู่ระบบก่อนจอง</a>
-        {% endif %}
+        <div class="modern-room-action">
+            {% if not room.get('is_open', True) %}
+                <span class="coming-soon-badge">COMING SOON</span>
+                <span class="btn btn-disabled">ยังไม่เปิดให้จอง</span>
+            {% else %}
+                <div class="modern-price">ราคา {{ room.price }} บาท / คืน</div>
+                {% if session.get('user') %}
+                    <a class="btn" href="/booking/{{ room.id }}">ดูรายละเอียด</a>
+                {% else %}
+                    <a class="btn" href="/login">เข้าสู่ระบบก่อนจอง</a>
+                {% endif %}
+            {% endif %}
+        </div>
     </div>
     {% endfor %}
 </div>
-
-<style>
-.room-card{
-    position:relative;
-}
-.room-image-wrapper{
-    position:relative;
-    overflow:hidden;
-    border-radius:18px;
-    margin-bottom:14px;
-}
-.room-card-maintenance .room-cover{
-    filter: grayscale(100%) brightness(0.12);
-}
-.coming-soon-badge{
-    position:absolute;
-    top:12px;
-    left:12px;
-    background:#FFD54F;
-    color:#5A4300;
-    font-weight:800;
-    padding:8px 12px;
-    border-radius:10px;
-    font-size:13px;
-    line-height:1;
-    box-shadow:0 4px 10px rgba(0,0,0,0.25);
-}
-.maintenance-note{
-    color:#7c5f12;
-    background:#fff8e8;
-    border:1px solid #f2dfaa;
-    padding:10px 12px;
-    border-radius:12px;
-    margin:10px 0 12px;
-    line-height:1.5;
-}
-.btn-disabled{
-    display:inline-block;
-    background:#d7cce9 !important;
-    color:#6f6284 !important;
-    cursor:not-allowed;
-    pointer-events:none;
-    text-decoration:none;
-}
-</style>
-
-
+</div>
 {% endblock %}

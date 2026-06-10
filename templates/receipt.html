@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}ใบเสร็จรับเงิน{% endblock %}
+{% block content %}
+<div class="card receipt-card">
+    <div class="receipt-head">
+        <div>
+            <h2>ใบเสร็จรับเงิน</h2>
+            <p class="muted">GoJames Vacation Home</p>
+        </div>
+        <button class="btn" onclick="window.print()">พิมพ์ / บันทึก PDF</button>
+    </div>
+
+    <div class="receipt-meta">
+        <div><b>เลขที่ใบเสร็จ</b><br>{{ booking["receipt_no"] or "-" }}</div>
+        <div><b>วันที่ออกใบเสร็จ</b><br>{{ booking["receipt_issued_at"] or "-" }}</div>
+        <div><b>รหัสการจอง</b><br>#{{ booking["id"] }}</div>
+    </div>
+
+    <hr>
+
+    <div class="receipt-grid">
+        <div><b>ห้องพัก</b><br>{{ booking["room_name"] }}</div>
+        <div><b>ผู้จอง</b><br>{{ booking["username"] }}</div>
+        <div><b>วันเข้าพัก</b><br>{{ booking["checkin"] }} {{ booking["checkin_time"] }}</div>
+        <div><b>วันออก</b><br>{{ booking["checkout"] }} {{ booking["checkout_time"] }}</div>
+        <div><b>จำนวนคืน</b><br>{{ booking["nights"] }} คืน</div>
+        <div><b>ช่องทางชำระ</b><br>
+            {% if booking["payment_method"] == "promptpay" %}PromptPay
+            {% elif booking["payment_method"] == "bank_transfer" %}โอนธนาคาร
+            {% elif booking["payment_method"] == "cash" %}เงินสด
+            {% elif booking["payment_method"] == "transfer" %}โอนหน้าเคาน์เตอร์
+            {% elif booking["payment_method"] == "counter" %}หน้าเคาน์เตอร์
+            {% else %}{{ booking["payment_method"] or "-" }}{% endif %}
+        </div>
+    </div>
+
+    <table class="receipt-table">
+        <thead>
+            <tr>
+                <th>รายการ</th>
+                <th>จำนวน</th>
+                <th>ยอดเงิน</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>ค่าที่พัก {{ booking["room_name"] }}</td>
+                <td>{{ booking["nights"] }} คืน</td>
+                <td>{{ "%.2f"|format(booking["total"] or 0) }} บาท</td>
+            </tr>
+        </tbody>
+        <tfoot>
+            <tr>
+                <th colspan="2">รวมทั้งสิ้น</th>
+                <th>{{ "%.2f"|format(booking["total"] or 0) }} บาท</th>
+            </tr>
+            <tr>
+                <th colspan="2">ชำระแล้ว</th>
+                <th>{{ "%.2f"|format(booking["paid"] or 0) }} บาท</th>
+            </tr>
+        </tfoot>
+    </table>
+
+    <p class="muted receipt-note">เอกสารนี้ออกโดยระบบจองที่พัก GoJames Vacation Home</p>
+</div>
+
+<style>
+.receipt-card{
+    max-width:820px;
+    margin:0 auto;
+    padding:28px;
+}
+.receipt-head{
+    display:flex;
+    justify-content:space-between;
+    gap:16px;
+    align-items:flex-start;
+}
+.receipt-head h2{
+    margin:0 0 6px;
+}
+.receipt-meta,
+.receipt-grid{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:14px;
+    margin:18px 0;
+}
+.receipt-meta > div,
+.receipt-grid > div{
+    background:#fbf8ff;
+    border:1px solid #e3d7f8;
+    border-radius:14px;
+    padding:12px;
+}
+.receipt-table{
+    margin-top:18px;
+    border-radius:14px;
+    overflow:hidden;
+}
+.receipt-table th,
+.receipt-table td{
+    text-align:left;
+}
+.receipt-note{
+    margin-top:18px;
+}
+@media(max-width:720px){
+    .receipt-head{
+        flex-direction:column;
+    }
+    .receipt-meta,
+    .receipt-grid{
+        grid-template-columns:1fr;
+    }
+}
+@media print{
+    .navbar,
+    .receipt-head .btn{
+        display:none !important;
+    }
+    body{
+        background:#fff !important;
+    }
+    .receipt-card{
+        box-shadow:none !important;
+        border:none !important;
+    }
+}
+</style>
+{% endblock %}

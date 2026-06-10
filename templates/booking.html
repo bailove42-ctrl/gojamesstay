@@ -1,116 +1,210 @@
 {% extends "base.html" %}
 {% block title %}จองห้องพัก{% endblock %}
 {% block content %}
-<div class="card" style="max-width:760px; margin:auto;">
-    <h2>{{ room.name }}</h2>
-    <p class="muted">{{ room.detail }}</p>
 
+{% macro amenity_icon(icon) -%}
+{% if icon == 'wifi' %}
+<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13a10 10 0 0 1 14 0"/><path d="M8.5 16.5a5 5 0 0 1 7 0"/><path d="M12 20h.01"/></svg>
+{% elif icon == 'air' %}
+<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="6" rx="2"/><path d="M7 14v1.5"/><path d="M12 14v2.5"/><path d="M17 14v1.5"/><path d="M8 18h8"/></svg>
+{% elif icon == 'fridge' %}
+<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="3" width="10" height="18" rx="2"/><path d="M7 10h10"/><path d="M10 7v1"/><path d="M10 13v1"/></svg>
+{% elif icon == 'bed' %}
+<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11V6"/><path d="M4 18v-7h16v7"/><path d="M20 11V9a3 3 0 0 0-3-3H9"/><path d="M4 14h16"/><path d="M6 18v-2"/><path d="M18 18v-2"/></svg>
+{% elif icon == 'bath' %}
+<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12h12v3a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4v-3Z"/><path d="M4 12h16"/><path d="M8 19l-1 2"/><path d="M16 19l1 2"/><path d="M9 8a3 3 0 0 1 6 0v4"/><path d="M15 8h2"/></svg>
+{% endif %}
+{%- endmacro %}
 
-    <div class="room-carousel" id="roomCarousel">
-        <button type="button" class="carousel-btn prev" onclick="moveSlide(-1)">‹</button>
-        <div class="carousel-track-wrap">
-            <div class="carousel-track" id="carouselTrack">
-                {% for img in room.images %}
-                <div class="carousel-slide">
-                    <img src="{{ url_for('static', filename=img) }}" alt="{{ room.name }}" onclick="openZoom({{ loop.index0 }})">
+<div class="hotel-booking-page">
+    <div class="hotel-booking-card">
+        <div class="hotel-room-header">
+            <div>
+                <h2>{{ room.name }}</h2>
+                <p>{{ room.detail }}</p>
+            </div>
+            <div class="hotel-price-card">
+                <span>เริ่มต้น</span>
+                <strong>{{ room.price }} บาท</strong>
+                <small>/ คืน</small>
+            </div>
+        </div>
+
+        <div class="room-carousel" id="roomCarousel">
+            <button type="button" class="carousel-btn prev" onclick="moveSlide(-1)">‹</button>
+            <div class="carousel-track-wrap">
+                <div class="carousel-track" id="carouselTrack">
+                    {% for img in room.images %}
+                    <div class="carousel-slide">
+                        <img src="{{ url_for('static', filename=img) }}" alt="{{ room.name }}" onclick="openZoom({{ loop.index0 }})">
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <button type="button" class="carousel-btn next" onclick="moveSlide(1)">›</button>
+        </div>
+
+        <div class="carousel-dots" id="carouselDots">
+            {% for img in room.images %}
+            <button type="button" class="carousel-dot {% if loop.first %}active{% endif %}" onclick="goToSlide({{ loop.index0 }})"></button>
+            {% endfor %}
+        </div>
+
+        <div class="gallery-hint">แตะหรือคลิกที่รูปเพื่อซูมดูภาพ</div>
+
+        <div class="image-zoom-modal" id="imageZoomModal" onclick="closeZoom(event)">
+            <button type="button" class="zoom-close" onclick="closeZoom(event); return false;">×</button>
+            <button type="button" class="zoom-nav prev" onclick="moveZoom(-1, event); return false;">‹</button>
+            <img id="zoomedImage" src="" alt="{{ room.name }}">
+            <button type="button" class="zoom-nav next" onclick="moveZoom(1, event); return false;">›</button>
+        </div>
+
+        {% if room.amenities %}
+        <section class="hotel-section">
+            <h3>สิ่งอำนวยความสะดวก</h3>
+            <div class="amenities-grid">
+                {% for item in room.amenities %}
+                <div class="amenity-item">
+                    <span class="amenity-icon">{{ amenity_icon(item.icon) }}</span>
+                    <span>{{ item.label }}</span>
                 </div>
                 {% endfor %}
             </div>
-        </div>
-        <button type="button" class="carousel-btn next" onclick="moveSlide(1)">›</button>
-    </div>
+        </section>
+        {% endif %}
 
-    <div class="carousel-dots" id="carouselDots">
-        {% for img in room.images %}
-        <button type="button" class="carousel-dot {% if loop.first %}active{% endif %}" onclick="goToSlide({{ loop.index0 }})"></button>
-        {% endfor %}
-    </div>
+        <section class="hotel-section booking-panel">
+            <div class="section-title-row">
+                <div>
+                    <h3>รายละเอียดการเข้าพัก</h3>
+                    <p>เลือกวันเข้าพัก เวลาเข้าพัก และวันออก</p>
+                </div>
+            </div>
+            <form method="post" id="bookingForm">
+                <div id="segmentsContainer">
+                    <div class="segment-card" data-segment-index="0">
+                        <div class="segment-header">
+                            <h4>ช่วงเข้าพักหลัก</h4>
+                        </div>
 
-    <div class="gallery-hint">แตะหรือคลิกที่รูปเพื่อซูมดูภาพ</div>
+                        <div class="booking-fields-grid">
+                            <div class="booking-field">
+                                <label>วันเข้าพัก</label>
+                                <input type="date" class="checkin" name="checkin" min="{{ today_str }}" required>
+                            </div>
 
-    <div class="image-zoom-modal" id="imageZoomModal" onclick="closeZoom(event)">
-        <button type="button" class="zoom-close" onclick="closeZoom(event); return false;">×</button>
-        <button type="button" class="zoom-nav prev" onclick="moveZoom(-1, event); return false;">‹</button>
-        <img id="zoomedImage" src="" alt="{{ room.name }}">
-        <button type="button" class="zoom-nav next" onclick="moveZoom(1, event); return false;">›</button>
-    </div>
+                            <div class="booking-field">
+                                <label>วันออก</label>
+                                <input type="date" class="checkout" name="checkout" min="{{ today_str }}" required>
+                                <small>เช็กเอาต์ภายใน 12:00 น. ของวันออก</small>
+                            </div>
 
-    <p><b>ราคา {{ room.price }} บาท / คืน</b></p>
-    <p class="booking-hint">จองได้ทั้งแบบช่วงวันต่อเนื่อง และแบบหลายช่วงวันที่ไม่ติดกัน เช่น พักวันที่ 13 แล้วจองเพิ่มอีกช่วงวันที่ 16 ได้</p>
+                            <div class="booking-field">
+                                <label>เวลาเข้าพัก</label>
+                                <select class="checkin_time" name="checkin_time" required></select>
+                            </div>
 
-    <form method="post" id="bookingForm">
-        <div id="segmentsContainer">
-            <div class="segment-card" data-segment-index="0">
-                <div class="segment-header">
-                    <h3>ช่วงเข้าพักหลัก</h3>
+                            <input type="hidden" class="checkout_time" name="checkout_time" value="12:00">
+                        </div>
+                    </div>
                 </div>
 
-                <label>วันเข้าพัก</label>
-                <input type="date" class="checkin" name="checkin" min="{{ today_str }}" required>
+                <p class="booking-policy-note">เช็กอินตั้งแต่ 14:00 น. / เช็กเอาต์ภายใน 12:00 น. ของวันออก</p>
 
-                <label>เวลาเข้าพัก</label>
-                <select class="checkin_time" name="checkin_time" required></select>
+                <input type="hidden" name="extra_segments" id="extra_segments">
 
-                <label>วันออก</label>
-                <p class="booking-hint">เลือกได้ทั้งวันเดียวกันหรือวันหลังจากวันเข้าพัก</p>
-                <input type="date" class="checkout" name="checkout" min="{{ today_str }}" required>
+                <div class="segment-tools">
+                    <button class="btn btn-secondary" type="button" id="addSegmentBtn">+ เพิ่มช่วงวันพัก</button>
+                    <span>ใช้กรณีต้องการจองหลายวันแบบไม่ต่อเนื่อง เช่น 13 และ 16</span>
+                </div>
 
-                <label>เวลาออก</label>
-                <select class="checkout_time" name="checkout_time" required></select>
-            </div>
-        </div>
+                <div class="booking-summary" id="booking_summary">สรุปการจอง: 1 ช่วงวัน</div>
 
-        <input type="hidden" name="extra_segments" id="extra_segments">
+                <div class="booking-price-summary">
+                    <div id="payment_calc_box">ระบบจะคำนวณยอดชำระให้อัตโนมัติ</div>
+                </div>
 
-        <div class="segment-tools">
-            <button class="btn btn-secondary" type="button" id="addSegmentBtn">+ เพิ่มช่วงวันพัก</button>
-            <span class="muted">ใช้กรณีต้องการจองหลายวันแบบไม่ต่อเนื่อง เช่น 13 และ 16</span>
-        </div>
+                <div class="payment-row">
+                    <label>รูปแบบการชำระเงิน</label>
+                    <select name="paytype" id="paytype" onchange="updateBookingSummary()">
+                        <option value="full">จ่ายเต็ม 100%</option>
+                        <option value="deposit">มัดจำ 25%</option>
+                    </select>
+                </div>
 
-        <div class="booking-summary" id="booking_summary">สรุปการจอง: 1 ช่วงวัน</div>
-        <div class="card" style="background:#faf5ff; margin-bottom:14px;">
-            <div id="payment_calc_box" class="muted">ระบบจะคำนวณยอดชำระให้อัตโนมัติ</div>
-        </div>
-
-        <label>รูปแบบการชำระเงิน</label>
-        <select name="paytype" id="paytype" onchange="updateBookingSummary()">
-            <option value="full">จ่ายเต็ม 100%</option>
-            <option value="deposit">มัดจำ 25%</option>
-        </select>
-
-        <button class="btn" type="submit">ส่งคำขอจอง</button>
-    </form>
+                <button class="btn submit-booking-btn" type="submit">ส่งคำขอจอง</button>
+            </form>
+        </section>
+    </div>
 </div>
 
-
 <style>
-.room-carousel{
-    position:relative;
-    margin:14px 0 8px;
+.hotel-booking-page{
+    max-width:980px;
+    margin:0 auto 56px;
 }
-.carousel-track-wrap{
-    overflow:hidden;
-    border-radius:18px;
+.hotel-booking-card{
+    background:var(--surface,#fff);
+    border:1px solid var(--border,#ddd6f5);
+    border-radius:26px;
+    padding:24px;
+    box-shadow:0 14px 34px rgba(20,13,38,.10);
 }
-.carousel-track{
+.hotel-room-header{
     display:flex;
-    transition:transform .28s ease;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:18px;
+    margin-bottom:18px;
 }
-.carousel-slide{
-    min-width:100%;
+.hotel-room-header h2{
+    margin:0 0 8px;
+    font-size:30px;
+    color:var(--heading,#24143a);
 }
+.hotel-room-header p{
+    margin:0;
+    line-height:1.75;
+    color:var(--muted-text,#5e5873);
+    max-width:680px;
+}
+.hotel-price-card{
+    flex:0 0 150px;
+    background:var(--primary-soft,#f3ecff);
+    border:1px solid var(--border,#ddd6f5);
+    border-radius:18px;
+    padding:14px;
+    text-align:right;
+}
+.hotel-price-card span,
+.hotel-price-card small{
+    display:block;
+    color:var(--muted-text,#5e5873);
+    font-weight:700;
+}
+.hotel-price-card strong{
+    display:block;
+    color:var(--primary,#6f42c1);
+    font-size:22px;
+    margin:4px 0;
+}
+.room-carousel{position:relative;margin:18px 0 8px;}
+.carousel-track-wrap{overflow:hidden;border-radius:20px;}
+.carousel-track{display:flex;transition:transform .28s ease;}
+.carousel-slide{min-width:100%;}
 .carousel-slide img{
     display:block;
     width:100%;
-    height:420px;
+    height:340px;
     object-fit:cover;
-    cursor:zoom-in;
+    cursor:pointer;
     background:#eee7fb;
 }
 .carousel-btn{
     position:absolute;
     top:50%;
     transform:translateY(-50%);
+    z-index:2;
     width:42px;
     height:42px;
     border:none;
@@ -118,99 +212,469 @@
     background:rgba(47,36,66,.72);
     color:#fff;
     font-size:30px;
-    line-height:1;
     cursor:pointer;
-    z-index:2;
 }
-.carousel-btn.prev{left:10px;}
-.carousel-btn.next{right:10px;}
-.carousel-dots{
+.carousel-btn.prev{left:12px;}
+.carousel-btn.next{right:12px;}
+.carousel-dots{display:flex;justify-content:center;gap:8px;margin:10px 0 6px;}
+.carousel-dot{width:9px;height:9px;border-radius:999px;border:none;background:#d3c3f7;cursor:pointer;padding:0;}
+.carousel-dot.active{width:24px;background:#7b4fe0;}
+.gallery-hint{text-align:center;color:var(--muted-text,#6d627f);font-size:13px;margin-bottom:18px;}
+.image-zoom-modal{display:none;position:fixed;z-index:9999;inset:0;background:rgba(0,0,0,.82);align-items:center;justify-content:center;padding:20px;}
+.image-zoom-modal.open{display:flex;}
+.image-zoom-modal img{max-width:92vw;max-height:86vh;border-radius:16px;object-fit:contain;}
+.zoom-close,.zoom-nav{position:absolute;border:none;background:rgba(255,255,255,.16);color:#fff;cursor:pointer;border-radius:999px;}
+.zoom-close{right:22px;top:20px;width:42px;height:42px;font-size:28px;}
+.zoom-nav{top:50%;transform:translateY(-50%);width:48px;height:48px;font-size:34px;}
+.zoom-nav.prev{left:22px;}.zoom-nav.next{right:22px;}
+.hotel-section{
+    margin-top:22px;
+    padding:18px;
+    border:1px solid var(--border,#ddd6f5);
+    border-radius:20px;
+    background:var(--surface-2,#fbf8ff);
+}
+.hotel-section h3{
+    margin:0 0 14px;
+    font-size:20px;
+    color:var(--heading,#24143a);
+}
+.amenities-grid{
+    display:grid;
+    grid-template-columns:repeat(5,minmax(0,1fr));
+    gap:10px;
+}
+.amenity-item{
     display:flex;
-    justify-content:center;
-    gap:8px;
-    margin:10px 0 14px;
-}
-.carousel-dot{
-    width:10px;
-    height:10px;
-    border-radius:999px;
-    border:none;
-    background:#d3c3f7;
-    cursor:pointer;
-}
-.carousel-dot.active{
-    background:#8c6cf1;
-    transform:scale(1.15);
-}
-.gallery-hint{
-    text-align:center;
-    color:#7a6f8f;
-    font-size:14px;
-    margin-bottom:10px;
-}
-.image-zoom-modal{
-    position:fixed;
-    inset:0;
-    background:rgba(13,10,20,.92);
-    display:none;
+    flex-direction:column;
     align-items:center;
     justify-content:center;
-    z-index:9999;
-    padding:20px;
+    gap:8px;
+    min-height:82px;
+    padding:10px;
+    border-radius:15px;
+    background:var(--surface,#fff);
+    border:1px solid var(--border,#ddd6f5);
+    text-align:center;
+    font-weight:700;
+    font-size:13px;
+    color:var(--page-text,#24143a);
 }
-.image-zoom-modal.open{
+.amenity-icon{
+    width:34px;
+    height:34px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:12px;
+    background:var(--primary-soft,#f1e9ff);
+    color:var(--primary,#5f3dc4);
+}
+.amenity-icon svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.section-title-row{margin-bottom:14px;}
+.section-title-row h3{margin:0 0 4px;}
+.section-title-row p{margin:0;color:var(--muted-text,#5e5873);}
+.segment-card{
+    background:var(--surface,#fff);
+    border:1px solid var(--border,#ddd6f5);
+    border-radius:18px;
+    padding:18px;
+    margin-bottom:14px;
+}
+.segment-header{
     display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    margin-bottom:14px;
 }
-.image-zoom-modal img{
-    max-width:min(96vw, 1200px);
-    max-height:88vh;
-    object-fit:contain;
+.segment-header h4{
+    margin:0;
+    font-size:18px;
+    color:var(--heading,#24143a);
+}
+.booking-fields-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px 18px;
+}
+.booking-field label,
+.payment-row label{
+    display:block;
+    margin:0 0 7px;
+    font-weight:800;
+    color:var(--page-text,#24143a);
+}
+.booking-field input,
+.booking-field select,
+.payment-row select{
+    width:100%;
+    height:46px;
+    border-radius:12px;
+    border:1px solid var(--border,#ddd6f5);
+    background:var(--surface,#fff);
+    color:var(--page-text,#24143a);
+    padding:0 13px;
+    box-sizing:border-box;
+}
+.booking-field small{
+    display:block;
+    margin-top:6px;
+    color:var(--muted-text,#5e5873);
+    line-height:1.35;
+}
+.segment-tools{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+    margin:14px 0;
+}
+.segment-tools span{
+    color:var(--muted-text,#5e5873);
+    font-weight:600;
+    font-size:14px;
+}
+.booking-summary,
+.booking-price-summary{
+    border:1px solid var(--border,#ddd6f5);
+    background:var(--surface,#fff);
     border-radius:16px;
-    box-shadow:0 12px 32px rgba(0,0,0,.35);
+    padding:16px 18px;
+    margin:14px 0;
+    line-height:1.65;
+    color:var(--page-text,#24143a);
+    font-weight:700;
 }
-.zoom-close{
-    position:absolute;
-    top:18px;
-    right:18px;
-    width:44px;
-    height:44px;
-    border:none;
-    border-radius:999px;
-    background:rgba(255,255,255,.15);
-    color:#fff;
-    font-size:28px;
-    cursor:pointer;
+.payment-row{margin-top:14px;}
+.submit-booking-btn{
+    margin-top:14px;
+    min-width:160px;
+    height:46px;
+    border-radius:12px;
 }
-.zoom-nav{
-    position:absolute;
-    top:50%;
-    transform:translateY(-50%);
-    width:48px;
-    height:48px;
-    border:none;
-    border-radius:999px;
-    background:rgba(255,255,255,.14);
-    color:#fff;
-    font-size:34px;
-    cursor:pointer;
+.btn-small{
+    min-height:36px;
+    padding:8px 12px;
+    font-size:13px;
 }
-.zoom-nav.prev{left:18px;}
-.zoom-nav.next{right:18px;}
-@media (max-width: 768px){
+@media(max-width:760px){
+    .hotel-booking-card{padding:16px;border-radius:20px;}
+    .hotel-room-header{flex-direction:column;}
+    .hotel-price-card{flex:auto;width:100%;text-align:left;box-sizing:border-box;}
+    .carousel-slide img{height:250px;}
+    .amenities-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+    .booking-fields-grid{grid-template-columns:1fr;gap:13px;}
+    .segment-header{align-items:flex-start;flex-direction:column;}
+}
+
+/* ===== Booking page hotel-style polish from mockup ===== */
+.hotel-booking-card{
+    border-radius:24px !important;
+    box-shadow:0 18px 48px rgba(31,18,58,.10) !important;
+}
+.hotel-room-header{
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) 150px !important;
+    align-items:start !important;
+}
+.hotel-room-header h2{
+    font-size:30px !important;
+    letter-spacing:-.02em !important;
+}
+.hotel-room-header p{
+    font-size:15px !important;
+    line-height:1.75 !important;
+}
+.hotel-price-card{
+    text-align:center !important;
+    padding:16px 14px !important;
+    border-radius:18px !important;
+    background:linear-gradient(180deg,#f4ecff 0%,#eee3ff 100%) !important;
+}
+.hotel-price-card strong{
+    font-size:26px !important;
+    color:#6f42c1 !important;
+}
+.hotel-section{
+    background:linear-gradient(180deg,#ffffff 0%,#fbf8ff 100%) !important;
+}@media(max-width:760px){
+    .hotel-room-header{
+        grid-template-columns:1fr !important;
+    }
+}
+
+
+/* ===== FINAL BOOKING POLISH ===== */
+.hotel-booking-page{
+    max-width:1080px !important;
+}
+.hotel-booking-card{
+    border-radius:26px !important;
+    padding:24px !important;
+}
+.hotel-room-header{
+    gap:18px !important;
+}
+.hotel-price-card{
+    background:linear-gradient(180deg,#f5efff,#eee3ff) !important;
+    border-radius:18px !important;
+    border:1px solid #ddcdf8 !important;
+}
+.carousel-slide img{
+    border-radius:20px !important;
+}
+.amenities-grid{
+    gap:10px !important;
+}
+.amenity-item{
+    background:#fff !important;
+    border-color:#e4d8fa !important;
+}
+.booking-fields-grid{
+    gap:16px !important;
+}
+.submit-booking-btn{
+    min-width:170px !important;
+}
+
+
+/* ===== Booking page mobile overflow fix ===== */
+.hotel-booking-page{
+    width:100% !important;
+    max-width:1080px !important;
+    margin-left:auto !important;
+    margin-right:auto !important;
+    padding:0 !important;
+}
+.hotel-booking-card{
+    width:100% !important;
+    max-width:100% !important;
+    overflow:hidden !important;
+}
+.hotel-section,
+.segment-card,
+.booking-summary,
+.booking-price-summary{
+    width:100% !important;
+    max-width:100% !important;
+}
+.booking-fields-grid{
+    min-width:0 !important;
+}
+.booking-field{
+    min-width:0 !important;
+}
+.booking-field input,
+.booking-field select,
+.payment-row select{
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+}
+.segment-tools{
+    width:100% !important;
+}
+.segment-tools .btn{
+    max-width:100% !important;
+}
+@media(max-width:760px){
+    .hotel-booking-page{
+        width:100% !important;
+        max-width:100% !important;
+        margin:0 auto 34px !important;
+    }
+    .hotel-booking-card{
+        padding:12px !important;
+        border-radius:18px !important;
+        box-shadow:0 8px 22px rgba(66,35,118,.08) !important;
+    }
+    .hotel-room-header{
+        grid-template-columns:1fr !important;
+        gap:12px !important;
+    }
+    .hotel-room-header h2{
+        font-size:24px !important;
+    }
+    .hotel-room-header p{
+        font-size:14px !important;
+        line-height:1.65 !important;
+    }
+    .hotel-price-card{
+        width:100% !important;
+        flex:auto !important;
+        text-align:left !important;
+    }
+    .hotel-section{
+        padding:12px !important;
+        border-radius:16px !important;
+        margin-top:14px !important;
+    }
+    .hotel-section h3{
+        font-size:20px !important;
+        margin-bottom:8px !important;
+    }
+    .booking-panel .section-title-row h3{
+        font-size:23px !important;
+    }
+    .booking-panel .section-title-row p{
+        font-size:16px !important;
+    }
+    .segment-card{
+        padding:12px !important;
+        border-radius:16px !important;
+        margin:12px 0 !important;
+    }
+    .segment-header h4{
+        font-size:19px !important;
+    }
+    .booking-fields-grid{
+        display:grid !important;
+        grid-template-columns:1fr !important;
+        gap:12px !important;
+    }
+    .booking-field label,
+    .payment-row label{
+        font-size:16px !important;
+        margin-bottom:6px !important;
+    }
+    .booking-field input,
+    .booking-field select,
+    .payment-row select{
+        height:52px !important;
+        font-size:16px !important;
+        padding:0 12px !important;
+        border-radius:14px !important;
+    }
+    .booking-field small{
+        font-size:14px !important;
+        line-height:1.35 !important;
+    }
+    .segment-tools{
+        display:flex !important;
+        flex-direction:column !important;
+        align-items:stretch !important;
+        gap:10px !important;
+    }
+    .segment-tools .btn{
+        width:fit-content !important;
+        max-width:100% !important;
+        align-self:flex-start !important;
+        padding:10px 14px !important;
+        white-space:normal !important;
+    }
+    .segment-tools span{
+        display:block !important;
+        width:100% !important;
+        font-size:15px !important;
+        line-height:1.5 !important;
+    }
+    .booking-summary,
+    .booking-price-summary{
+        padding:14px !important;
+        border-radius:16px !important;
+        font-size:15px !important;
+        line-height:1.6 !important;
+        overflow-wrap:anywhere !important;
+    }
+    .submit-booking-btn{
+        width:100% !important;
+        min-width:0 !important;
+        height:50px !important;
+    }
     .carousel-slide img{
-        height:260px;
+        height:230px !important;
     }
-    .carousel-btn{
-        width:38px;
-        height:38px;
-        font-size:28px;
-    }
-    .zoom-nav{
-        width:42px;
-        height:42px;
-        font-size:30px;
+    .amenities-grid{
+        grid-template-columns:1fr 1fr !important;
     }
 }
+@media(max-width:420px){
+    .hotel-booking-card{
+        padding:10px !important;
+    }
+    .hotel-section{
+        padding:10px !important;
+    }
+    .segment-card{
+        padding:10px !important;
+    }
+    .booking-field input,
+    .booking-field select{
+        font-size:15px !important;
+    }
+}
+
+
+/* ===== Small resort flexible check-in/check-out rules ===== */
+.booking-standard-note{
+    margin:12px 0 0;
+    padding:12px 14px;
+    border-radius:14px;
+    background:#fff8df;
+    border:1px solid #ecd47c;
+    color:#5a4300;
+    font-weight:700;
+    line-height:1.45;
+}
+
+
+/* ===== Remove checkout time picker: fixed checkout at noon ===== */
+.fixed-checkout-time{
+    min-height:52px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:0 14px;
+    border:1px solid var(--border-2,#cdbbf1);
+    border-radius:14px;
+    background:#fbf8ff;
+    color:#24143a;
+    font-weight:900;
+}
+.fixed-checkout-time span{
+    color:#6b607a;
+    font-size:13px;
+    font-weight:700;
+}
+.checkout-fixed-field{
+    align-self:end;
+}
+@media(max-width:760px){
+    .fixed-checkout-time{
+        min-height:52px;
+        flex-direction:column;
+        align-items:flex-start;
+        justify-content:center;
+        line-height:1.25;
+    }
+}
+
+
+/* ===== Booking form: show only 3 customer fields ===== */
+.booking-fields-grid{
+    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+}
+.booking-fields-grid > input[type="hidden"]{
+    display:none !important;
+}
+.checkout-fixed-field,
+.fixed-checkout-time{
+    display:none !important;
+}
+.booking-policy-note{
+    margin-top:10px;
+    color:#665a78;
+    font-size:14px;
+    line-height:1.45;
+}
+@media(max-width:860px){
+    .booking-fields-grid{
+        grid-template-columns:1fr !important;
+    }
+}
+
 </style>
 
 <script>
@@ -221,6 +685,12 @@ let currentZoom = 0;
 
 const todayTimeOptions = {{ today_time_options|tojson }};
 const allTimeOptions = {{ all_time_options|tojson }};
+const checkinTimeOptions = {{ checkin_time_options|tojson }};
+const checkoutTimeOptions = {{ checkout_time_options|tojson }};
+const defaultCheckinStr = "{{ default_checkin_str }}";
+const defaultCheckoutStr = "{{ default_checkout_str }}";
+const standardCheckinTime = "{{ standard_checkin_time }}";
+const standardCheckoutTime = "{{ standard_checkout_time }}";
 const roomPrice = {{ room.price|tojson }};
 
 
@@ -324,38 +794,49 @@ function setupSegment(segmentEl) {
     const checkinTimeSelect = segmentEl.querySelector(".checkin_time");
     const checkoutTimeSelect = segmentEl.querySelector(".checkout_time");
 
+    function addDays(dateStr, days) {
+        const d = new Date(dateStr + "T00:00:00");
+        d.setDate(d.getDate() + days);
+        return d.toISOString().slice(0, 10);
+    }
+
     function updateCheckinTimeOptions() {
-        if (checkinInput.value === todayStr) {
-            fillSelectOptions(checkinTimeSelect, todayTimeOptions);
-        } else {
-            fillSelectOptions(checkinTimeSelect, allTimeOptions);
+        fillSelectOptions(checkinTimeSelect, checkinTimeOptions);
+        if (checkinTimeOptions.includes(standardCheckinTime)) {
+            checkinTimeSelect.value = standardCheckinTime;
         }
     }
 
     function updateCheckoutTimeOptions() {
-        let options = [...allTimeOptions];
-        if (checkinInput.value && checkoutInput.value && checkinInput.value === checkoutInput.value) {
-            const checkinTime = checkinTimeSelect.value;
-            options = allTimeOptions.filter(t => t > checkinTime);
+        if (checkoutTimeSelect) {
+            checkoutTimeSelect.value = standardCheckoutTime || "12:00";
         }
-        fillSelectOptions(checkoutTimeSelect, options);
     }
 
     function handleDateChange() {
-        checkoutInput.min = checkinInput.value || todayStr;
-        if (!checkoutInput.value || (checkinInput.value && checkoutInput.value < checkinInput.value)) {
-            checkoutInput.value = checkinInput.value;
+        if (!checkinInput.value) {
+            checkinInput.value = defaultCheckinStr;
         }
+
+        checkoutInput.min = checkinInput.value || todayStr;
+
+        if (!checkoutInput.value || checkoutInput.value < checkinInput.value) {
+            checkoutInput.value = defaultCheckoutStr;
+        }
+
         updateCheckinTimeOptions();
         updateCheckoutTimeOptions();
         updateBookingSummary();
     }
 
-    checkinInput.value = todayStr;
-    checkoutInput.value = todayStr;
+    checkinInput.value = defaultCheckinStr;
+    checkoutInput.value = defaultCheckoutStr;
 
     checkinInput.addEventListener("change", handleDateChange);
     checkoutInput.addEventListener("change", () => {
+        if (checkinInput.value && checkoutInput.value < checkinInput.value) {
+            checkoutInput.value = checkinInput.value;
+        }
         updateCheckoutTimeOptions();
         updateBookingSummary();
     });
@@ -363,7 +844,9 @@ function setupSegment(segmentEl) {
         updateCheckoutTimeOptions();
         updateBookingSummary();
     });
-    checkoutTimeSelect.addEventListener("change", updateBookingSummary);
+    if (checkoutTimeSelect) {
+        checkoutTimeSelect.addEventListener("change", updateBookingSummary);
+    }
 
     handleDateChange();
 }
@@ -378,17 +861,22 @@ function createExtraSegment(index) {
             <button type="button" class="btn btn-danger btn-small remove-segment">ลบช่วงนี้</button>
         </div>
 
-        <label>วันเข้าพัก</label>
-        <input type="date" class="checkin" min="${todayStr}" required>
-
-        <label>เวลาเข้าพัก</label>
-        <select class="checkin_time" required></select>
-
-        <label>วันออก</label>
-        <input type="date" class="checkout" min="${todayStr}" required>
-
-        <label>เวลาออก</label>
-        <select class="checkout_time" required></select>
+        <div class="booking-fields-grid">
+            <div class="booking-field">
+                <label>วันเข้าพัก</label>
+                <input type="date" class="checkin" min="${todayStr}" required>
+            </div>
+            <div class="booking-field">
+                <label>วันออก</label>
+                <input type="date" class="checkout" min="${todayStr}" required>
+                <small>เช็กเอาต์ภายใน 12:00 น. ของวันออก</small>
+            </div>
+            <div class="booking-field">
+                <label>เวลาเข้าพัก</label>
+                <select class="checkin_time" required></select>
+            </div>
+            <input type="hidden" class="checkout_time" value="12:00">
+        </div>
     `;
     wrapper.querySelector(".remove-segment").addEventListener("click", function() {
         wrapper.remove();

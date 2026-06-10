@@ -1,101 +1,482 @@
 {% extends "base.html" %}
 {% block title %}ชำระเงิน{% endblock %}
 {% block content %}
-<div class="card center" style="max-width:720px; margin:auto;">
-    <h2>{% if payment_mode == "remaining" %}ชำระส่วนที่เหลือ{% else %}ชำระเงินด้วย PromptPay QR จริง{% endif %}</h2>
-    <p>รหัสอ้างอิง: <b>#{{ booking_id }}</b></p>
+
+<div class="payment-page card">
+    <div class="payment-head">
+        <div>
+            <h2>{% if payment_mode == "remaining" %}ชำระส่วนที่เหลือ{% else %}ชำระเงิน{% endif %}</h2>
+            <p class="muted">รหัสอ้างอิง: <b>#{{ booking_id }}</b></p>
+        </div>
+        <div class="payment-amount-card">
+            <span>ยอดที่ต้องชำระ</span>
+            <strong>{{ amount }} บาท</strong>
+        </div>
+    </div>
 
     {% if batch_bookings|length > 1 %}
-    <div class="card" style="text-align:left; margin:16px 0; background:#faf5ff;">
-        <h3 style="margin-top:0;">รายการช่วงวันทั้งหมดในชุดนี้</h3>
-        <ul style="padding-left:18px; margin-bottom:0;">
+    <div class="payment-box">
+        <h3>รายการช่วงวันทั้งหมดในชุดนี้</h3>
+        <ul class="payment-booking-list">
             {% for b in batch_bookings %}
-            <li style="margin-bottom:8px;">
-                {{ b["room_name"] }} : {{ b["checkin"] }} {{ b["checkin_time"] }} ถึง {{ b["checkout"] }} {{ b["checkout_time"] }}
-                ({{ b["nights"] }} คืน)
+            <li>
+                <b>{{ b["room_name"] }}</b>
+                <span>{{ b["checkin"] }} {{ b["checkin_time"] }} ถึง {{ b["checkout"] }} {{ b["checkout_time"] }} ({{ b["nights"] }} คืน)</span>
             </li>
             {% endfor %}
         </ul>
     </div>
     {% else %}
-    <p>ห้องพัก: <b>{{ booking["room_name"] }}</b></p>
+    <div class="payment-box compact">
+        <span>ห้องพัก</span>
+        <b>{{ booking["room_name"] }}</b>
+    </div>
     {% endif %}
 
-    <p>ยอดเต็มรวมทุกช่วง: <b>{{ total }} บาท</b></p>
+    <div class="payment-summary-grid">
+        <div>
+            <span>ยอดเต็มรวม</span>
+            <b>{{ total }} บาท</b>
+        </div>
 
-    {% if payment_mode == "remaining" %}
-        <p>ยอดที่ชำระมาแล้ว: <b>{{ paid_so_far }} บาท</b></p>
-        <p>ยอดที่ต้องชำระส่วนที่เหลือตอนนี้: <b>{{ amount }} บาท</b></p>
-    {% else %}
-        <p>รูปแบบการชำระ: <b>{% if paytype == 'deposit' %}มัดจำ 25%{% else %}จ่ายเต็ม{% endif %}</b></p>
-        <p>ยอดที่ต้องจ่ายตอนนี้รวมทุกช่วง: <b>{{ amount }} บาท</b></p>
-        <p>ยอดคงเหลือหลังชำระครั้งนี้: <b>{{ remaining_due }} บาท</b></p>
-    {% endif %}
-
-    {% if booking["payment_deadline"] and payment_mode != "remaining" %}
-    <p><b>กรุณาสแกนคิวอาร์โค้ดภายใน 15 นาที</b></p>
-    <p class="muted">หมดเวลา: {{ booking["payment_deadline"] }}</p>
-    {% endif %}
-
-    <img class="qr" src="{{ url_for('static', filename=qr_filename) }}" alt="QR Code">
-
-    <div style="text-align:center;margin-top:10px;">
-        <div style="font-weight:bold;font-size:18px;">ชื่อบัญชี: ธเนศ สมโพยม</div>
-        <div class="muted">กรุณาตรวจสอบชื่อบัญชีให้ตรงก่อนทำการโอนเงิน</div>
+        {% if payment_mode == "remaining" %}
+        <div>
+            <span>ชำระมาแล้ว</span>
+            <b>{{ paid_so_far }} บาท</b>
+        </div>
+        <div>
+            <span>ยอดคงเหลือต้องชำระ</span>
+            <b>{{ amount }} บาท</b>
+        </div>
+        {% else %}
+        <div>
+            <span>รูปแบบการชำระ</span>
+            <b>{% if paytype == 'deposit' %}มัดจำ 25%{% else %}จ่ายเต็ม 100%{% endif %}</b>
+        </div>
+        <div>
+            <span>ยอดคงเหลือหลังชำระ</span>
+            <b>{{ remaining_due }} บาท</b>
+        </div>
+        {% endif %}
     </div>
 
-    <hr style="margin:20px 0;">
+    {% if booking["payment_deadline"] and payment_mode != "remaining" %}
+    <div class="payment-deadline">
+        กรุณาชำระและอัปโหลดสลิปภายใน 15 นาที
+        <b>หมดเวลา: {{ booking["payment_deadline"] }}</b>
+    </div>
+    {% endif %}
 
-    <h3>{% if payment_mode == "remaining" %}อัปโหลดสลิปหรือเลือกวิธีชำระยอดคงเหลือ{% else %}แนบสลิปการโอน{% endif %}</h3>
-    <form action="/upload_slip/{{ booking_id }}" method="post" enctype="multipart/form-data" style="max-width:420px;margin:0 auto; text-align:left;">
-        {% if payment_mode == "remaining" and paytype == "deposit" %}
-        <div class="card" style="margin-bottom:14px;background:#f6f6ff;">
-            <h3 style="margin-top:0; font-size:18px;">วิธีชำระยอดส่วนที่เหลือ</h3>
-            <label style="display:block; margin-bottom:8px;">
+    <form action="/upload_slip/{{ booking_id }}" method="post" enctype="multipart/form-data" class="payment-form">
+        <h3>{% if payment_mode == "remaining" %}เลือกวิธีชำระยอดคงเหลือ{% else %}เลือกช่องทางชำระเงิน{% endif %}</h3>
+
+        {% if payment_mode != "remaining" %}
+        <div class="payment-method-tabs">
+            <label class="payment-method-option active" data-method-card="promptpay">
+                <input type="radio" name="payment_method" value="promptpay" checked>
+                <span>PromptPay QR</span>
+                <small>สแกนจ่ายและแนบสลิป</small>
+            </label>
+            <label class="payment-method-option" data-method-card="bank_transfer">
+                <input type="radio" name="payment_method" value="bank_transfer">
+                <span>โอนธนาคาร</span>
+                <small>กสิกรไทย</small>
+            </label>
+            <label class="payment-method-option" data-method-card="counter">
+                <input type="radio" name="payment_method" value="counter">
+                <span>หน้าเคาน์เตอร์</span>
+                <small>ชำระหน้างาน</small>
+            </label>
+        </div>
+        {% else %}
+        <div class="payment-method-tabs two">
+            <label class="payment-method-option active" data-method-card="remaining_qr">
                 <input type="radio" name="remain_method" value="qr" {% if booking["remaining_payment_method"] != "counter" %}checked{% endif %}>
-                ชำระผ่านการสแกน QR ด้านบน
+                <span>สแกน QR</span>
+                <small>จ่ายส่วนที่เหลือ</small>
             </label>
-            <label style="display:block; margin-bottom:8px;">
+            <label class="payment-method-option" data-method-card="remaining_counter">
                 <input type="radio" name="remain_method" value="counter" {% if booking["remaining_payment_method"] == "counter" %}checked{% endif %}>
-                ชำระหน้าเคาน์เตอร์ที่พักในวันเข้าพัก
+                <span>หน้าเคาน์เตอร์</span>
+                <small>จ่ายวันเข้าพัก</small>
             </label>
-            <p class="muted" style="margin-bottom:0;">หากเลือกจ่ายหน้าเคาน์เตอร์ ระบบจะบันทึกว่าเหลือยอดชำระในวันเข้าพัก และไม่ต้องอัปโหลดสลิปตอนนี้</p>
         </div>
         {% endif %}
 
-        <input id="slipInput" type="file" name="slip" accept=".png,.jpg,.jpeg,.webp" {% if payment_mode != "remaining" %}required{% endif %}>
-        <button class="btn" type="submit" style="margin-top:8px; width:100%;">{% if payment_mode == "remaining" %}ยืนยันการชำระยอดคงเหลือ{% else %}อัปโหลดสลิป{% endif %}</button>
+        <div class="payment-method-panel" data-panel="promptpay">
+            <h3>สแกนจ่ายด้วย PromptPay</h3>
+            <img class="qr" src="{{ url_for('static', filename=qr_filename) }}" alt="PromptPay QR Code">
+            <div class="account-name">ชื่อบัญชี: <b>ธเนศ สมโพยม</b></div>
+            <p class="muted">สแกน QR แล้วแนบสลิปด้านล่างเพื่อให้แอดมินตรวจสอบ</p>
+        </div>
+
+        <div class="payment-method-panel" data-panel="bank_transfer" hidden>
+            <h3>โอนผ่านธนาคารกสิกรไทย</h3>
+            <div class="bank-account-box">
+                <div class="bank-account-row">
+                    <span>ธนาคาร</span>
+                    <strong>{{ bank_account_bank or "กสิกรไทย" }}</strong>
+                </div>
+                <div class="bank-account-row">
+                    <span>เลขบัญชี</span>
+                    <strong class="bank-account-number">{{ bank_account_number or "0518084623" }}</strong>
+                </div>
+                <div class="bank-account-row">
+                    <span>ชื่อบัญชี</span>
+                    <strong>{{ bank_account_name or "ธเนศ สมโพยม" }}</strong>
+                </div>
+            </div>
+            <p class="muted">โอนเงินเข้าบัญชีนี้ แล้วแนบสลิปด้านล่างเพื่อรอแอดมินตรวจสอบ</p>
+        </div>
+
+        <div class="payment-method-panel counter-panel" data-panel="counter" hidden>
+            <h3>ชำระหน้าเคาน์เตอร์</h3>
+            <div class="counter-wait-box">
+                <strong>ไม่ต้องอัปโหลดสลิปตอนนี้</strong>
+                <span>ระบบจะบันทึกว่าเลือกชำระที่หน้าเคาน์เตอร์ แอดมินจะรับเงินและยืนยันตอนเข้าพัก</span>
+            </div>
+        </div>
+
+        <div class="payment-method-panel" data-panel="remaining_qr" {% if payment_mode != "remaining" %}hidden{% endif %}>
+            <h3>สแกนจ่ายยอดคงเหลือ</h3>
+            <img class="qr" src="{{ url_for('static', filename=qr_filename) }}" alt="PromptPay QR Code">
+            <div class="account-name">ชื่อบัญชี: <b>ธเนศ สมโพยม</b></div>
+            <p class="muted">สแกน QR แล้วแนบสลิปเพื่อให้แอดมินตรวจสอบยอดคงเหลือ</p>
+        </div>
+
+        <div class="payment-method-panel counter-panel" data-panel="remaining_counter" hidden>
+            <h3>ชำระยอดคงเหลือหน้าเคาน์เตอร์</h3>
+            <div class="counter-wait-box">
+                <strong>รอยืนยันหน้างาน</strong>
+                <span>ระบบจะบันทึกว่ายอดคงเหลือจะชำระที่หน้าเคาน์เตอร์ในวันเข้าพัก</span>
+            </div>
+        </div>
+
+        <div class="slip-upload-box" id="slipUploadBox">
+            <label>แนบสลิปการชำระเงิน</label>
+            <input id="slipInput" type="file" name="slip" accept=".png,.jpg,.jpeg,.webp" {% if payment_mode != "remaining" %}required{% endif %}>
+            <p class="muted">รองรับไฟล์ .png .jpg .jpeg .webp</p>
+        </div>
+
+        <button class="btn payment-submit-btn" id="paymentSubmitBtn" type="submit">
+            {% if payment_mode == "remaining" %}ยืนยันการชำระยอดคงเหลือ{% else %}อัปโหลดสลิป{% endif %}
+        </button>
     </form>
 
-    <p class="muted">
-    {% if payment_mode == "remaining" %}
-        หากเลือกสแกน QR ให้อัปโหลดสลิปเพื่อรอแอดมินตรวจสอบ หรือเลือกจ่ายหน้าเคาน์เตอร์เพื่อแจ้งระบบว่าคุณจะชำระยอดส่วนที่เหลือในวันเข้าพัก
-    {% else %}
-        หลังอัปโหลดสลิปแล้ว ระบบจะใช้สลิปนี้กับทุกช่วงวันในชุดเดียวกัน และแอดมินจะตรวจสอบอีกครั้ง
-    {% endif %}
-    </p>
-    <p><a class="btn-secondary btn" href="/my-bookings">กลับไปหน้าการจองของฉัน</a></p>
+    <p class="payment-back"><a class="btn-secondary btn" href="/my-bookings">กลับไปหน้าการจองของฉัน</a></p>
 </div>
-{% endblock %}
 
-{% if payment_mode == "remaining" and paytype == "deposit" %}
+<style>
+.payment-page{
+    max-width:760px;
+    margin:0 auto 48px;
+    padding:26px;
+}
+.payment-head{
+    display:flex;
+    justify-content:space-between;
+    gap:18px;
+    align-items:flex-start;
+    margin-bottom:18px;
+}
+.payment-head h2{
+    margin:0 0 6px;
+}
+.payment-amount-card{
+    min-width:190px;
+    border:1px solid #e2d4ff;
+    border-radius:18px;
+    background:#fbf8ff;
+    padding:14px 16px;
+    text-align:right;
+}
+.payment-amount-card span,
+.payment-summary-grid span,
+.payment-box.compact span{
+    display:block;
+    color:#665a78;
+    font-weight:800;
+    font-size:13px;
+    margin-bottom:4px;
+}
+.payment-amount-card strong{
+    font-size:24px;
+    color:#6f42c1;
+}
+.payment-box{
+    border:1px solid #e5d8fb;
+    background:#fbf8ff;
+    border-radius:18px;
+    padding:16px;
+    margin:16px 0;
+}
+.payment-box h3{
+    margin-top:0;
+}
+.payment-booking-list{
+    margin:0;
+    padding-left:18px;
+}
+.payment-booking-list li{
+    margin-bottom:8px;
+}
+.payment-booking-list span{
+    display:block;
+    color:#665a78;
+    margin-top:3px;
+}
+.payment-summary-grid{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:12px;
+    margin:16px 0;
+}
+.payment-summary-grid > div{
+    border:1px solid #e5d8fb;
+    border-radius:16px;
+    background:#fff;
+    padding:12px;
+}
+.payment-deadline{
+    background:#fff7db;
+    border:1px solid #f1d77b;
+    color:#614300;
+    border-radius:14px;
+    padding:12px 14px;
+    margin:14px 0;
+    font-weight:800;
+}
+.payment-deadline b{
+    display:block;
+    margin-top:4px;
+}
+.payment-form{
+    max-width:560px;
+    margin:20px auto 0;
+    text-align:left;
+}
+.payment-form h3{
+    text-align:center;
+}
+.payment-method-tabs{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:10px;
+    margin-bottom:16px;
+}
+.payment-method-tabs.two{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+}
+.payment-method-option{
+    border:1px solid #e1d5f8;
+    background:#fff;
+    border-radius:16px;
+    padding:12px;
+    cursor:pointer;
+    display:block;
+    transition:.15s ease;
+}
+.payment-method-option input{
+    width:auto;
+    min-height:auto;
+    margin:0 6px 0 0;
+}
+.payment-method-option span{
+    display:block;
+    margin-top:6px;
+    font-weight:900;
+}
+.payment-method-option small{
+    display:block;
+    color:#665a78;
+    margin-top:3px;
+}
+.payment-method-option.active{
+    border-color:#8d63ff;
+    background:#f4edff;
+    box-shadow:0 10px 22px rgba(111,66,193,.12);
+}
+.payment-method-panel{
+    text-align:center;
+    border:1px solid #e5d8fb;
+    border-radius:20px;
+    background:#fff;
+    padding:18px;
+    margin-bottom:14px;
+}
+.payment-method-panel h3{
+    margin-top:0;
+}
+.payment-method-panel .qr{
+    width:min(360px,100%);
+    height:auto;
+    display:block;
+    margin:0 auto 12px;
+}
+.account-name{
+    font-weight:800;
+    margin:8px 0;
+}
+.bank-account-box{
+    margin:0 auto 12px;
+    padding:16px;
+    max-width:420px;
+    border:1px solid #e2d4ff;
+    border-radius:18px;
+    background:#fbf8ff;
+}
+.bank-account-row{
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+    padding:10px 0;
+    border-bottom:1px solid #eadfff;
+}
+.bank-account-row:last-child{
+    border-bottom:0;
+}
+.bank-account-row span{
+    color:#665a78;
+    font-weight:800;
+}
+.bank-account-row strong{
+    color:#24143a;
+    text-align:right;
+}
+.bank-account-number{
+    font-size:22px;
+    letter-spacing:.04em;
+}
+.counter-wait-box{
+    display:grid;
+    gap:8px;
+    background:#fff7db;
+    border:1px solid #f1d77b;
+    color:#614300;
+    border-radius:16px;
+    padding:18px;
+    text-align:left;
+}
+.counter-wait-box strong{
+    font-size:18px;
+}
+.slip-upload-box{
+    border:1px dashed #cdbbf1;
+    border-radius:18px;
+    padding:14px;
+    background:#fbf8ff;
+    margin:14px 0;
+}
+.slip-upload-box label{
+    display:block;
+    font-weight:900;
+    margin-bottom:8px;
+}
+.slip-upload-box input{
+    width:100%;
+}
+.payment-submit-btn{
+    width:100%;
+    min-height:48px;
+}
+.payment-back{
+    text-align:center;
+    margin-top:18px;
+}
+@media(max-width:700px){
+    .payment-page{
+        padding:16px;
+    }
+    .payment-head{
+        flex-direction:column;
+    }
+    .payment-amount-card{
+        width:100%;
+        min-width:0;
+        text-align:left;
+        box-sizing:border-box;
+    }
+    .payment-summary-grid,
+    .payment-method-tabs,
+    .payment-method-tabs.two{
+        grid-template-columns:1fr;
+    }
+    .bank-account-row{
+        flex-direction:column;
+        gap:3px;
+    }
+    .bank-account-row strong{
+        text-align:left;
+    }
+}
+</style>
+
 <script>
 (function(){
-    const form = document.querySelector('form[action="/upload_slip/{{ booking_id }}"]');
+    const form = document.querySelector('.payment-form');
     if (!form) return;
+
+    const slipBox = document.getElementById('slipUploadBox');
     const slipInput = document.getElementById('slipInput');
-    const radios = form.querySelectorAll('input[name="remain_method"]');
+    const submitBtn = document.getElementById('paymentSubmitBtn');
+    const options = form.querySelectorAll('.payment-method-option');
+    const radios = form.querySelectorAll('input[name="remain_method"], input[name="payment_method"]');
+    const panels = form.querySelectorAll('.payment-method-panel');
+    const paymentMode = "{{ payment_mode }}";
+
+    function currentPanelName(){
+        const pay = form.querySelector('input[name="payment_method"]:checked');
+        const remain = form.querySelector('input[name="remain_method"]:checked');
+
+        if (pay) return pay.value;
+        if (remain) return remain.value === 'counter' ? 'remaining_counter' : 'remaining_qr';
+        return paymentMode === 'remaining' ? 'remaining_qr' : 'promptpay';
+    }
+
     function sync(){
-        const selected = form.querySelector('input[name="remain_method"]:checked');
-        const isCounter = selected && selected.value === 'counter';
+        const panelName = currentPanelName();
+        const isCounter = panelName === 'counter' || panelName === 'remaining_counter';
+
+        panels.forEach(panel => {
+            panel.hidden = panel.dataset.panel !== panelName;
+        });
+
+        options.forEach(option => {
+            const radio = option.querySelector('input');
+            option.classList.toggle('active', radio && radio.checked);
+        });
+
+        if (slipBox) slipBox.hidden = isCounter;
         if (slipInput){
             slipInput.required = !isCounter;
             slipInput.disabled = isCounter;
             if (isCounter) slipInput.value = '';
         }
+
+        if (submitBtn){
+            if (isCounter) {
+                submitBtn.textContent = paymentMode === 'remaining'
+                    ? 'บันทึกว่าชำระยอดคงเหลือหน้าเคาน์เตอร์'
+                    : 'บันทึกว่าชำระหน้าเคาน์เตอร์';
+            } else {
+                submitBtn.textContent = paymentMode === 'remaining'
+                    ? 'อัปโหลดสลิปยอดคงเหลือ'
+                    : 'อัปโหลดสลิป';
+            }
+        }
     }
+
     radios.forEach(r => r.addEventListener('change', sync));
+    options.forEach(o => o.addEventListener('click', () => {
+        const radio = o.querySelector('input');
+        if (radio) {
+            radio.checked = true;
+            radio.dispatchEvent(new Event('change', {bubbles:true}));
+        }
+    }));
+
     sync();
 })();
 </script>
-{% endif %}
+
+{% endblock %}

@@ -1,7 +1,119 @@
 {% extends "base.html" %}
-{% block title %}การจองของฉัน{% endblock %}
+{% block title %}การจองของฉัน</div>
+{% endblock %}
 {% block content %}
+
+<style>
+.status.no_show{
+    background:#ffe3e3 !important;
+    color:#a51d2d !important;
+    border:1px solid #ffc1c1 !important;
+}
+
+/* ===== My Bookings page fit/clean layout ===== */
+.my-bookings-page{
+    width:min(100%, 1180px);
+    margin:0 auto 40px;
+    background:#fff;
+    border:1px solid #eadff7;
+    border-radius:22px;
+    padding:20px;
+    box-shadow:0 14px 34px rgba(68,38,109,.08);
+}
+.my-bookings-page h2{
+    margin:0 0 6px;
+    font-size:28px;
+    color:#24143a;
+}
+.my-bookings-subtitle{
+    margin:0 0 18px;
+    color:#6d627f;
+    line-height:1.5;
+}
+.my-bookings-page .desktop-bookings-view.table-wrap{
+    overflow-x:visible;
+    border:1px solid #eadff7;
+    border-radius:18px;
+    background:#fff;
+}
+.my-bookings-page .bookings-table{
+    width:100%;
+    table-layout:fixed;
+    border-collapse:separate;
+    border-spacing:0;
+    overflow:hidden;
+    border-radius:18px;
+}
+.my-bookings-page .bookings-table th,
+.my-bookings-page .bookings-table td{
+    white-space:normal !important;
+    word-break:break-word;
+    overflow-wrap:anywhere;
+    padding:12px 10px;
+    font-size:14px;
+    line-height:1.45;
+    vertical-align:top;
+}
+.my-bookings-page .bookings-table th{
+    background:#e9ddff;
+    color:#24143a;
+    font-weight:800;
+}
+.my-bookings-page .bookings-table th:nth-child(1),
+.my-bookings-page .bookings-table td:nth-child(1){width:44px;}
+.my-bookings-page .bookings-table th:nth-child(2),
+.my-bookings-page .bookings-table td:nth-child(2){width:115px;text-align:left;}
+.my-bookings-page .bookings-table th:nth-child(3),
+.my-bookings-page .bookings-table td:nth-child(3){width:250px;}
+.my-bookings-page .bookings-table th:nth-child(4),
+.my-bookings-page .bookings-table td:nth-child(4){width:54px;}
+.my-bookings-page .bookings-table th:nth-child(5),
+.my-bookings-page .bookings-table td:nth-child(5){width:92px;}
+.my-bookings-page .bookings-table th:nth-child(6),
+.my-bookings-page .bookings-table td:nth-child(6){width:92px;}
+.my-bookings-page .bookings-table th:nth-child(7),
+.my-bookings-page .bookings-table td:nth-child(7){width:116px;}
+.my-bookings-page .bookings-table th:nth-child(8),
+.my-bookings-page .bookings-table td:nth-child(8){width:130px;}
+.my-bookings-page .bookings-table th:nth-child(9),
+.my-bookings-page .bookings-table td:nth-child(9){width:125px;}
+.my-bookings-page .bookings-table .btn{
+    width:100%;
+    min-width:0;
+    margin:2px 0;
+    padding:9px 10px;
+    border-radius:12px;
+}
+.my-bookings-page .status{
+    white-space:normal;
+    line-height:1.25;
+}
+.my-bookings-page .mobile-bookings-view{
+    display:none;
+}
+@media (max-width:1180px){
+    .my-bookings-page{
+        width:100%;
+        padding:16px;
+        border-radius:18px;
+    }
+    .my-bookings-page .desktop-bookings-view{display:none !important;}
+    .my-bookings-page .mobile-bookings-view{display:block !important;}
+}
+@media (max-width:768px){
+    .my-bookings-page{
+        padding:14px;
+        margin-bottom:24px;
+    }
+    .my-bookings-page h2{font-size:24px;}
+    .my-bookings-subtitle{font-size:14px;}
+}
+
+</style>
+
+<div class="my-bookings-page">
 <h2>การจองของฉัน</h2>
+<p class="my-bookings-subtitle">ตรวจสอบรายการจอง ชำระเงิน ยกเลิก หรือเช็กเอาท์ได้จากหน้านี้</p>
 
 {% macro segment_status_text(segment) -%}
     {% if segment["status"] == "waiting_approval" %}รอแอดมินอนุมัติ
@@ -9,8 +121,12 @@
     {% elif segment["status"] == "waiting_slip_approval" %}รอตรวจสอบสลิป
     {% elif segment["status"] == "deposit_paid" %}ชำระมัดจำแล้ว
     {% elif segment["status"] == "waiting_remaining_slip_approval" %}รอตรวจสอบสลิปส่วนที่เหลือ
-    {% elif segment["status"] == "remaining_counter_pending" %}ยอดคงเหลือชำระหน้าเคาน์เตอร์
+    {% elif segment["status"] == "remaining_counter_pending" %}รอชำระยอดคงเหลือที่เคาน์เตอร์
+    {% elif segment["status"] == "counter_pending" %}รอชำระที่เคาน์เตอร์
     {% elif segment["status"] == "fully_paid" %}ชำระครบแล้ว
+    {% elif segment["status"] == "checked_in" %}เข้าพักอยู่
+    {% elif segment["status"] == "checked_out" %}เช็กเอาท์แล้ว
+    {% elif segment["status"] == "no_show" %}ลูกค้าไม่มา
     {% elif segment["status"] == "cancel_requested" %}ส่งคำขอยกเลิกแล้ว
     {% elif segment["status"] == "refund_pending" %}รอคืนเงิน
     {% elif segment["status"] == "refunded" %}คืนเงินแล้ว
@@ -25,8 +141,12 @@
     {% elif status == "waiting_slip_approval" %}<span class="status waiting_slip_approval">รอตรวจสอบสลิป</span>
     {% elif status == "deposit_paid" %}<span class="status deposit_paid">ชำระมัดจำแล้ว</span>
     {% elif status == "waiting_remaining_slip_approval" %}<span class="status waiting_slip_approval">รอตรวจสอบสลิปส่วนที่เหลือ</span>
-    {% elif status == "remaining_counter_pending" %}<span class="status approved">ยอดคงเหลือชำระหน้าเคาน์เตอร์</span>
+    {% elif status == "remaining_counter_pending" %}<span class="status approved">รอชำระยอดคงเหลือที่เคาน์เตอร์</span>
+    {% elif status == "counter_pending" %}<span class="status approved">รอชำระที่เคาน์เตอร์</span>
     {% elif status == "fully_paid" %}<span class="status fully_paid">ชำระเงินเรียบร้อย</span>
+    {% elif status == "checked_in" %}<span class="status checked_in">เข้าพักอยู่</span>
+    {% elif status == "checked_out" %}<span class="status checked_out">เช็กเอาท์แล้ว</span>
+    {% elif status == "no_show" %}<span class="status no_show">ลูกค้าไม่มา</span>
     {% elif status == "cancel_requested" %}<span class="status waiting_slip_approval">ส่งคำขอยกเลิกแล้ว</span>
     {% elif status == "refund_pending" %}<span class="status approved">ยกเลิกแล้ว</span>
     {% elif status == "refunded" %}<span class="status deposit_paid">คืนเงินแล้ว</span>
@@ -66,6 +186,8 @@
         <span class="muted">รอตรวจสอบสลิปส่วนที่เหลือ</span>
     {% if b["refund_amount"] and b["refund_amount"] > 0 %}<span class="muted" style="display:block;margin-bottom:6px;">ยอดคืน: {{ "%.2f"|format(b["refund_amount"]) }} บาท</span>{% endif %}{% if b["refund_method"] %}<span class="muted" style="display:block;margin-bottom:6px;">รับเงินคืนทาง {{ b["refund_method"] }} / {{ b["refund_account"] }}</span>{% endif %}
     {% if b["refund_amount"] and b["refund_amount"] > 0 %}<span class="muted" style="display:block;margin-bottom:6px;">ยอดคืน: {{ "%.2f"|format(b["refund_amount"]) }} บาท</span>{% endif %}{% if b["refund_method"] %}<span class="muted" style="display:block;margin-bottom:6px;">วิธีรับเงินคืน: {% if b["refund_method"] == "promptpay" %}PromptPay{% else %}บัญชีธนาคาร{% endif %}</span>{% endif %}{% if b["refund_bank"] %}<span class="muted" style="display:block;margin-bottom:6px;">ธนาคาร: {{ get_bank_meta(b["refund_bank"])["name"] }}</span>{% endif %}{% if b["refund_account"] %}<span class="muted" style="display:block;margin-bottom:6px;">ปลายทางคืนเงิน: {{ b["refund_account"] }}</span>{% endif %}
+    {% elif b["status"] == "counter_pending" %}
+        <span class="muted">ชำระที่หน้าเคาน์เตอร์</span>
     {% elif b["status"] == "remaining_counter_pending" %}
         <a class="btn" href="/remaining-payment/{{ b['action_id'] }}">เปลี่ยนเป็นสแกน QR</a>
         {% if b["is_grouped"] %}
@@ -80,6 +202,13 @@
         {% else %}
             <a class="btn btn-warning" href="/cancel/{{ b['action_id'] }}" onclick="return confirm('ต้องการส่งคำขอยกเลิกการจองนี้ใช่หรือไม่? หากแอดมินอนุมัติ ระบบจะคืนเงินภายใน 2-4 วันทำการ')">ส่งคำขอยกเลิก</a>
         {% endif %}
+    {% elif b["status"] == "checked_in" %}
+        <form method="post" action="/my-bookings/check-out/{{ b['action_id'] }}" style="display:inline;">
+            <button class="btn btn-warning" type="submit" onclick="return confirm('ยืนยันว่าออกจากที่พักและต้องการเช็กเอาท์ใช่หรือไม่?')">เช็กเอาท์ออก</button>
+        </form>
+        <span class="muted" style="display:block;margin-top:6px;">ใช้เมื่อออกจากที่พักก่อนเวลาเช็กเอาท์มาตรฐาน</span>
+    {% elif b["status"] == "checked_out" %}
+        <span class="muted">เช็กเอาท์แล้ว</span>
     {% elif b["status"] == "cancel_requested" %}
         <span class="muted">ส่งคำขอยกเลิกแล้ว</span>
     {% elif b["status"] == "refund_pending" %}
@@ -131,6 +260,13 @@
                             <a class="btn btn-danger" href="/cancel/{{ segment['id'] }}" onclick="return confirm('ต้องการยกเลิกเฉพาะช่วงนี้ใช่หรือไม่?')">ยกเลิกเฉพาะช่วงนี้</a>
                         </div>
                     {% endif %}
+                    {% if b["is_grouped"] and segment["status"] == "checked_in" %}
+                        <div style="margin-top:6px;">
+                            <form method="post" action="/my-bookings/check-out/{{ segment['id'] }}" style="display:inline;">
+                                <button class="btn btn-warning" type="submit" onclick="return confirm('ยืนยันว่าออกจากที่พักช่วงนี้แล้วใช่หรือไม่?')">เช็กเอาท์ช่วงนี้</button>
+                            </form>
+                        </div>
+                    {% endif %}
                 </div>
             {% endfor %}
         </td>
@@ -180,6 +316,13 @@
                 {% if b["is_grouped"] and segment["cancel_allowed"] %}
                 <div class="segment-actions">
                     <a class="btn btn-danger" href="/cancel/{{ segment['id'] }}" onclick="return confirm('ต้องการยกเลิกเฉพาะช่วงนี้ใช่หรือไม่?')">ยกเลิกเฉพาะช่วงนี้</a>
+                </div>
+                {% endif %}
+                {% if b["is_grouped"] and segment["status"] == "checked_in" %}
+                <div class="segment-actions">
+                    <form method="post" action="/my-bookings/check-out/{{ segment['id'] }}" style="display:inline;">
+                        <button class="btn btn-warning" type="submit" onclick="return confirm('ยืนยันว่าออกจากที่พักช่วงนี้แล้วใช่หรือไม่?')">เช็กเอาท์ช่วงนี้</button>
+                    </form>
                 </div>
                 {% endif %}
             </div>

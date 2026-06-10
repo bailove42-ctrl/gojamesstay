@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, session, flash, url
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 from dotenv import load_dotenv
 import sqlite3
+import re
 from datetime import datetime, date, timedelta
 import os
 from io import BytesIO
@@ -33,13 +34,16 @@ ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "webp"}
 # EMAIL_PASSWORD ต้องใช้ App Password ของ Gmail (ไม่ใช่รหัสผ่านปกติ)
 EMAIL_SENDER = os.environ.get("EMAIL_SENDER", "")
 EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD", "")
-BASE_URL = os.environ.get("BASE_URL", "http://127.0.0.1:5000").rstrip("/")
+BASE_URL = (os.environ.get("APP_BASE_URL") or os.environ.get("BASE_URL") or "").rstrip("/")
 
 serializer = URLSafeTimedSerializer(app.secret_key)
 
 # PromptPay สำหรับรับเงินจริง
 # ถ้าเอาขึ้น GitHub/Render ภายหลัง แนะนำให้ย้ายไปใช้ Environment Variable แทน
 PROMPTPAY_ID = os.environ.get("PROMPTPAY_ID", "0953087210")
+BANK_ACCOUNT_BANK = "กสิกรไทย"
+BANK_ACCOUNT_NUMBER = "0518084623"
+BANK_ACCOUNT_NAME = "ธเนศ สมโพยม"
 
 BANKS = {
     "promptpay": {"name": "PromptPay", "short": "PP", "color": "#1f8bff", "prefixes": []},
@@ -113,26 +117,47 @@ ROOMS = [
     {
         "id": 1,
         "name": "ห้อง Lavender",
-        "price": 10,
-        "detail": "ห้องพักเตียงคู่สำหรับ 2 ท่าน บรรยากาศอบอุ่น",
+        "price": 800,
+        "detail": "ห้อง Lavender เป็นห้องพักโทนอบอุ่นที่ให้ความรู้สึกสบายตั้งแต่ก้าวแรก ภายในตกแต่งเรียบง่าย โปร่ง และเหมาะกับการพักผ่อนแบบเป็นส่วนตัว มีเตียงใหญ่ เครื่องปรับอากาศ ตู้เย็น Wi‑Fi ฟรี และห้องน้ำส่วนตัวครบถ้วน ด้านหน้าห้องมีมุมพักผ่อนให้นั่งเล่น รับลม หรือจิบเครื่องดื่มเบา ๆ ท่ามกลางบรรยากาศธรรมชาติ เหมาะสำหรับผู้เข้าพัก 2 ท่านที่ต้องการห้องพักเงียบ ๆ ดูแลตัวเองได้สะดวก และเดินทางมาพักผ่อนได้แบบสบายใจ",
         "cover": "room1_1.jpg",
-        "images": ["room1_1.jpg", "room1_2.jpg", "room1_3.jpg"]
+        "images": ["room1_1.jpg", "room1_2.jpg", "room1_3.jpg"],
+        "amenities": [
+            {"icon": "wifi", "label": "Wi-Fi ฟรี"},
+            {"icon": "air", "label": "เครื่องปรับอากาศ"},
+            {"icon": "fridge", "label": "ตู้เย็น"},
+            {"icon": "bed", "label": "เตียงใหญ่ 1 เตียง"},
+            {"icon": "bath", "label": "ห้องน้ำส่วนตัว"}
+        ]
     },
     {
         "id": 2,
         "name": "ห้อง Lilac",
         "price": 800,
-        "detail": "ห้องพักวิวสวน เงียบสงบ เหมาะกับการพักผ่อน",
+        "detail": "ห้อง Lilac เหมาะสำหรับคนที่ชอบบรรยากาศสวนและความเป็นธรรมชาติ รอบห้องให้ความรู้สึกสงบ มีพื้นที่นั่งเล่นหน้าห้องสำหรับพักสายตา พูดคุย หรือใช้เวลาช้า ๆ ในวันหยุด ภายในห้องจัดวางอย่างเรียบง่ายแต่ใช้งานสะดวก มี Wi‑Fi ฟรี เครื่องปรับอากาศ ตู้เย็น เตียงใหญ่ 1 เตียง และห้องน้ำส่วนตัว เหมาะกับคู่รักหรือผู้เข้าพัก 2 ท่านที่อยากได้ห้องพักสบาย ๆ มีมุมส่วนตัว และอยู่ใกล้บรรยากาศร่มรื่นของสวน",
         "cover": "room2_1.jpg",
-        "images": ["room2_1.jpg", "room2_2.jpg", "room2_3.jpg"]
+        "images": ["room2_1.jpg", "room2_2.jpg", "room2_3.jpg"],
+        "amenities": [
+            {"icon": "wifi", "label": "Wi-Fi ฟรี"},
+            {"icon": "air", "label": "เครื่องปรับอากาศ"},
+            {"icon": "fridge", "label": "ตู้เย็น"},
+            {"icon": "bed", "label": "เตียงใหญ่ 1 เตียง"},
+            {"icon": "bath", "label": "ห้องน้ำส่วนตัว"}
+        ]
     },
     {
         "id": 3,
         "name": "ห้อง Orchid",
         "price": 800,
-        "detail": "ห้องพักขนาดกลาง พร้อมพื้นที่นั่งเล่นเล็ก ๆ",
+        "detail": "ห้อง Orchid เป็นห้องพักสไตล์บ้านพักส่วนตัวที่ให้บรรยากาศเรียบง่ายและผ่อนคลาย รายล้อมด้วยความร่มรื่น เหมาะสำหรับคนที่ต้องการหลีกหนีความวุ่นวายและพักผ่อนอย่างเป็นกันเอง ภายในมีพื้นที่ใช้งานครบสำหรับการเข้าพัก 2 ท่าน พร้อม Wi‑Fi ฟรี เครื่องปรับอากาศ ตู้เย็น เตียงใหญ่ 1 เตียง และห้องน้ำส่วนตัว บริเวณหน้าห้องให้ความรู้สึกโปร่ง สบาย และมีความเป็นส่วนตัว เหมาะกับการมาพักระยะสั้นหรือพักผ่อนในวันหยุดแบบเงียบสงบ",
         "cover": "room3_1.jpg",
-        "images": ["room3_1.jpg", "room3_2.jpg", "room3_3.jpg"]
+        "images": ["room3_1.jpg", "room3_2.jpg", "room3_3.jpg"],
+        "amenities": [
+            {"icon": "wifi", "label": "Wi-Fi ฟรี"},
+            {"icon": "air", "label": "เครื่องปรับอากาศ"},
+            {"icon": "fridge", "label": "ตู้เย็น"},
+            {"icon": "bed", "label": "เตียงใหญ่ 1 เตียง"},
+            {"icon": "bath", "label": "ห้องน้ำส่วนตัว"}
+        ]
     },
     {
         "id": 4,
@@ -158,7 +183,57 @@ ROOMS = [
     }
 ]
 
-BOOKED_STATUSES = ("approved", "waiting_slip_approval", "deposit_paid", "remaining_counter_pending", "fully_paid", "cancel_requested")
+BOOKED_STATUSES = ("approved", "waiting_slip_approval", "deposit_paid", "remaining_counter_pending", "counter_pending", "fully_paid", "checked_in", "cancel_requested")
+NO_SHOW_CUTOFF_TIME = "20:00"
+RESORT_CHECKIN_GUIDE = "14:00"
+RESORT_CHECKOUT_GUIDE = "12:00"  # หลังเวลานี้ หากลูกค้ายังไม่มา แอดมินสามารถกด No Show เพื่อปล่อยห้องได้
+
+STANDARD_CHECKIN_TIME = "14:00"
+STANDARD_CHECKOUT_TIME = "12:00"
+HOTEL_CHECKIN_TIME_OPTIONS = [f"{hour:02d}:00" for hour in range(14, 23)]  # 14:00-22:00
+HOTEL_CHECKOUT_TIME_OPTIONS = [f"{hour:02d}:00" for hour in range(6, 13)]  # 06:00-12:00
+
+
+MANUAL_DAY_STATUSES = {
+    "free": "ว่าง",
+    "booked": "มีผู้จอง",
+    "occupied": "มีผู้พักอยู่",
+    "blocked": "ไม่ว่าง"
+}
+
+
+def make_receipt_no(booking_id):
+    return f"RCPT-{datetime.now().strftime('%Y%m%d')}-{booking_id:05d}"
+
+
+def ensure_walkin_user(phone, display_name):
+    """สร้าง/ใช้ user สำหรับ Walk-in เพื่อให้ระบบจองยังอ้างอิง username ได้"""
+    username = "walkin_" + re.sub(r"[^0-9A-Za-z_]+", "", phone or "guest")
+    if username == "walkin_":
+        username = "walkin_guest"
+
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT username FROM users WHERE username = ?", (username,))
+    exists = cur.fetchone()
+    if not exists:
+        cur.execute("""
+            INSERT INTO users(first_name,last_name,nickname,gender,phone,email,username,password,role)
+            VALUES(?,?,?,?,?,?,?,?,?)
+        """, (
+            display_name or "Walk-in",
+            "",
+            display_name or "Walk-in",
+            "-",
+            phone or "-",
+            f"{username}@walkin.local",
+            username,
+            "walkin",
+            "user"
+        ))
+        conn.commit()
+    conn.close()
+    return username
 
 
 def get_db():
@@ -185,6 +260,18 @@ def get_rooms_with_status():
         room_copy["is_open"] = status_map.get(room_copy["id"], default_open)
         rooms.append(room_copy)
     return rooms
+
+
+def get_no_show_cutoff_dt(booking):
+    """เวลาตัดสิทธิ์ No Show: ใช้วันที่เข้าพัก + 20:00 น. เป็นค่าเริ่มต้น"""
+    try:
+        cutoff_time = NO_SHOW_CUTOFF_TIME
+        return datetime.strptime(f"{booking['checkin']} {cutoff_time}", "%Y-%m-%d %H:%M")
+    except Exception:
+        try:
+            return datetime.strptime(f"{booking['checkin']} {booking['checkin_time']}", "%Y-%m-%d %H:%M")
+        except Exception:
+            return None
 
 
 def get_now():
@@ -270,7 +357,8 @@ def send_email_notification(to_email, subject, body):
 
 def send_reset_password_email(user_row):
     token = serializer.dumps({"user_id": user_row["id"], "email": user_row["email"]}, salt="reset-password")
-    reset_link = f"{BASE_URL}{url_for('reset_password', token=token)}"
+    base_url = BASE_URL or request.url_root.rstrip("/")
+    reset_link = f"{base_url}{url_for('reset_password', token=token)}"
 
     subject = "รีเซ็ตรหัสผ่าน - GoJames Vacation Home"
     body = (
@@ -586,7 +674,14 @@ def init_db():
         refund_completed_at TEXT,
         remaining_due REAL,
         checkin_reminder_sent_at TEXT,
-        remaining_payment_method TEXT DEFAULT 'qr'
+        remaining_payment_method TEXT DEFAULT 'qr',
+        checked_in_at TEXT,
+        payment_method TEXT,
+        receipt_no TEXT,
+        receipt_issued_at TEXT,
+        checked_out_at TEXT,
+        counter_payment_method TEXT,
+        note TEXT
     )
     """)
 
@@ -617,6 +712,20 @@ def init_db():
         cur.execute("ALTER TABLE bookings ADD COLUMN checkin_reminder_sent_at TEXT")
     if "remaining_payment_method" not in booking_columns:
         cur.execute("ALTER TABLE bookings ADD COLUMN remaining_payment_method TEXT DEFAULT 'qr'")
+    if "checked_in_at" not in booking_columns:
+        cur.execute("ALTER TABLE bookings ADD COLUMN checked_in_at TEXT")
+    if "payment_method" not in booking_columns:
+        cur.execute("ALTER TABLE bookings ADD COLUMN payment_method TEXT")
+    if "receipt_no" not in booking_columns:
+        cur.execute("ALTER TABLE bookings ADD COLUMN receipt_no TEXT")
+    if "receipt_issued_at" not in booking_columns:
+        cur.execute("ALTER TABLE bookings ADD COLUMN receipt_issued_at TEXT")
+    if "checked_out_at" not in booking_columns:
+        cur.execute("ALTER TABLE bookings ADD COLUMN checked_out_at TEXT")
+    if "counter_payment_method" not in booking_columns:
+        cur.execute("ALTER TABLE bookings ADD COLUMN counter_payment_method TEXT")
+    if "note" not in booking_columns:
+        cur.execute("ALTER TABLE bookings ADD COLUMN note TEXT")
 
     cur.execute("""
     CREATE TABLE IF NOT EXISTS room_blocks(
@@ -625,9 +734,14 @@ def init_db():
         start_date TEXT NOT NULL,
         end_date TEXT NOT NULL,
         note TEXT,
-        created_at TEXT NOT NULL
+        created_at TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'blocked'
     )
     """)
+
+    room_block_columns = {row["name"] for row in cur.execute("PRAGMA table_info(room_blocks)").fetchall()}
+    if "status" not in room_block_columns:
+        cur.execute("ALTER TABLE room_blocks ADD COLUMN status TEXT NOT NULL DEFAULT 'blocked'")
 
     cur.execute("""
     CREATE TABLE IF NOT EXISTS notifications(
@@ -727,6 +841,7 @@ def choose_group_status(rows):
         return statuses[0]
 
     priority = [
+        "checked_in",
         "cancel_requested",
         "refund_pending",
         "refunded",
@@ -737,6 +852,8 @@ def choose_group_status(rows):
         "approved",
         "waiting_approval",
         "fully_paid",
+        "checked_out",
+        "no_show",
         "rejected",
         "cancelled",
     ]
@@ -760,6 +877,7 @@ def build_booking_groups(rows):
         "waiting_remaining_slip_approval",
         "remaining_counter_pending",
         "fully_paid",
+        "checked_in",
     }
 
     groups = []
@@ -838,11 +956,20 @@ def get_all_time_options():
     return [f"{hour:02d}:00" for hour in range(24)]
 
 
-def get_calendar_data(days=14):
+def get_checkin_time_options():
+    return get_all_time_options()
+
+
+def get_checkout_time_options():
+    return get_all_time_options()
+
+
+def get_calendar_data(days=14, start_day=None):
     conn = get_db()
     cur = conn.cursor()
 
-    start_day = date.today()
+    if start_day is None:
+        start_day = date.today()
     day_list = [start_day + timedelta(days=i) for i in range(days)]
 
     placeholders = ",".join("?" for _ in BOOKED_STATUSES)
@@ -879,7 +1006,8 @@ def get_calendar_data(days=14):
                     "checkout": day.strftime("%Y-%m-%d"),
                     "checkout_time": "-",
                     "status_text": "ปิดปรับปรุง",
-                    "note": room.get("maintenance_note") or "-"
+                    "note": room.get("maintenance_note") or "-",
+                    "source": "room_closed"
                 }
             else:
                 for block in blocks:
@@ -887,7 +1015,10 @@ def get_calendar_data(days=14):
                         block_start = datetime.strptime(block["start_date"], "%Y-%m-%d").date()
                         block_end = datetime.strptime(block["end_date"], "%Y-%m-%d").date()
                         if block_start <= day <= block_end:
-                            state = "blocked"
+                            block_status = block["status"] if "status" in block.keys() and block["status"] else "blocked"
+                            if block_status not in MANUAL_DAY_STATUSES:
+                                block_status = "blocked"
+                            state = block_status
                             detail = {
                                 "guest_name": "-",
                                 "room_name": room["name"],
@@ -895,8 +1026,9 @@ def get_calendar_data(days=14):
                                 "checkin_time": "-",
                                 "checkout": block["end_date"],
                                 "checkout_time": "-",
-                                "status_text": "แอดมินบล็อกห้อง",
-                                "note": block["note"] if block["note"] else "-"
+                                "status_text": MANUAL_DAY_STATUSES.get(block_status, "ไม่ว่าง"),
+                                "note": block["note"] if block["note"] else "-",
+                                "source": "manual"
                             }
                             break
 
@@ -926,11 +1058,20 @@ def get_calendar_data(days=14):
                                     "checkout": booking["checkout"],
                                     "checkout_time": booking["checkout_time"],
                                     "status_text": status_text,
-                                    "note": f"รหัสการจอง #{booking['id']}"
+                                    "note": f"รหัสการจอง #{booking['id']}",
+                                    "source": "booking",
+                                    "booking_id": booking["id"]
                                 }
                                 break
 
-            cells.append({"date": day, "state": state, "detail": detail})
+            cells.append({
+                "date": day,
+                "date_text": day.strftime("%Y-%m-%d"),
+                "state": state,
+                "detail": detail,
+                "room_id": room["id"],
+                "room_name": room["name"]
+            })
         room_rows.append({"room": room, "cells": cells})
 
     return day_list, room_rows
@@ -1073,6 +1214,85 @@ def reset_password(token):
     return render_template("reset_password.html", token=token)
 
 
+
+@app.route("/profile", methods=["GET", "POST"])
+def profile():
+    if "user" not in session:
+        flash("กรุณาเข้าสู่ระบบก่อน")
+        return redirect("/login")
+
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM users WHERE username = ?", (session["user"],))
+    user = cur.fetchone()
+
+    if not user:
+        conn.close()
+        flash("ไม่พบบัญชีผู้ใช้")
+        return redirect("/logout")
+
+    if request.method == "POST":
+        first_name = request.form.get("first_name", "").strip()
+        last_name = request.form.get("last_name", "").strip()
+        nickname = request.form.get("nickname", "").strip()
+        gender = request.form.get("gender", "").strip()
+        phone = request.form.get("phone", "").strip()
+        email = request.form.get("email", "").strip()
+
+        if not all([first_name, last_name, nickname, gender, phone, email]):
+            conn.close()
+            flash("กรุณากรอกข้อมูลโปรไฟล์ให้ครบ")
+            return redirect("/profile")
+
+        cur.execute("""
+            UPDATE users
+            SET first_name = ?, last_name = ?, nickname = ?, gender = ?, phone = ?, email = ?
+            WHERE username = ?
+        """, (first_name, last_name, nickname, gender, phone, email, session["user"]))
+        conn.commit()
+        conn.close()
+        flash("บันทึกโปรไฟล์เรียบร้อยแล้ว")
+        return redirect("/profile")
+
+    conn.close()
+    return render_template("profile.html", user=user)
+
+
+@app.route("/profile/change-password", methods=["POST"])
+def profile_change_password():
+    if "user" not in session:
+        flash("กรุณาเข้าสู่ระบบก่อน")
+        return redirect("/login")
+
+    current_password = request.form.get("current_password", "").strip()
+    new_password = request.form.get("new_password", "").strip()
+    confirm_password = request.form.get("confirm_password", "").strip()
+
+    if not current_password or not new_password or not confirm_password:
+        flash("กรุณากรอกรหัสผ่านให้ครบ")
+        return redirect("/profile")
+
+    if new_password != confirm_password:
+        flash("รหัสผ่านใหม่และยืนยันรหัสผ่านไม่ตรงกัน")
+        return redirect("/profile")
+
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM users WHERE username = ?", (session["user"],))
+    user = cur.fetchone()
+
+    if not user or user["password"] != current_password:
+        conn.close()
+        flash("รหัสผ่านเดิมไม่ถูกต้อง")
+        return redirect("/profile")
+
+    cur.execute("UPDATE users SET password = ? WHERE username = ?", (new_password, session["user"]))
+    conn.commit()
+    conn.close()
+
+    flash("เปลี่ยนรหัสผ่านเรียบร้อยแล้ว")
+    return redirect("/profile")
+
 @app.route("/logout")
 def logout():
     session.clear()
@@ -1097,6 +1317,11 @@ def booking(room_id):
 
     all_time_options = get_all_time_options()
     today_time_options = get_today_available_time_options()
+    checkin_time_options = get_checkin_time_options()
+    checkout_time_options = get_checkout_time_options()
+
+    default_checkin_date = date.today()
+    default_checkout_date = default_checkin_date + timedelta(days=1)
 
     if request.method == "POST":
         paytype = request.form["paytype"]
@@ -1111,7 +1336,7 @@ def booking(room_id):
             "checkin": request.form["checkin"],
             "checkout": request.form["checkout"],
             "checkin_time": request.form["checkin_time"],
-            "checkout_time": request.form["checkout_time"]
+            "checkout_time": RESORT_CHECKOUT_GUIDE
         }]
 
         for seg in extra_segments:
@@ -1120,7 +1345,7 @@ def booking(room_id):
                     "checkin": str(seg.get("checkin", "")).strip(),
                     "checkout": str(seg.get("checkout", "")).strip(),
                     "checkin_time": str(seg.get("checkin_time", "")).strip(),
-                    "checkout_time": str(seg.get("checkout_time", "")).strip()
+                    "checkout_time": RESORT_CHECKOUT_GUIDE
                 })
 
         validated_segments = []
@@ -1130,7 +1355,7 @@ def booking(room_id):
             checkin = seg["checkin"]
             checkout = seg["checkout"]
             checkin_time = seg["checkin_time"]
-            checkout_time = seg["checkout_time"]
+            checkout_time = RESORT_CHECKOUT_GUIDE
 
             try:
                 d1 = datetime.strptime(checkin, "%Y-%m-%d").date()
@@ -1149,6 +1374,8 @@ def booking(room_id):
                 flash(f"ช่วงที่ {idx}: เวลาเข้าพักต้องมากกว่าเวลาปัจจุบัน")
                 return redirect(url_for("booking", room_id=room_id))
 
+            # รีสอร์ทขนาดเล็ก: แนะนำให้พักค้างคืน 14:00-12:00 แต่ไม่ล็อกตายตัว
+            # อนุญาตกรณีพิเศษ เช่น ลูกค้า Walk-in หรือเจ้าของให้เข้าก่อนเวลาได้
             if dt2 <= dt1:
                 flash(f"ช่วงที่ {idx}: วันและเวลาออกต้องมากกว่าวันและเวลาเข้า")
                 return redirect(url_for("booking", room_id=room_id))
@@ -1233,6 +1460,12 @@ def booking(room_id):
         room=room,
         all_time_options=all_time_options,
         today_time_options=today_time_options,
+        checkin_time_options=checkin_time_options,
+        checkout_time_options=checkout_time_options,
+        default_checkin_str=default_checkin_date.strftime("%Y-%m-%d"),
+        default_checkout_str=default_checkout_date.strftime("%Y-%m-%d"),
+        standard_checkin_time=RESORT_CHECKIN_GUIDE,
+        standard_checkout_time=RESORT_CHECKOUT_GUIDE,
         today_str=date.today().strftime("%Y-%m-%d")
     )
 
@@ -1266,6 +1499,61 @@ def my_bookings():
     conn.close()
 
     return render_template("my_bookings.html", bookings=grouped_bookings)
+
+
+
+
+@app.route("/my-bookings/check-out/<int:booking_id>", methods=["POST"])
+def user_check_out(booking_id):
+    """ให้ลูกค้ากดเช็กเอาท์เองได้เมื่อออกก่อนเวลา/ออกจากที่พักแล้ว"""
+    if "user" not in session:
+        flash("กรุณาเข้าสู่ระบบก่อน")
+        return redirect("/login")
+
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM bookings WHERE id = ? AND username = ?", (booking_id, session["user"]))
+    booking = cur.fetchone()
+
+    if booking is None:
+        conn.close()
+        flash("ไม่พบรายการจอง")
+        return redirect("/my-bookings")
+
+    if booking["status"] != "checked_in":
+        conn.close()
+        flash("เช็กเอาท์ได้เฉพาะรายการที่อยู่ในสถานะเข้าพักแล้ว")
+        return redirect("/my-bookings")
+
+    now_str = db_now_str()
+    note_suffix = f" | ลูกค้ากดเช็กเอาท์เอง {now_str}"
+
+    if booking["batch_id"]:
+        cur.execute("""
+            UPDATE bookings
+            SET status = 'checked_out',
+                checked_out_at = ?,
+                note = COALESCE(note, '') || ?
+            WHERE batch_id = ? AND username = ? AND status = 'checked_in'
+        """, (now_str, note_suffix, booking["batch_id"], booking["username"]))
+    else:
+        cur.execute("""
+            UPDATE bookings
+            SET status = 'checked_out',
+                checked_out_at = ?,
+                note = COALESCE(note, '') || ?
+            WHERE id = ? AND username = ?
+        """, (now_str, note_suffix, booking_id, session["user"]))
+
+    conn.commit()
+    conn.close()
+
+    notify_admin(
+        "ลูกค้าเช็กเอาท์แล้ว",
+        f"ลูกค้า {booking['username']} กดเช็กเอาท์ห้อง {booking['room_name']} แล้ว ห้องถูกปล่อยกลับมาว่าง"
+    )
+    flash("เช็กเอาท์เรียบร้อยแล้ว ขอบคุณที่ใช้บริการ")
+    return redirect("/my-bookings")
 
 
 @app.route("/cancel/<int:booking_id>", methods=["GET", "POST"])
@@ -1860,6 +2148,27 @@ def upload_slip(booking_id):
 
     is_remaining_flow = booking["status"] in {"deposit_paid", "remaining_counter_pending"}
     remain_method = request.form.get("remain_method", "qr") if is_remaining_flow else "qr"
+    payment_method = request.form.get("payment_method", "promptpay") if not is_remaining_flow else remain_method
+
+    # กรณีลูกค้าเลือกชำระทั้งหมดหน้าเคาน์เตอร์ตั้งแต่แรก
+    if (not is_remaining_flow) and payment_method == "counter":
+        if booking["batch_id"]:
+            cur.execute("""
+                UPDATE bookings
+                SET status = 'counter_pending', payment_method = 'counter'
+                WHERE batch_id = ? AND username = ? AND status = 'approved'
+            """, (booking["batch_id"], booking["username"]))
+        else:
+            cur.execute("""
+                UPDATE bookings
+                SET status = 'counter_pending', payment_method = 'counter'
+                WHERE id = ?
+            """, (booking_id,))
+        conn.commit()
+        conn.close()
+        flash("บันทึกแล้ว: รายการนี้จะชำระเงินหน้าเคาน์เตอร์")
+        notify_user(booking["username"], "เลือกชำระหน้าเคาน์เตอร์", f"รายการจองห้อง {booking['room_name']} จะชำระเงินที่หน้าเคาน์เตอร์")
+        return redirect("/my-bookings")
 
     if is_remaining_flow and remain_method == "counter":
         if booking["batch_id"]:
@@ -1901,28 +2210,28 @@ def upload_slip(booking_id):
         if is_remaining_flow:
             cur.execute(f"""
                 UPDATE bookings
-                SET slip_filename = ?, status = ?, remaining_payment_method = 'qr'
+                SET slip_filename = ?, status = ?, remaining_payment_method = 'qr', payment_method = 'promptpay'
                 WHERE batch_id = ? AND username = ? AND status IN ('deposit_paid', 'remaining_counter_pending')
             """, (filename, target_status, booking["batch_id"], booking["username"]))
         else:
             cur.execute(f"""
                 UPDATE bookings
-                SET slip_filename = ?, status = ?
+                SET slip_filename = ?, status = ?, payment_method = ?
                 WHERE batch_id = ? AND username = ? AND status = ?
-            """, (filename, target_status, booking["batch_id"], booking["username"], booking["status"]))
+            """, (filename, target_status, payment_method, booking["batch_id"], booking["username"], booking["status"]))
     else:
         if is_remaining_flow:
             cur.execute("""
                 UPDATE bookings
-                SET slip_filename = ?, status = ?, remaining_payment_method = 'qr'
+                SET slip_filename = ?, status = ?, remaining_payment_method = 'qr', payment_method = 'promptpay'
                 WHERE id = ?
             """, (filename, target_status, booking_id))
         else:
             cur.execute("""
                 UPDATE bookings
-                SET slip_filename = ?, status = ?
+                SET slip_filename = ?, status = ?, payment_method = ?
                 WHERE id = ?
-            """, (filename, target_status, booking_id))
+            """, (filename, target_status, payment_method, booking_id))
     conn.commit()
     conn.close()
 
@@ -1962,20 +2271,34 @@ def approve_slip(booking_id):
         if booking["status"] == "waiting_remaining_slip_approval":
             cur.execute("""
                 UPDATE bookings
-                SET status = ?, paid = total, remaining_due = 0
+                SET status = ?, paid = total, remaining_due = 0,
+                    receipt_no = COALESCE(receipt_no, ?),
+                    receipt_issued_at = COALESCE(receipt_issued_at, ?)
                 WHERE batch_id = ? AND username = ? AND status = 'waiting_remaining_slip_approval'
-            """, (new_status, booking["batch_id"], booking["username"]))
+            """, (new_status, make_receipt_no(booking_id), db_now_str(), booking["batch_id"], booking["username"]))
         else:
-            cur.execute("""
-                UPDATE bookings
-                SET status = ?
-                WHERE batch_id = ? AND username = ? AND status = 'waiting_slip_approval'
-            """, (new_status, booking["batch_id"], booking["username"]))
+            if new_status == "fully_paid":
+                cur.execute("""
+                    UPDATE bookings
+                    SET status = ?,
+                        receipt_no = COALESCE(receipt_no, ?),
+                        receipt_issued_at = COALESCE(receipt_issued_at, ?)
+                    WHERE batch_id = ? AND username = ? AND status = 'waiting_slip_approval'
+                """, (new_status, make_receipt_no(booking_id), db_now_str(), booking["batch_id"], booking["username"]))
+            else:
+                cur.execute("""
+                    UPDATE bookings
+                    SET status = ?
+                    WHERE batch_id = ? AND username = ? AND status = 'waiting_slip_approval'
+                """, (new_status, booking["batch_id"], booking["username"]))
     else:
         if booking["status"] == "waiting_remaining_slip_approval":
-            cur.execute("UPDATE bookings SET status = ?, paid = total, remaining_due = 0 WHERE id = ?", (new_status, booking_id))
+            cur.execute("UPDATE bookings SET status = ?, paid = total, remaining_due = 0, receipt_no = COALESCE(receipt_no, ?), receipt_issued_at = COALESCE(receipt_issued_at, ?) WHERE id = ?", (new_status, make_receipt_no(booking_id), db_now_str(), booking_id))
         else:
-            cur.execute("UPDATE bookings SET status = ? WHERE id = ?", (new_status, booking_id))
+            if new_status == "fully_paid":
+                cur.execute("UPDATE bookings SET status = ?, receipt_no = COALESCE(receipt_no, ?), receipt_issued_at = COALESCE(receipt_issued_at, ?) WHERE id = ?", (new_status, make_receipt_no(booking_id), db_now_str(), booking_id))
+            else:
+                cur.execute("UPDATE bookings SET status = ? WHERE id = ?", (new_status, booking_id))
 
     conn.commit()
     conn.close()
@@ -2069,9 +2392,9 @@ def block_room():
             return redirect("/admin")
 
     cur.execute("""
-        INSERT INTO room_blocks(room_id, start_date, end_date, note, created_at)
-        VALUES(?,?,?,?,?)
-    """, (room_id, start_date, end_date, note, get_now().strftime("%Y-%m-%d %H:%M:%S")))
+        INSERT INTO room_blocks(room_id, start_date, end_date, note, created_at, status)
+        VALUES(?,?,?,?,?,?)
+    """, (room_id, start_date, end_date, note, get_now().strftime("%Y-%m-%d %H:%M:%S"), "blocked"))
     conn.commit()
     conn.close()
 
@@ -2166,23 +2489,29 @@ def admin_mark_counter_paid(booking_id):
         flash("ไม่พบรายการจอง")
         return redirect("/admin")
 
-    if booking["status"] != "remaining_counter_pending":
+    if booking["status"] not in ("remaining_counter_pending", "counter_pending"):
         conn.close()
-        flash("รายการนี้ยังไม่ได้เลือกชำระยอดคงเหลือหน้าเคาน์เตอร์")
+        flash("รายการนี้ยังไม่ได้เลือกชำระหน้าเคาน์เตอร์")
         return redirect("/admin")
 
     if booking["batch_id"]:
         cur.execute("""
             UPDATE bookings
-            SET status = 'fully_paid', paid = total, remaining_due = 0
-            WHERE batch_id = ? AND username = ? AND status = 'remaining_counter_pending'
-        """, (booking["batch_id"], booking["username"]))
+            SET status = 'fully_paid', paid = total, remaining_due = 0,
+                payment_method = COALESCE(payment_method, 'counter'),
+                receipt_no = COALESCE(receipt_no, ?),
+                receipt_issued_at = COALESCE(receipt_issued_at, ?)
+            WHERE batch_id = ? AND username = ? AND status IN ('remaining_counter_pending', 'counter_pending')
+        """, (make_receipt_no(booking_id), db_now_str(), booking["batch_id"], booking["username"]))
     else:
         cur.execute("""
             UPDATE bookings
-            SET status = 'fully_paid', paid = total, remaining_due = 0
+            SET status = 'fully_paid', paid = total, remaining_due = 0,
+                payment_method = COALESCE(payment_method, 'counter'),
+                receipt_no = COALESCE(receipt_no, ?),
+                receipt_issued_at = COALESCE(receipt_issued_at, ?)
             WHERE id = ?
-        """, (booking_id,))
+        """, (make_receipt_no(booking_id), db_now_str(), booking_id))
 
     conn.commit()
     conn.close()
@@ -2191,6 +2520,355 @@ def admin_mark_counter_paid(booking_id):
     flash("บันทึกการชำระหน้าเคาน์เตอร์เรียบร้อยแล้ว")
     return redirect("/admin")
 
+
+
+@app.route("/admin/check-in/<int:booking_id>")
+def admin_check_in(booking_id):
+    if session.get("role") != "admin":
+        return "สำหรับผู้ดูแลระบบเท่านั้น"
+
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM bookings WHERE id = ?", (booking_id,))
+    booking = cur.fetchone()
+
+    if booking is None:
+        conn.close()
+        flash("ไม่พบรายการจอง")
+        return redirect("/admin")
+
+    if booking["status"] != "fully_paid":
+        conn.close()
+        flash("เช็กอินปกติได้เฉพาะรายการที่ชำระครบแล้ว หากชำระมัดจำให้ใช้ปุ่มรับยอดคงเหลือหน้าเคาน์เตอร์และเช็กอิน")
+        return redirect("/admin")
+
+    # แอดมินสามารถกดเข้าพักก่อนเวลาได้ เช่น ลูกค้ามาถึงก่อนเวลาเช็กอิน
+    now_str = db_now_str()
+
+    if booking["batch_id"]:
+        cur.execute("""
+            UPDATE bookings
+            SET status = 'checked_in',
+                checked_in_at = ?
+            WHERE batch_id = ? AND username = ? AND status = 'fully_paid'
+        """, (now_str, booking["batch_id"], booking["username"]))
+    else:
+        cur.execute("""
+            UPDATE bookings
+            SET status = 'checked_in',
+                checked_in_at = ?
+            WHERE id = ?
+        """, (now_str, booking_id))
+
+    conn.commit()
+    conn.close()
+
+    notify_user(
+        booking["username"],
+        "เข้าพักแล้ว",
+        f"รายการจองห้อง {booking['room_name']} ได้ถูกเปลี่ยนสถานะเป็นเข้าพักแล้ว"
+    )
+    flash("เปลี่ยนสถานะเป็นเข้าพักแล้วเรียบร้อย")
+    return redirect("/admin")
+
+@app.route("/admin/counter-check-in/<int:booking_id>", methods=["POST"])
+def admin_counter_check_in(booking_id):
+    """แอดมินรับยอดคงเหลือหน้าเคาน์เตอร์แล้วเช็กอินทันที"""
+    if session.get("role") != "admin":
+        return "สำหรับผู้ดูแลระบบเท่านั้น"
+
+    pay_method = request.form.get("counter_method", "cash")
+    pay_method_text = "เงินสด" if pay_method == "cash" else "โอน"
+
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM bookings WHERE id = ?", (booking_id,))
+    booking = cur.fetchone()
+
+    if booking is None:
+        conn.close()
+        flash("ไม่พบรายการจอง")
+        return redirect("/admin")
+
+    if booking["status"] not in ("deposit_paid", "counter_pending"):
+        conn.close()
+        flash("รายการนี้ไม่ได้อยู่ในสถานะที่สามารถรับเงินหน้าเคาน์เตอร์และเช็กอินได้")
+        return redirect("/admin")
+
+    # แอดมินสามารถรับเงินหน้าเคาน์เตอร์และเช็กอินก่อนเวลาได้
+    now_str = db_now_str()
+    note_suffix = f" | ชำระยอดคงเหลือหน้าเคาน์เตอร์ด้วย{pay_method_text} และเช็กอินแล้ว {now_str}"
+
+    if booking["batch_id"]:
+        cur.execute("""
+            UPDATE bookings
+            SET status = 'checked_in',
+                paid = total,
+                remaining_due = 0,
+                remaining_payment_method = ?,
+                payment_method = ?,
+                checked_in_at = ?,
+                receipt_no = COALESCE(receipt_no, ?),
+                receipt_issued_at = COALESCE(receipt_issued_at, ?),
+                note = COALESCE(note, '') || ?
+            WHERE batch_id = ? AND username = ? AND status IN ('deposit_paid','counter_pending')
+        """, (pay_method, pay_method, now_str, make_receipt_no(booking_id), db_now_str(), note_suffix, booking["batch_id"], booking["username"]))
+    else:
+        cur.execute("""
+            UPDATE bookings
+            SET status = 'checked_in',
+                paid = total,
+                remaining_due = 0,
+                remaining_payment_method = ?,
+                payment_method = ?,
+                checked_in_at = ?,
+                receipt_no = COALESCE(receipt_no, ?),
+                receipt_issued_at = COALESCE(receipt_issued_at, ?),
+                note = COALESCE(note, '') || ?
+            WHERE id = ?
+        """, (pay_method, pay_method, now_str, make_receipt_no(booking_id), db_now_str(), note_suffix, booking_id))
+
+    conn.commit()
+    conn.close()
+
+    notify_user(
+        booking["username"],
+        "เข้าพักแล้ว",
+        f"รายการจองห้อง {booking['room_name']} ได้ชำระยอดคงเหลือหน้าเคาน์เตอร์และเช็กอินเรียบร้อยแล้ว"
+    )
+    flash(f"บันทึกชำระยอดคงเหลือด้วย{pay_method_text} และเช็กอินเรียบร้อยแล้ว")
+    return redirect("/admin")
+
+
+@app.route("/admin/no-show/<int:booking_id>", methods=["POST"])
+def admin_no_show(booking_id):
+    """กรณีลูกค้าจอง/จ่ายแล้ว แต่ไม่มาเมื่อเลยเวลาตัดสิทธิ์ ให้ปล่อยห้องกลับมาว่าง"""
+    if session.get("role") != "admin":
+        return "สำหรับผู้ดูแลระบบเท่านั้น"
+
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM bookings WHERE id = ?", (booking_id,))
+    booking = cur.fetchone()
+
+    if booking is None:
+        conn.close()
+        flash("ไม่พบรายการจอง")
+        return redirect("/admin")
+
+    allowed_statuses = ("approved", "deposit_paid", "fully_paid", "remaining_counter_pending", "counter_pending")
+    if booking["status"] not in allowed_statuses:
+        conn.close()
+        flash("สถานะนี้ไม่สามารถเปลี่ยนเป็นลูกค้าไม่มาได้")
+        return redirect("/admin")
+
+    cutoff_dt = get_no_show_cutoff_dt(booking)
+    if cutoff_dt and get_now() < cutoff_dt:
+        conn.close()
+        flash(f"ยังไม่ถึงเวลาตัดสิทธิ์ No Show ({NO_SHOW_CUTOFF_TIME} น.) จึงยังไม่ควรปล่อยห้อง")
+        return redirect("/admin")
+
+    now_str = db_now_str()
+    note_suffix = f" | No Show: ลูกค้าไม่มาเกินเวลาตัดสิทธิ์ {NO_SHOW_CUTOFF_TIME} น. แอดมินปล่อยห้องกลับมาว่าง {now_str}"
+
+    if booking["batch_id"]:
+        cur.execute("""
+            UPDATE bookings
+            SET status = 'no_show',
+                note = COALESCE(note, '') || ?
+            WHERE batch_id = ? AND username = ? AND status IN ('approved','deposit_paid','fully_paid','remaining_counter_pending','counter_pending')
+        """, (note_suffix, booking["batch_id"], booking["username"]))
+    else:
+        cur.execute("""
+            UPDATE bookings
+            SET status = 'no_show',
+                note = COALESCE(note, '') || ?
+            WHERE id = ?
+        """, (note_suffix, booking_id))
+
+    conn.commit()
+    conn.close()
+
+    notify_user(
+        booking["username"],
+        "รายการจองถูกปรับเป็น No Show",
+        f"รายการจองห้อง {booking['room_name']} ถูกปรับเป็น No Show เนื่องจากเลยเวลาตัดสิทธิ์และยังไม่มาเข้าพัก"
+    )
+    flash("เปลี่ยนสถานะเป็น No Show แล้ว ห้องถูกปล่อยกลับมาว่างและสามารถรับ Walk-in ได้")
+    return redirect("/admin")
+
+@app.route("/admin/check-out/<int:booking_id>", methods=["POST"])
+def admin_check_out(booking_id):
+    if session.get("role") != "admin":
+        return "สำหรับผู้ดูแลระบบเท่านั้น"
+
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM bookings WHERE id = ?", (booking_id,))
+    booking = cur.fetchone()
+
+    if booking is None:
+        conn.close()
+        flash("ไม่พบรายการจอง")
+        return redirect("/admin")
+
+    if booking["status"] != "checked_in":
+        conn.close()
+        flash("เช็กเอาท์ได้เฉพาะรายการที่อยู่ในสถานะเข้าพักแล้ว")
+        return redirect("/admin")
+
+    now_str = db_now_str()
+    if booking["batch_id"]:
+        cur.execute("""
+            UPDATE bookings
+            SET status = 'checked_out',
+                checked_out_at = ?
+            WHERE batch_id = ? AND username = ? AND status = 'checked_in'
+        """, (now_str, booking["batch_id"], booking["username"]))
+    else:
+        cur.execute("""
+            UPDATE bookings
+            SET status = 'checked_out',
+                checked_out_at = ?
+            WHERE id = ?
+        """, (now_str, booking_id))
+
+    conn.commit()
+    conn.close()
+
+    notify_user(
+        booking["username"],
+        "เช็กเอาท์แล้ว",
+        f"รายการจองห้อง {booking['room_name']} ถูกเปลี่ยนสถานะเป็นเช็กเอาท์แล้ว"
+    )
+    flash("เช็กเอาท์เรียบร้อยแล้ว ห้องจะกลับไปว่างสำหรับวันถัดไปตามปฏิทิน")
+    return redirect("/admin")
+
+
+@app.route("/admin/walk-in", methods=["POST"])
+def admin_walk_in():
+    if session.get("role") != "admin":
+        return "สำหรับผู้ดูแลระบบเท่านั้น"
+
+    try:
+        room_id = int(request.form.get("room_id", ""))
+        checkin = request.form.get("checkin", "").strip()
+        checkout = request.form.get("checkout", "").strip()
+        checkin_time = request.form.get("checkin_time", "14:00").strip()
+        checkout_time = RESORT_CHECKOUT_GUIDE if "RESORT_CHECKOUT_GUIDE" in globals() else "12:00"
+        total = float(request.form.get("total", "0") or 0)
+    except ValueError:
+        flash("ข้อมูล Walk-in ไม่ถูกต้อง")
+        return redirect("/admin")
+
+    guest_name = request.form.get("guest_name", "").strip() or "ลูกค้า Walk-in"
+    guest_phone = request.form.get("guest_phone", "").strip() or "walkin"
+    pay_method = request.form.get("pay_method", "cash")
+    room = get_room(room_id)
+
+    if room is None:
+        flash("ไม่พบห้องพัก")
+        return redirect("/admin")
+
+    try:
+        dt1 = datetime.strptime(f"{checkin} {checkin_time}", "%Y-%m-%d %H:%M")
+        dt2 = datetime.strptime(f"{checkout} {checkout_time}", "%Y-%m-%d %H:%M")
+    except ValueError:
+        flash("รูปแบบวันที่หรือเวลาไม่ถูกต้อง")
+        return redirect("/admin")
+
+    if dt2 <= dt1:
+        flash("วัน/เวลาออกต้องมากกว่าวัน/เวลาเข้า")
+        return redirect("/admin")
+
+    if total <= 0:
+        total = calculate_charge_nights(dt1, dt2) * room["price"]
+
+    # กันจองทับ
+    conn = get_db()
+    cur = conn.cursor()
+    placeholders = ",".join("?" for _ in BOOKED_STATUSES)
+    cur.execute(f"""
+        SELECT * FROM bookings
+        WHERE room_id = ? AND status IN ({placeholders})
+    """, (room_id, *BOOKED_STATUSES))
+    existing = cur.fetchall()
+    conn.close()
+
+    for b in existing:
+        b_start = datetime.strptime(f"{b['checkin']} {b['checkin_time']}", "%Y-%m-%d %H:%M")
+        b_end = datetime.strptime(f"{b['checkout']} {b['checkout_time']}", "%Y-%m-%d %H:%M")
+        if is_overlap(dt1, dt2, b_start, b_end):
+            flash("ช่วงเวลานี้มีรายการจอง/เข้าพักอยู่แล้ว")
+            return redirect("/admin")
+
+    username = ensure_walkin_user(guest_phone, guest_name)
+    nights = calculate_charge_nights(dt1, dt2)
+    now_str = db_now_str()
+    method_text = "เงินสด" if pay_method == "cash" else "โอน"
+
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("""
+        INSERT INTO bookings(
+            username, room_id, room_name, checkin, checkout,
+            checkin_time, checkout_time, nights, total, paytype,
+            paid, status, created_at, approved_at, remaining_due,
+            remaining_payment_method, counter_payment_method, checked_in_at,
+            payment_method, receipt_no, receipt_issued_at
+        )
+        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+    """, (
+        username, room_id, room["name"], checkin, checkout,
+        checkin_time, checkout_time, nights, total, "full",
+        total, "checked_in", now_str, now_str, 0,
+        pay_method, pay_method, now_str,
+        pay_method, make_receipt_no(room_id), now_str
+    ))
+    conn.commit()
+    conn.close()
+
+    notify_user(username, "สร้างรายการ Walk-in", f"สร้างรายการ Walk-in ห้อง {room['name']} และเช็กอินแล้ว ชำระด้วย{method_text}")
+    flash(f"สร้าง Walk-in และเช็กอินห้อง {room['name']} แล้ว ชำระด้วย{method_text}")
+    return redirect("/admin")
+
+
+@app.route("/receipt/<int:booking_id>")
+def receipt(booking_id):
+    if "user" not in session:
+        flash("กรุณาเข้าสู่ระบบก่อน")
+        return redirect("/login")
+
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM bookings WHERE id = ?", (booking_id,))
+    booking = cur.fetchone()
+
+    if booking is None:
+        conn.close()
+        flash("ไม่พบรายการจอง")
+        return redirect("/my-bookings")
+
+    if session.get("role") != "admin" and booking["username"] != session["user"]:
+        conn.close()
+        flash("คุณไม่มีสิทธิ์ดูใบเสร็จนี้")
+        return redirect("/my-bookings")
+
+    if booking["status"] not in ("fully_paid", "checked_in", "checked_out"):
+        conn.close()
+        flash("ใบเสร็จจะแสดงได้หลังชำระครบแล้ว")
+        return redirect("/my-bookings")
+
+    if not booking["receipt_no"]:
+        receipt_no = make_receipt_no(booking_id)
+        issued_at = db_now_str()
+        cur.execute("UPDATE bookings SET receipt_no = ?, receipt_issued_at = ? WHERE id = ?", (receipt_no, issued_at, booking_id))
+        conn.commit()
+        cur.execute("SELECT * FROM bookings WHERE id = ?", (booking_id,))
+        booking = cur.fetchone()
+
+    conn.close()
+    return render_template("receipt.html", booking=booking)
 
 @app.route("/admin")
 def admin():
@@ -2263,6 +2941,98 @@ def admin_toggle_room(room_id):
     return redirect("/admin")
 
 
+@app.route("/admin/calendar/update-room-day", methods=["POST"])
+def admin_calendar_update_room_day():
+    if session.get("role") != "admin":
+        return "สำหรับผู้ดูแลระบบเท่านั้น"
+
+    return_url = request.form.get("return_url") or "/admin/calendar"
+    if not return_url.startswith("/admin/calendar"):
+        return_url = "/admin/calendar"
+
+    try:
+        room_id = int(request.form.get("room_id", ""))
+        target_date_text = request.form.get("date", "")
+        target_day = datetime.strptime(target_date_text, "%Y-%m-%d").date()
+    except ValueError:
+        flash("ข้อมูลห้องหรือวันที่ไม่ถูกต้อง")
+        return redirect(return_url)
+
+    action = request.form.get("action")
+    selected_status = request.form.get("status", "blocked").strip()
+    note = request.form.get("note", "").strip()
+
+    if action == "block":
+        selected_status = "blocked"
+    elif action == "unblock":
+        selected_status = "free"
+    elif action != "set_status":
+        flash("ไม่พบคำสั่งที่ต้องการ")
+        return redirect(return_url)
+
+    if selected_status not in MANUAL_DAY_STATUSES:
+        flash("สถานะที่เลือกไม่ถูกต้อง")
+        return redirect(return_url)
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    if selected_status != "free":
+        placeholders = ",".join("?" for _ in BOOKED_STATUSES)
+        cur.execute(f"""
+            SELECT * FROM bookings
+            WHERE room_id = ? AND status IN ({placeholders})
+        """, (room_id, *BOOKED_STATUSES))
+        bookings = cur.fetchall()
+
+        for booking in bookings:
+            checkin = datetime.strptime(f"{booking['checkin']} {booking['checkin_time']}", "%Y-%m-%d %H:%M")
+            checkout = datetime.strptime(f"{booking['checkout']} {booking['checkout_time']}", "%Y-%m-%d %H:%M")
+            if block_overlaps_booking(checkin, checkout, target_day, target_day):
+                conn.close()
+                flash("เปลี่ยนไม่ได้ เพราะวันดังกล่าวมีรายการจองหรือมีผู้พักอยู่")
+                return redirect(return_url)
+
+    cur.execute("""
+        SELECT * FROM room_blocks
+        WHERE room_id = ? AND date(start_date) <= date(?) AND date(end_date) >= date(?)
+    """, (room_id, target_date_text, target_date_text))
+    matching_blocks = cur.fetchall()
+
+    for block in matching_blocks:
+        block_start = datetime.strptime(block["start_date"], "%Y-%m-%d").date()
+        block_end = datetime.strptime(block["end_date"], "%Y-%m-%d").date()
+        block_status = block["status"] if "status" in block.keys() and block["status"] else "blocked"
+        cur.execute("DELETE FROM room_blocks WHERE id = ?", (block["id"],))
+
+        if block_start < target_day:
+            before_end = target_day - timedelta(days=1)
+            cur.execute("""
+                INSERT INTO room_blocks(room_id, start_date, end_date, note, created_at, status)
+                VALUES(?,?,?,?,?,?)
+            """, (room_id, block_start.strftime("%Y-%m-%d"), before_end.strftime("%Y-%m-%d"), block["note"], block["created_at"], block_status))
+
+        if target_day < block_end:
+            after_start = target_day + timedelta(days=1)
+            cur.execute("""
+                INSERT INTO room_blocks(room_id, start_date, end_date, note, created_at, status)
+                VALUES(?,?,?,?,?,?)
+            """, (room_id, after_start.strftime("%Y-%m-%d"), block_end.strftime("%Y-%m-%d"), block["note"], block["created_at"], block_status))
+
+    if selected_status != "free":
+        cur.execute("""
+            INSERT INTO room_blocks(room_id, start_date, end_date, note, created_at, status)
+            VALUES(?,?,?,?,?,?)
+        """, (room_id, target_date_text, target_date_text, note, get_now().strftime("%Y-%m-%d %H:%M:%S"), selected_status))
+        flash(f"ตั้งค่าวันนี้เป็น {MANUAL_DAY_STATUSES[selected_status]} แล้ว")
+    else:
+        flash("เปลี่ยนเฉพาะวันดังกล่าวกลับเป็นว่างแล้ว")
+
+    conn.commit()
+    conn.close()
+    return redirect(return_url)
+
+
 @app.route("/admin/calendar")
 def admin_calendar():
     auto_cancel_expired_bookings()
@@ -2270,8 +3040,30 @@ def admin_calendar():
     if session.get("role") != "admin":
         return "สำหรับผู้ดูแลระบบเท่านั้น"
 
-    day_list, room_rows = get_calendar_data(days=14)
-    return render_template("admin_calendar.html", day_list=day_list, room_rows=room_rows)
+    start_text = request.args.get("start", "").strip()
+    try:
+        start_day = datetime.strptime(start_text, "%Y-%m-%d").date() if start_text else date.today()
+    except ValueError:
+        start_day = date.today()
+
+    # แสดงเป็นช่วง 14 วันเพื่อให้ตารางไม่ล้นจอ แต่มีปุ่มเลื่อนไปเดือนหน้า/ช่วงถัดไปได้
+    days = 14
+    day_list, room_rows = get_calendar_data(days=days, start_day=start_day)
+    prev_start = (start_day - timedelta(days=14)).strftime("%Y-%m-%d")
+    next_start = (start_day + timedelta(days=14)).strftime("%Y-%m-%d")
+    today_start = date.today().strftime("%Y-%m-%d")
+    current_start = start_day.strftime("%Y-%m-%d")
+    current_end = day_list[-1].strftime("%Y-%m-%d") if day_list else current_start
+    return render_template(
+        "admin_calendar.html",
+        day_list=day_list,
+        room_rows=room_rows,
+        prev_start=prev_start,
+        next_start=next_start,
+        today_start=today_start,
+        current_start=current_start,
+        current_end=current_end,
+    )
 
 
 init_db()

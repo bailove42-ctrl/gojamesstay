@@ -1,10 +1,25 @@
 {% extends "base.html" %}
 {% block title %}ปฏิทินห้องพัก{% endblock %}
 {% block content %}
-<h2>ปฏิทินห้องพัก</h2>
+<div class="calendar-page-head">
+    <div>
+        <h2>ปฏิทินห้องพัก</h2>
+        <p class="muted">ดูและแก้ไขสถานะห้องพักแบบรายวัน</p>
+    </div>
+    <div class="calendar-nav">
+        <a class="calendar-nav-btn" href="/admin/calendar?start={{ prev_start }}">‹ 14 วันก่อนหน้า</a>
+        <a class="calendar-nav-btn active" href="/admin/calendar?start={{ today_start }}">วันนี้</a>
+        <a class="calendar-nav-btn" href="/admin/calendar?start={{ next_start }}">14 วันถัดไป ›</a>
+        <form method="get" action="/admin/calendar" class="calendar-jump">
+            <input type="date" name="start" value="{{ current_start }}">
+            <button type="submit">ไปวันที่</button>
+        </form>
+    </div>
+</div>
 
-<div class="card">
-<h3>ปฏิทินสถานะห้องพัก (14 วันข้างหน้า)</h3>
+<div class="card calendar-card">
+<h3>ปฏิทินสถานะห้องพัก</h3>
+<p class="muted" style="margin-top:0;">ช่วงวันที่ {{ current_start }} ถึง {{ current_end }} — กดที่ช่องในปฏิทิน แล้วเลือกสถานะของห้องเฉพาะวันนั้น ๆ</p>
 
 <div class="calendar-wrap">
 <table class="calendar-table">
@@ -20,19 +35,35 @@
 <td class="calendar-room">{{ row.room.name }}</td>
 {% for cell in row.cells %}
 <td>
-{% if cell.detail %}
 <button
 class="calendar-btn"
-title="ชื่อผู้จอง: {{ cell.detail.guest_name }}"
+title="กดเพื่อแก้ไขสถานะห้อง"
+data-room-id="{{ cell.room_id }}"
+data-room="{{ cell.room_name }}"
+data-date="{{ cell.date_text }}"
+data-state="{{ cell.state }}"
+{% if cell.detail %}
 data-guest="{{ cell.detail.guest_name }}"
-data-room="{{ cell.detail.room_name }}"
 data-checkin="{{ cell.detail.checkin }}"
 data-checkin-time="{{ cell.detail.checkin_time }}"
 data-checkout="{{ cell.detail.checkout }}"
 data-checkout-time="{{ cell.detail.checkout_time }}"
 data-status="{{ cell.detail.status_text }}"
 data-note="{{ cell.detail.note }}"
-onclick="showBookingDetail(this)"
+data-source="{{ cell.detail.source }}"
+data-booking-id="{{ cell.detail.booking_id if cell.detail.booking_id else '' }}"
+{% else %}
+data-guest="-"
+data-checkin="{{ cell.date_text }}"
+data-checkin-time="-"
+data-checkout="{{ cell.date_text }}"
+data-checkout-time="-"
+data-status="ว่าง"
+data-note="-"
+data-source="free"
+data-booking-id=""
+{% endif %}
+onclick="showRoomAction(this)"
 >
     {% if cell.state == "booked" %}
     <div class="cell-booked">มีผู้จอง</div>
@@ -44,9 +75,6 @@ onclick="showBookingDetail(this)"
     <div class="cell-free">ว่าง</div>
     {% endif %}
 </button>
-{% else %}
-<div class="cell-free">ว่าง</div>
-{% endif %}
 </td>
 {% endfor %}
 </tr>
@@ -55,61 +83,167 @@ onclick="showBookingDetail(this)"
 </div>
 
 <p class="muted" style="margin-top:12px;">
-สีเขียว = ว่าง สีฟ้า = มีผู้จอง สีม่วง = มีผู้พักอยู่ สีชมพู = แอดมินตั้งค่าไม่ว่าง
+สีเขียว = ว่าง สีฟ้า = มีผู้จอง สีม่วง = มีผู้พักอยู่ สีชมพู = แอดมินตั้งค่าไม่ว่างรายวัน
 </p>
 </div>
 
-<div class="card" style="margin-top:20px;">
-<h3>รายละเอียดการจอง</h3>
+<div class="card status-editor-card" style="margin-top:20px;">
+<h3>แก้ไขสถานะจากปฏิทิน</h3>
 <div id="booking-detail-box" class="muted">
-กดที่ช่องในปฏิทินเพื่อดูรายละเอียดการจอง
+กดที่ช่องในปฏิทินเพื่อเลือกสถานะ: ว่าง / มีผู้จอง / มีผู้พักอยู่ / ไม่ว่าง
 </div>
 </div>
 
 <style>
-.calendar-btn{border:none;background:transparent;padding:0;width:100%;cursor:pointer;transition:0.15s;}
+.calendar-page-head{max-width:1180px;margin:0 auto 18px;display:flex;align-items:flex-end;justify-content:space-between;gap:18px;}
+.calendar-page-head h2{margin:0 0 4px;font-size:30px;}
+.calendar-page-head .muted{margin:0;}
+.calendar-nav{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;align-items:center;}
+.calendar-nav-btn,.calendar-jump button{display:inline-flex;align-items:center;justify-content:center;border:1px solid #eadcff;background:#fff;color:#4c2f75;border-radius:999px;padding:9px 13px;font-weight:800;text-decoration:none;box-shadow:0 5px 14px rgba(47,36,66,.08);}
+.calendar-nav-btn.active{background:#6f42c1;color:#fff;border-color:#6f42c1;}
+.calendar-jump{display:flex;gap:6px;align-items:center;}
+.calendar-jump input{height:38px;border-radius:999px;border:1px solid #eadcff;padding:0 12px;background:#fff;color:#2f2442;}
+.calendar-card{max-width:1180px;margin-left:auto;margin-right:auto;overflow:hidden;}
+.calendar-btn{border:none;background:transparent;padding:0;width:100%;cursor:pointer;transition:0.15s;min-width:68px;}
 .calendar-btn:hover{transform:scale(1.05);}
 .calendar-btn div{transition:0.15s;}
 .detail-grid{display:grid;grid-template-columns:160px 1fr;gap:10px 16px;margin-top:10px;}
 .detail-label{font-weight:bold;color:#4c3b63;}
 .detail-value{color:#2f2442;}
+.action-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;align-items:end;}
+.action-row form{display:flex;flex-wrap:wrap;gap:8px;align-items:end;}
+.action-row input[type="text"], .action-row select{padding:10px;border:1px solid #ddd;border-radius:12px;min-width:230px;background:white;}
+.calendar-action-btn{border:none;border-radius:999px;padding:10px 16px;font-weight:bold;cursor:pointer;}
+.btn-block{background:#ffd7e5;color:#8a1238;}
+.btn-free{background:#e4f8e9;color:#0b6b2b;}
+.btn-open{background:#dff7ff;color:#075b6d;}
+.btn-close{background:#eee3ff;color:#4c2f75;}
+.warning-text{margin-top:14px;color:#9a5a00;background:#fff7df;padding:10px 12px;border-radius:12px;}
+
+.status-editor-card{max-width:1180px;margin-left:auto;margin-right:auto;padding:26px 28px;border-radius:28px;background:linear-gradient(180deg,#fff 0%,#f7f3ff 100%);box-shadow:0 10px 35px rgba(20,10,40,.18);}
+.status-editor-card h3{font-size:28px;margin-bottom:18px;color:#3f2468;}
+#booking-detail-box{background:#fff;border:1px solid #eadcff;border-radius:22px;padding:22px;box-shadow:0 6px 20px rgba(76,47,117,.08);}
+.detail-grid{display:grid;grid-template-columns:180px 1fr;gap:14px 18px;margin-top:16px;background:#fbf9ff;padding:18px;border-radius:18px;}
+.detail-label{font-weight:800;color:#5c3d91;}
+.detail-value{color:#2b1d42;font-weight:600;}
+.action-row{margin-top:22px;padding-top:18px;border-top:1px solid #eee2ff;}
+.action-row form{width:100%;display:grid;grid-template-columns:220px 1fr auto;gap:12px;align-items:center;}
+.action-row input[type="text"], .action-row select{
+height:48px;padding:0 16px;border:1px solid #dcc8ff;border-radius:14px;background:#fff;
+font-size:15px;font-weight:600;color:#2f2442;
+}
+.calendar-action-btn{
+height:48px;padding:0 22px;border:none;border-radius:14px;
+background:linear-gradient(135deg,#8d63ff,#6f42c1);
+color:#fff;font-weight:800;box-shadow:0 8px 20px rgba(111,66,193,.28);
+}
+.calendar-action-btn:hover{transform:translateY(-1px);}
+@media (max-width: 760px){
+.action-row form{grid-template-columns:1fr;}
+.detail-grid{grid-template-columns:1fr;}
+}
+/* ===== FINAL CALENDAR POLISH ===== */
+.calendar-card,
+.status-editor-card{
+    max-width:1120px !important;
+    border-radius:24px !important;
+    padding:22px !important;
+}
+.calendar-wrap{
+    border:1px solid var(--border) !important;
+    border-radius:18px !important;
+    background:#fff !important;
+    padding:12px !important;
+    overflow-x:auto !important;
+}
+.calendar-wrap table th,
+.calendar-wrap table td{
+    padding:10px 12px !important;
+}
+.status-editor-card input,
+.status-editor-card select{
+    max-width:100% !important;
+}
+@media(max-width:760px){
+    .calendar-card,
+    .status-editor-card{
+        padding:16px !important;
+    }
+}
+
 </style>
 
 <script>
-function showBookingDetail(btn){
-    const guest = btn.dataset.guest;
-    const room = btn.dataset.room;
-    const checkin = btn.dataset.checkin;
-    const checkinTime = btn.dataset.checkinTime;
-    const checkout = btn.dataset.checkout;
-    const checkoutTime = btn.dataset.checkoutTime;
-    const status = btn.dataset.status;
-    const note = btn.dataset.note;
+function hiddenFields(roomId, date){
+    return `
+        <input type="hidden" name="room_id" value="${roomId}">
+        <input type="hidden" name="date" value="${date}">
+    `;
+}
 
+function showRoomAction(btn){
+    const roomId = btn.dataset.roomId;
+    const room = btn.dataset.room;
+    const date = btn.dataset.date;
+    const state = btn.dataset.state;
+    const guest = btn.dataset.guest || "-";
+    const checkin = btn.dataset.checkin || date;
+    const checkinTime = btn.dataset.checkinTime || "-";
+    const checkout = btn.dataset.checkout || date;
+    const checkoutTime = btn.dataset.checkoutTime || "-";
+    const status = btn.dataset.status || "ว่าง";
+    const note = btn.dataset.note || "-";
+    const source = btn.dataset.source || "free";
+    const bookingId = btn.dataset.bookingId || "";
     const box = document.getElementById("booking-detail-box");
 
+    let actions = "";
+
+    if (source === "booking") {
+        actions = `
+            <div class="warning-text">วันนี้มีรายการจองหรือมีผู้พักอยู่ จึงไม่สามารถตั้งเป็นไม่ว่าง/ว่างจากปฏิทินนี้ได้ กรุณาจัดการรายการจองที่หน้าแอดมิน</div>
+            <div class="action-row"><a class="calendar-action-btn btn-open" href="/admin">ไปหน้าจัดการการจอง</a></div>
+        `;
+    } else if (source === "room_closed") {
+        actions = `
+            <div class="warning-text">ห้องนี้ถูกปิดทั้งห้องจากหน้าจัดการห้องพัก ปฏิทินนี้ปรับได้เฉพาะรายวันเท่านั้น</div>
+            <div class="action-row"><a class="calendar-action-btn btn-open" href="/admin">ไปหน้าจัดการห้องพัก</a></div>
+        `;
+    } else {
+        actions = `
+            <div class="action-row">
+                <form method="post" action="/admin/calendar/update-room-day">
+                    ${hiddenFields(roomId, date)}
+                    <input type="hidden" name="action" value="set_status">
+                    <input type="hidden" name="return_url" value="/admin/calendar?start={{ current_start }}">
+                    <label>เลือกสถานะของวันนี้<br>
+                        <select name="status">
+                            <option value="free" ${state === "free" ? "selected" : ""}>ว่าง</option>
+                            <option value="booked" ${state === "booked" ? "selected" : ""}>มีผู้จอง</option>
+                            <option value="occupied" ${state === "occupied" ? "selected" : ""}>มีผู้พักอยู่</option>
+                            <option value="blocked" ${state === "blocked" ? "selected" : ""}>ไม่ว่าง</option>
+                        </select>
+                    </label>
+                    <label>หมายเหตุ<br><input type="text" name="note" placeholder="เช่น ซ่อมแอร์ / ลูกค้าจองนอกระบบ" value="${note !== "-" ? note : ""}"></label>
+                    <button class="calendar-action-btn btn-block" type="submit">บันทึกสถานะเฉพาะวันนี้</button>
+                </form>
+            </div>
+        `;
+    }
+
     box.innerHTML = `
-        <div style="font-size:18px;font-weight:bold;margin-bottom:10px;">
-            รายละเอียดการจอง
-        </div>
+        <div style="font-size:18px;font-weight:bold;margin-bottom:10px;">${room} — ${date}</div>
         <div class="detail-grid">
-            <div class="detail-label">ชื่อผู้จอง</div>
-            <div class="detail-value">${guest}</div>
-            <div class="detail-label">ห้องพัก</div>
-            <div class="detail-value">${room}</div>
-            <div class="detail-label">วันเข้า</div>
-            <div class="detail-value">${checkin}</div>
-            <div class="detail-label">เวลาเข้า</div>
-            <div class="detail-value">${checkinTime}</div>
-            <div class="detail-label">วันออก</div>
-            <div class="detail-value">${checkout}</div>
-            <div class="detail-label">เวลาออก</div>
-            <div class="detail-value">${checkoutTime}</div>
-            <div class="detail-label">สถานะ</div>
-            <div class="detail-value">${status}</div>
-            <div class="detail-label">หมายเหตุ</div>
-            <div class="detail-value">${note}</div>
+            <div class="detail-label">สถานะ</div><div class="detail-value">${status}</div>
+            <div class="detail-label">ชื่อผู้จอง</div><div class="detail-value">${guest}</div>
+            <div class="detail-label">วันเข้า</div><div class="detail-value">${checkin}</div>
+            <div class="detail-label">เวลาเข้า</div><div class="detail-value">${checkinTime}</div>
+            <div class="detail-label">วันออก</div><div class="detail-value">${checkout}</div>
+            <div class="detail-label">เวลาออก</div><div class="detail-value">${checkoutTime}</div>
+            <div class="detail-label">หมายเหตุ</div><div class="detail-value">${note}</div>
+            ${bookingId ? `<div class="detail-label">รหัสการจอง</div><div class="detail-value">#${bookingId}</div>` : ""}
         </div>
+        ${actions}
     `;
 }
 </script>
