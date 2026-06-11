@@ -1092,6 +1092,20 @@ form[action="/admin/walk-in"] .walkin-actions .btn{width:100% !important;min-wid
 @media(max-width:980px){.walkin-top-grid{grid-template-columns:1fr 1fr !important}.walkin-pay-grid,.walkin-date-card{grid-template-columns:1fr !important}.walkin-date-col:first-child{padding-right:0 !important;border-right:0 !important;border-bottom:1px solid #efe7fb !important;padding-bottom:20px !important}}
 @media(max-width:640px){.walkin-panel{padding:18px !important;border-radius:20px !important}.walkin-form-head{align-items:flex-start !important;gap:12px !important}.walkin-head-icon{width:40px !important;height:40px !important;font-size:13px !important}.walkin-form-head h3{font-size:22px !important}.walkin-top-grid,.walkin-pay-grid{grid-template-columns:1fr !important;gap:14px !important}.walkin-date-card{padding:16px !important;gap:18px !important}.walkin-field input,.walkin-field select{height:50px !important;min-height:50px !important}.walkin-policy-note{padding:14px !important}.walkin-policy-note .walkin-clock{flex-basis:36px !important;width:36px !important;height:36px !important;font-size:12px !important}.walkin-note-box span{font-size:13px !important}}
 
+
+.admin-report-panel{margin:0 0 18px !important;}
+.admin-report-grid{display:grid !important;grid-template-columns:repeat(4,minmax(0,1fr)) !important;gap:12px !important;margin-top:14px !important;}
+.admin-report-card{padding:16px !important;border-radius:18px !important;background:#fff !important;border:1px solid #eadfff !important;box-shadow:0 10px 24px rgba(50,22,88,.06) !important;}
+.admin-report-card .label{font-size:13px !important;color:#6b5a7d !important;font-weight:800 !important;margin-bottom:8px !important;}
+.admin-report-card .value{font-size:24px !important;color:#211034 !important;font-weight:950 !important;line-height:1.1 !important;}
+.admin-report-card .sub{font-size:12px !important;color:#8a7a99 !important;font-weight:700 !important;margin-top:8px !important;}
+.admin-report-table{width:100% !important;border-collapse:collapse !important;margin-top:12px !important;background:#fff !important;border-radius:16px !important;overflow:hidden !important;}
+.admin-report-table th,.admin-report-table td{padding:12px !important;border-bottom:1px solid #f0e8ff !important;text-align:left !important;font-size:14px !important;}
+.admin-report-table th{background:#f3ebff !important;font-weight:900 !important;color:#2b1748 !important;}
+.admin-report-note{margin-top:12px !important;color:#71617e !important;font-weight:700 !important;font-size:13px !important;}
+@media(max-width:980px){.admin-report-grid{grid-template-columns:repeat(2,minmax(0,1fr)) !important;}}
+@media(max-width:640px){.admin-report-grid{grid-template-columns:1fr !important}.admin-report-card .value{font-size:21px !important}.admin-report-table{display:block !important;overflow-x:auto !important;white-space:nowrap !important;}}
+
 /* ===== Admin page simplification cleanup ===== */
 .admin-page-head-clean{align-items:center !important;margin-bottom:18px !important;}
 .admin-page-head-clean .admin-page-title p{max-width:720px !important;margin-top:6px !important;}
@@ -1131,10 +1145,108 @@ form[action="/admin/walk-in"] .walkin-actions .btn{width:100% !important;min-wid
     <details class="admin-tools-menu">
         <summary>เครื่องมือเพิ่มเติม</summary>
         <div class="admin-tools-popover">
+            <a href="#admin-report-summary">รายงานและสรุปข้อมูล</a>
             <a href="/admin/export-refunds">ดาวน์โหลดรายการคืนเงิน Excel</a>
         </div>
     </details>
 </div>
+
+<details id="admin-report-summary" class="admin-panel admin-collapsible-card admin-report-panel">
+    <summary>รายงานและสรุปข้อมูล</summary>
+    <div style="padding:18px 20px 20px;">
+        <div class="admin-report-grid">
+            <div class="admin-report-card">
+                <div class="label">รายได้วันนี้</div>
+                <div class="value">{{ "{:,.2f}".format(report.today_revenue) }} บาท</div>
+                <div class="sub">ยอดชำระที่บันทึกวันนี้</div>
+            </div>
+            <div class="admin-report-card">
+                <div class="label">รายได้เดือนนี้</div>
+                <div class="value">{{ "{:,.2f}".format(report.month_revenue) }} บาท</div>
+                <div class="sub">รวมยอดชำระของเดือนปัจจุบัน</div>
+            </div>
+            <div class="admin-report-card">
+                <div class="label">รายได้รวมทั้งหมด</div>
+                <div class="value">{{ "{:,.2f}".format(report.total_revenue) }} บาท</div>
+                <div class="sub">รวมยอดชำระที่ไม่ถูกยกเลิก</div>
+            </div>
+            <div class="admin-report-card">
+                <div class="label">จำนวนลูกค้าที่จอง</div>
+                <div class="value">{{ report.customer_count }} คน</div>
+                <div class="sub">ไม่นับรายการ Walk-in ภายในระบบ</div>
+            </div>
+            <div class="admin-report-card">
+                <div class="label">การจองทั้งหมด</div>
+                <div class="value">{{ report.total_bookings }} รายการ</div>
+                <div class="sub">รวมทุกสถานะ</div>
+            </div>
+            <div class="admin-report-card">
+                <div class="label">รอดำเนินการ</div>
+                <div class="value">{{ report.pending_bookings }} รายการ</div>
+                <div class="sub">รออนุมัติ / รอสลิป / รอชำระ</div>
+            </div>
+            <div class="admin-report-card">
+                <div class="label">Walk-in ทั้งหมด</div>
+                <div class="value">{{ report.walkin_count }} รายการ</div>
+                <div class="sub">ลูกค้าหน้าเคาน์เตอร์</div>
+            </div>
+            <div class="admin-report-card">
+                <div class="label">กำลังเข้าพัก</div>
+                <div class="value">{{ report.checked_in_count }} ห้อง</div>
+                <div class="sub">สถานะเข้าพักแล้ว</div>
+            </div>
+            <div class="admin-report-card">
+                <div class="label">ห้องทั้งหมด</div>
+                <div class="value">{{ report.total_rooms }} ห้อง</div>
+                <div class="sub">เปิดให้จอง {{ report.open_rooms }} ห้อง</div>
+            </div>
+            <div class="admin-report-card">
+                <div class="label">ห้องว่างโดยประมาณวันนี้</div>
+                <div class="value">{{ report.available_today }} ห้อง</div>
+                <div class="sub">คำนวณจากห้องเปิดให้จอง - กำลังเข้าพัก</div>
+            </div>
+            <div class="admin-report-card">
+                <div class="label">เช็กเอาท์แล้ว</div>
+                <div class="value">{{ report.checked_out_count }} รายการ</div>
+                <div class="sub">รายการที่จบการเข้าพัก</div>
+            </div>
+            <div class="admin-report-card">
+                <div class="label">ห้องที่ถูกบล็อก</div>
+                <div class="value">{{ report.blocked_count }} รายการ</div>
+                <div class="sub">ช่วงวันที่ปิดไม่ให้จอง</div>
+            </div>
+        </div>
+
+        <h4 style="margin:20px 0 8px;color:#201135;font-size:17px;font-weight:950;">รายการล่าสุด</h4>
+        <table class="admin-report-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>ห้อง</th>
+                    <th>ผู้จอง</th>
+                    <th>สถานะ</th>
+                    <th>ยอดรวม</th>
+                    <th>สร้างเมื่อ</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in report.latest_bookings %}
+                <tr>
+                    <td>#{{ item.id }}</td>
+                    <td>{{ item.room_name }}</td>
+                    <td>{{ item.username }}</td>
+                    <td>{{ status_th(item.status) }}</td>
+                    <td>{{ "{:,.2f}".format(item.total or 0) }} บาท</td>
+                    <td>{{ item.created_at or '-' }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6" style="text-align:center;color:#7b6a8f;">ยังไม่มีรายการจอง</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div class="admin-report-note">หมายเหตุ: รายได้คำนวณจากยอดที่ระบบบันทึกไว้ในรายการจองที่ยังไม่ถูกยกเลิก</div>
+    </div>
+</details>
 
 <div class="admin-panel" style="margin-bottom:18px;">
     <div class="admin-panel-title">

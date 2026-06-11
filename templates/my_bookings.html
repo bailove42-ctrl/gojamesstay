@@ -113,7 +113,7 @@
 
 <div class="my-bookings-page">
 <h2>การจองของฉัน</h2>
-<p class="my-bookings-subtitle">ตรวจสอบรายการจอง ชำระเงิน ยกเลิก หรือเช็กเอาท์ได้จากหน้านี้</p>
+<p class="my-bookings-subtitle">ตรวจสอบรายการจอง ชำระเงิน หรือยกเลิกได้จากหน้านี้</p>
 
 {% macro segment_status_text(segment) -%}
     {% if segment["status"] == "waiting_approval" %}รอแอดมินอนุมัติ
@@ -203,10 +203,7 @@
             <a class="btn btn-warning" href="/cancel/{{ b['action_id'] }}" onclick="return confirm('ต้องการส่งคำขอยกเลิกการจองนี้ใช่หรือไม่? หากแอดมินอนุมัติ ระบบจะคืนเงินภายใน 2-4 วันทำการ')">ส่งคำขอยกเลิก</a>
         {% endif %}
     {% elif b["status"] == "checked_in" %}
-        <form method="post" action="/my-bookings/check-out/{{ b['action_id'] }}" style="display:inline;">
-            <button class="btn btn-warning" type="submit" onclick="return confirm('ยืนยันว่าออกจากที่พักและต้องการเช็กเอาท์ใช่หรือไม่?')">เช็กเอาท์ออก</button>
-        </form>
-        <span class="muted" style="display:block;margin-top:6px;">ใช้เมื่อออกจากที่พักก่อนเวลาเช็กเอาท์มาตรฐาน</span>
+        <span class="muted">หากต้องการเช็กเอาท์ กรุณาติดต่อหน้าเคาน์เตอร์</span>
     {% elif b["status"] == "checked_out" %}
         <span class="muted">เช็กเอาท์แล้ว</span>
     {% elif b["status"] == "cancel_requested" %}
@@ -260,13 +257,6 @@
                             <a class="btn btn-danger" href="/cancel/{{ segment['id'] }}" onclick="return confirm('ต้องการยกเลิกเฉพาะช่วงนี้ใช่หรือไม่?')">ยกเลิกเฉพาะช่วงนี้</a>
                         </div>
                     {% endif %}
-                    {% if b["is_grouped"] and segment["status"] == "checked_in" %}
-                        <div style="margin-top:6px;">
-                            <form method="post" action="/my-bookings/check-out/{{ segment['id'] }}" style="display:inline;">
-                                <button class="btn btn-warning" type="submit" onclick="return confirm('ยืนยันว่าออกจากที่พักช่วงนี้แล้วใช่หรือไม่?')">เช็กเอาท์ช่วงนี้</button>
-                            </form>
-                        </div>
-                    {% endif %}
                 </div>
             {% endfor %}
         </td>
@@ -316,13 +306,6 @@
                 {% if b["is_grouped"] and segment["cancel_allowed"] %}
                 <div class="segment-actions">
                     <a class="btn btn-danger" href="/cancel/{{ segment['id'] }}" onclick="return confirm('ต้องการยกเลิกเฉพาะช่วงนี้ใช่หรือไม่?')">ยกเลิกเฉพาะช่วงนี้</a>
-                </div>
-                {% endif %}
-                {% if b["is_grouped"] and segment["status"] == "checked_in" %}
-                <div class="segment-actions">
-                    <form method="post" action="/my-bookings/check-out/{{ segment['id'] }}" style="display:inline;">
-                        <button class="btn btn-warning" type="submit" onclick="return confirm('ยืนยันว่าออกจากที่พักช่วงนี้แล้วใช่หรือไม่?')">เช็กเอาท์ช่วงนี้</button>
-                    </form>
                 </div>
                 {% endif %}
             </div>

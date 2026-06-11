@@ -438,6 +438,27 @@ def notify_admin(title, message, email_subject=None, email_body=None):
         )
 
 
+
+def status_th(status):
+    return {
+        "waiting_approval": "รออนุมัติ",
+        "approved": "รอชำระเงิน",
+        "waiting_slip_approval": "รอตรวจสลิป",
+        "deposit_paid": "มัดจำแล้ว",
+        "waiting_remaining_slip_approval": "รอตรวจสลิปส่วนที่เหลือ",
+        "remaining_counter_pending": "รอชำระส่วนที่เหลือหน้าเคาน์เตอร์",
+        "counter_pending": "รอชำระหน้าเคาน์เตอร์",
+        "fully_paid": "ชำระเงินครบแล้ว",
+        "checked_in": "เข้าพักแล้ว",
+        "checked_out": "เช็กเอาท์แล้ว",
+        "cancel_requested": "ขอยกเลิก",
+        "refund_pending": "รอคืนเงิน",
+        "refunded": "คืนเงินแล้ว",
+        "cancelled": "ยกเลิกแล้ว",
+        "rejected": "ถูกปฏิเสธ",
+        "no_show": "ลูกค้าไม่มา",
+    }.get(status, status or "-")
+
 @app.context_processor
 def inject_notification_count():
     unread_count = 0
@@ -495,7 +516,8 @@ def inject_notification_count():
         "unread_notification_count": unread_count,
         "latest_notifications": latest_notifications,
         "user_nav_badge_count": user_nav_badge_count,
-        "admin_nav_badge_count": admin_nav_badge_count
+        "admin_nav_badge_count": admin_nav_badge_count,
+        "status_th": status_th
     }
 
 def get_live_badge_payload():
@@ -555,7 +577,8 @@ def get_live_badge_payload():
     return {
         "unread_notification_count": unread_count,
         "user_nav_badge_count": user_nav_badge_count,
-        "admin_nav_badge_count": admin_nav_badge_count
+        "admin_nav_badge_count": admin_nav_badge_count,
+        "status_th": status_th
     }
 
 
@@ -1561,54 +1584,11 @@ def my_bookings():
 
 @app.route("/my-bookings/check-out/<int:booking_id>", methods=["POST"])
 def user_check_out(booking_id):
-    """ให้ลูกค้ากดเช็กเอาท์เองได้เมื่อออกก่อนเวลา/ออกจากที่พักแล้ว"""
+    """ปิดการเช็กเอาท์ด้วยตนเองของลูกค้า ให้แอดมิน/หน้าเคาน์เตอร์เป็นผู้จัดการเท่านั้น"""
     if "user" not in session:
         flash("กรุณาเข้าสู่ระบบก่อน")
         return redirect("/login")
-
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM bookings WHERE id = ? AND username = ?", (booking_id, session["user"]))
-    booking = cur.fetchone()
-
-    if booking is None:
-        conn.close()
-        flash("ไม่พบรายการจอง")
-        return redirect("/my-bookings")
-
-    if booking["status"] != "checked_in":
-        conn.close()
-        flash("เช็กเอาท์ได้เฉพาะรายการที่อยู่ในสถานะเข้าพักแล้ว")
-        return redirect("/my-bookings")
-
-    now_str = db_now_str()
-    note_suffix = f" | ลูกค้ากดเช็กเอาท์เอง {now_str}"
-
-    if booking["batch_id"]:
-        cur.execute("""
-            UPDATE bookings
-            SET status = 'checked_out',
-                checked_out_at = ?,
-                note = COALESCE(note, '') || ?
-            WHERE batch_id = ? AND username = ? AND status = 'checked_in'
-        """, (now_str, note_suffix, booking["batch_id"], booking["username"]))
-    else:
-        cur.execute("""
-            UPDATE bookings
-            SET status = 'checked_out',
-                checked_out_at = ?,
-                note = COALESCE(note, '') || ?
-            WHERE id = ? AND username = ?
-        """, (now_str, note_suffix, booking_id, session["user"]))
-
-    conn.commit()
-    conn.close()
-
-    notify_admin(
-        "ลูกค้าเช็กเอาท์แล้ว",
-        f"ลูกค้า {booking['username']} กดเช็กเอาท์ห้อง {booking['room_name']} แล้ว ห้องถูกปล่อยกลับมาว่าง"
-    )
-    flash("เช็กเอาท์เรียบร้อยแล้ว ขอบคุณที่ใช้บริการ")
+    flash("หากต้องการเช็กเอาท์ กรุณาติดต่อหน้าเคาน์เตอร์ เพื่อให้ผู้ดูแลดำเนินการในระบบ")
     return redirect("/my-bookings")
 
 
@@ -2980,6 +2960,76 @@ def receipt(booking_id):
     conn.close()
     return render_template("receipt.html", booking=booking)
 
+
+def get_admin_report_summary():
+    """สรุปข้อมูลสำหรับหน้าเครื่องมือเพิ่มเติมของแอดมิน"""
+    conn = get_db()
+    cur = conn.cursor()
+    today = get_now().strftime("%Y-%m-%d")
+    month_prefix = get_now().strftime("%Y-%m")
+
+    active_revenue_statuses = (
+        "deposit_paid", "remaining_counter_pending", "counter_pending",
+        "waiting_remaining_slip_approval", "fully_paid", "checked_in", "checked_out",
+        "refund_pending", "refunded"
+    )
+    placeholders = ",".join(["?"] * len(active_revenue_statuses))
+
+    def scalar(sql, params=()):
+        cur.execute(sql, params)
+        row = cur.fetchone()
+        return list(row)[0] if row else 0
+
+    total_bookings = scalar("SELECT COUNT(*) FROM bookings") or 0
+    pending_bookings = scalar("SELECT COUNT(*) FROM bookings WHERE status IN ('waiting_approval','approved','waiting_slip_approval','waiting_remaining_slip_approval')") or 0
+    checked_in_count = scalar("SELECT COUNT(*) FROM bookings WHERE status = 'checked_in'") or 0
+    checked_out_count = scalar("SELECT COUNT(*) FROM bookings WHERE status = 'checked_out'") or 0
+    cancelled_count = scalar("SELECT COUNT(*) FROM bookings WHERE status IN ('cancelled','rejected','no_show')") or 0
+    walkin_count = scalar("SELECT COUNT(*) FROM bookings WHERE username LIKE 'walkin_%'") or 0
+    customer_count = scalar("SELECT COUNT(DISTINCT username) FROM bookings WHERE username NOT LIKE 'walkin_%'") or 0
+    blocked_count = scalar("SELECT COUNT(*) FROM room_blocks WHERE status = 'blocked'") or 0
+
+    total_revenue = scalar(f"SELECT COALESCE(SUM(paid), 0) FROM bookings WHERE status IN ({placeholders})", active_revenue_statuses) or 0
+    today_revenue = scalar(
+        f"SELECT COALESCE(SUM(paid), 0) FROM bookings WHERE status IN ({placeholders}) AND substr(COALESCE(created_at,''),1,10) = ?",
+        (*active_revenue_statuses, today)
+    ) or 0
+    month_revenue = scalar(
+        f"SELECT COALESCE(SUM(paid), 0) FROM bookings WHERE status IN ({placeholders}) AND substr(COALESCE(created_at,''),1,7) = ?",
+        (*active_revenue_statuses, month_prefix)
+    ) or 0
+
+    open_rooms = sum(1 for r in get_rooms_with_status() if r.get("is_open", True))
+    total_rooms = len(ROOMS)
+    available_today = max(0, open_rooms - checked_in_count)
+
+    cur.execute("""
+        SELECT id, room_name, username, status, total, paid, created_at
+        FROM bookings
+        ORDER BY id DESC
+        LIMIT 5
+    """)
+    latest_bookings = cur.fetchall()
+    conn.close()
+
+    return {
+        "today_revenue": float(today_revenue),
+        "month_revenue": float(month_revenue),
+        "total_revenue": float(total_revenue),
+        "total_bookings": int(total_bookings),
+        "pending_bookings": int(pending_bookings),
+        "checked_in_count": int(checked_in_count),
+        "checked_out_count": int(checked_out_count),
+        "cancelled_count": int(cancelled_count),
+        "walkin_count": int(walkin_count),
+        "customer_count": int(customer_count),
+        "total_rooms": int(total_rooms),
+        "open_rooms": int(open_rooms),
+        "available_today": int(available_today),
+        "blocked_count": int(blocked_count),
+        "latest_bookings": latest_bookings,
+    }
+
 @app.route("/admin")
 def admin():
     auto_cancel_expired_bookings()
@@ -3014,7 +3064,7 @@ def admin():
     conn.commit()
     conn.close()
 
-    return render_template("admin.html", bookings=bookings, blocks=blocks, rooms=get_rooms_with_status())
+    return render_template("admin.html", bookings=bookings, blocks=blocks, rooms=get_rooms_with_status(), report=get_admin_report_summary())
 
 
 @app.route("/admin/toggle-room/<int:room_id>")
