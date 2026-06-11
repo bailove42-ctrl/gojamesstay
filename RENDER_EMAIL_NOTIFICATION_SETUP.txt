@@ -1,0 +1,42 @@
+วิธีเปิดใช้งานแจ้งเตือนทางอีเมลบน Render
+
+ระบบนี้สามารถส่งอีเมลแจ้งเตือนได้ เช่น
+- ลืมรหัสผ่าน / รีเซ็ตรหัสผ่าน
+- ลูกค้าส่งคำขอจองใหม่
+- แอดมินอนุมัติหรือปฏิเสธการจอง
+- ลูกค้าอัปโหลดสลิป
+- แอดมินอนุมัติหรือปฏิเสธสลิป
+- ลูกค้าเลือกชำระหน้าเคาน์เตอร์
+- เช็กอิน / เช็กเอาท์
+- ลูกค้าขอยกเลิกการจอง
+
+1) สร้าง Gmail App Password
+- เปิด Gmail ที่จะใช้ส่งอีเมล
+- เปิด 2-Step Verification
+- เข้า Google Account > Security > App passwords
+- สร้าง App password สำหรับ Mail
+- ใช้รหัส 16 ตัวที่ได้เป็น EMAIL_PASSWORD
+
+2) ตั้งค่า Environment Variables ใน Render
+เข้า Render > Web Service > Environment แล้วเพิ่มค่าเหล่านี้
+
+EMAIL_SENDER=อีเมล Gmail ที่ใช้ส่ง เช่น gojames.booking@gmail.com
+EMAIL_PASSWORD=App Password 16 ตัวจาก Gmail
+ADMIN_EMAIL=อีเมลผู้ดูแลระบบที่จะรับแจ้งเตือน เช่น gojames.booking@gmail.com
+APP_BASE_URL=https://gojamesstay.onrender.com
+SECRET_KEY=ข้อความสุ่มยาว ๆ
+SMTP_SERVER=smtp.gmail.com
+SMTP_PORT=465
+
+3) กด Save Changes แล้ว Deploy ใหม่
+Manual Deploy > Deploy latest commit
+
+4) ทดสอบ
+- ลองกดลืมรหัสผ่าน
+- ลองสร้างคำขอจองใหม่
+- ลองอัปโหลดสลิป
+- ตรวจสอบอีเมลผู้ใช้และอีเมลแอดมิน
+
+หมายเหตุ
+- EMAIL_PASSWORD ต้องเป็น Gmail App Password ไม่ใช่รหัส Gmail ปกติ
+- อย่าอัปโหลด .env หรือรหัสผ่านขึ้น GitHub โดยเฉพาะ Repository ที่เป็น Public

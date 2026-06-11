@@ -18,7 +18,8 @@ from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = "gojames-secret-key"
+# ใช้ SECRET_KEY จาก Render/Environment เพื่อให้ลิงก์รีเซ็ตรหัสผ่านปลอดภัยและไม่เปลี่ยนหลัง Deploy
+app.secret_key = os.environ.get("SECRET_KEY", "gojames-secret-key")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "database.db")
@@ -30,10 +31,13 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "webp"}
 
-# ตั้งค่าอีเมลก่อนใช้งานจริง
-# EMAIL_PASSWORD ต้องใช้ App Password ของ Gmail (ไม่ใช่รหัสผ่านปกติ)
-EMAIL_SENDER = os.environ.get("EMAIL_SENDER", "")
-EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD", "")
+# ตั้งค่าอีเมลก่อนใช้งานจริง / บน Render ให้ใส่ใน Environment Variables
+# EMAIL_PASSWORD ต้องใช้ App Password ของ Gmail (ไม่ใช่รหัสผ่าน Gmail ปกติ)
+EMAIL_SENDER = os.environ.get("EMAIL_SENDER", "").strip()
+EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD", "").strip()
+ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "").strip()
+SMTP_SERVER = os.environ.get("SMTP_SERVER", "smtp.gmail.com").strip()
+SMTP_PORT = int(os.environ.get("SMTP_PORT", "465"))
 BASE_URL = (os.environ.get("APP_BASE_URL") or os.environ.get("BASE_URL") or "").rstrip("/")
 
 serializer = URLSafeTimedSerializer(app.secret_key)
@@ -338,8 +342,10 @@ app.jinja_env.globals["get_bank_meta"] = get_bank_meta
 
 
 def send_email_notification(to_email, subject, body):
+    """ส่งอีเมลผ่าน SMTP และคืนค่า True/False เพื่อให้หน้าเว็บแจ้งผลได้ถูกต้อง"""
     if not EMAIL_SENDER or not EMAIL_PASSWORD:
-        return
+        print("ยังไม่ได้ตั้งค่า EMAIL_SENDER หรือ EMAIL_PASSWORD")
+        return False
 
     try:
         msg = EmailMessage()
@@ -348,11 +354,13 @@ def send_email_notification(to_email, subject, body):
         msg["To"] = to_email
         msg.set_content(body)
 
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+        with smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT, timeout=10) as smtp:
             smtp.login(EMAIL_SENDER, EMAIL_PASSWORD)
             smtp.send_message(msg)
+        return True
     except Exception as e:
         print("ส่งอีเมลไม่สำเร็จ:", e)
+        return False
 
 
 def send_reset_password_email(user_row):
@@ -369,7 +377,7 @@ def send_reset_password_email(user_row):
         "ลิงก์นี้จะหมดอายุภายใน 30 นาที\n"
         "หากคุณไม่ได้เป็นผู้ขอรีเซ็ต สามารถละเว้นอีเมลฉบับนี้ได้"
     )
-    send_email_notification(user_row["email"], subject, body)
+    return send_email_notification(user_row["email"], subject, body)
 
 
 def create_notification(username, title, message):
@@ -401,7 +409,33 @@ def notify_user(username, title, message, email_subject=None, email_body=None):
 
 
 def notify_admin(title, message, email_subject=None, email_body=None):
-    notify_user("admin", title, message, email_subject=email_subject, email_body=email_body)
+    """แจ้งเตือนผู้ดูแลระบบทั้งในเว็บและทางอีเมล (ถ้าตั้งค่า ADMIN_EMAIL หรืออีเมลของ admin ไว้)"""
+    create_notification("admin", title, message)
+
+    recipients = []
+    if ADMIN_EMAIL:
+        recipients.append(ADMIN_EMAIL)
+
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT email FROM users WHERE username = ?", ("admin",))
+    admin_user = cur.fetchone()
+    conn.close()
+
+    if admin_user and admin_user["email"]:
+        recipients.append(admin_user["email"])
+
+    seen = set()
+    for email in recipients:
+        email = (email or "").strip()
+        if not email or email.lower() in seen:
+            continue
+        seen.add(email.lower())
+        send_email_notification(
+            email,
+            email_subject if email_subject else title,
+            email_body if email_body else message
+        )
 
 
 @app.context_processor
@@ -1160,7 +1194,10 @@ def forgot_password():
         conn.close()
 
         if user:
-            send_reset_password_email(user)
+            sent = send_reset_password_email(user)
+            if not sent:
+                flash("ยังส่งอีเมลไม่ได้ กรุณาตรวจสอบการตั้งค่า EMAIL_SENDER และ EMAIL_PASSWORD บน Render")
+                return redirect("/forgot-password")
 
         flash("หากอีเมลนี้มีอยู่ในระบบ เราได้ส่งลิงก์รีเซ็ตรหัสผ่านไปแล้ว")
         return redirect("/login")
@@ -1449,6 +1486,25 @@ def booking(room_id):
         conn.commit()
         conn.close()
 
+        notify_admin(
+            "มีคำขอจองใหม่",
+            f"ลูกค้า {session['user']} ส่งคำขอจองห้อง {room['name']} จำนวน {created_count} รายการ กรุณาตรวจสอบและอนุมัติ",
+            email_subject="มีคำขอจองใหม่ - GoJames Vacation Home",
+            email_body=(
+                f"มีคำขอจองใหม่จากลูกค้า {session['user']}\n"
+                f"ห้องพัก: {room['name']}\n"
+                f"จำนวนรายการ: {created_count}\n"
+                "กรุณาเข้าสู่ระบบแอดมินเพื่อตรวจสอบและอนุมัติการจอง"
+            )
+        )
+        notify_user(
+            session["user"],
+            "ส่งคำขอจองแล้ว",
+            f"ระบบได้รับคำขอจองห้อง {room['name']} แล้ว กรุณารอผู้ดูแลระบบอนุมัติ",
+            email_subject="ได้รับคำขอจองแล้ว - GoJames Vacation Home",
+            email_body=f"ระบบได้รับคำขอจองห้อง {room['name']} แล้ว กรุณารอผู้ดูแลระบบอนุมัติ"
+        )
+
         if created_count > 1:
             flash(f"ส่งคำขอจองเรียบร้อยแล้ว จำนวน {created_count} ช่วงวัน กรุณารอแอดมินอนุมัติ")
         else:
@@ -1604,6 +1660,17 @@ def cancel_booking(booking_id):
         )
         conn.commit()
         conn.close()
+        if is_admin:
+            notify_user(
+                booking["username"],
+                "รายการจองถูกยกเลิก",
+                f"รายการจองห้อง {booking['room_name']} ถูกยกเลิกโดยผู้ดูแลระบบ"
+            )
+        else:
+            notify_admin(
+                "ลูกค้ายกเลิกการจอง",
+                f"ลูกค้า {booking['username']} ยกเลิกรายการจองห้อง {booking['room_name']}"
+            )
         flash("ยกเลิกการจองเรียบร้อย")
         return redirect("/admin" if is_admin else "/my-bookings")
 
@@ -1626,6 +1693,11 @@ def cancel_booking(booking_id):
             )
             conn.commit()
             conn.close()
+            notify_user(
+                booking["username"],
+                "รายการจองถูกยกเลิกโดยผู้ดูแลระบบ",
+                f"รายการจองห้อง {booking['room_name']} ถูกยกเลิกโดยผู้ดูแลระบบ และอยู่ระหว่างดำเนินการคืนเงิน {refund_amount:.2f} บาท"
+            )
             flash(f"ยกเลิกรายการแล้ว และต้องคืนเงิน {refund_amount:.2f} บาท")
             return redirect("/admin")
 
@@ -1671,6 +1743,16 @@ def cancel_booking(booking_id):
             )
             conn.commit()
             conn.close()
+            notify_user(
+                booking["username"],
+                "ส่งคำขอยกเลิกแล้ว",
+                f"ระบบได้รับคำขอยกเลิกห้อง {booking['room_name']} แล้ว กรุณารอผู้ดูแลระบบตรวจสอบ"
+            )
+            notify_admin(
+                "มีคำขอยกเลิกการจอง",
+                f"ลูกค้า {booking['username']} ส่งคำขอยกเลิกรายการจองห้อง {booking['room_name']} ยอดคืนเบื้องต้น {refund_amount:.2f} บาท",
+                email_subject="มีคำขอยกเลิกการจอง - GoJames Vacation Home"
+            )
             flash(f"ส่งคำขอยกเลิกแล้ว ยอดคืนตามนโยบายเบื้องต้น {refund_amount:.2f} บาท")
             return redirect("/my-bookings")
 
@@ -2168,6 +2250,10 @@ def upload_slip(booking_id):
         conn.close()
         flash("บันทึกแล้ว: รายการนี้จะชำระเงินหน้าเคาน์เตอร์")
         notify_user(booking["username"], "เลือกชำระหน้าเคาน์เตอร์", f"รายการจองห้อง {booking['room_name']} จะชำระเงินที่หน้าเคาน์เตอร์")
+        notify_admin(
+            "ลูกค้าเลือกชำระหน้าเคาน์เตอร์",
+            f"ลูกค้า {booking['username']} เลือกชำระเงินหน้าเคาน์เตอร์สำหรับห้อง {booking['room_name']}"
+        )
         return redirect("/my-bookings")
 
     if is_remaining_flow and remain_method == "counter":
@@ -2186,6 +2272,11 @@ def upload_slip(booking_id):
         conn.commit()
         conn.close()
         flash("บันทึกแล้ว: ยอดส่วนที่เหลือจะชำระหน้าเคาน์เตอร์ที่พัก")
+        notify_user(booking["username"], "เลือกชำระยอดคงเหลือหน้าเคาน์เตอร์", f"ยอดคงเหลือของรายการจองห้อง {booking['room_name']} จะชำระหน้าเคาน์เตอร์")
+        notify_admin(
+            "ลูกค้าเลือกชำระยอดคงเหลือหน้าเคาน์เตอร์",
+            f"ลูกค้า {booking['username']} เลือกชำระยอดคงเหลือหน้าเคาน์เตอร์สำหรับห้อง {booking['room_name']}"
+        )
         return redirect("/my-bookings")
 
     slip = request.files.get("slip")
@@ -2235,6 +2326,21 @@ def upload_slip(booking_id):
     conn.commit()
     conn.close()
 
+    notify_user(
+        booking["username"],
+        "อัปโหลดสลิปแล้ว",
+        f"ระบบได้รับสลิปของรายการจองห้อง {booking['room_name']} แล้ว กรุณารอผู้ดูแลระบบตรวจสอบ"
+    )
+    notify_admin(
+        "มีสลิปรอตรวจสอบ",
+        f"ลูกค้า {booking['username']} อัปโหลดสลิปสำหรับห้อง {booking['room_name']} กรุณาตรวจสอบ",
+        email_subject="มีสลิปรอตรวจสอบ - GoJames Vacation Home",
+        email_body=(
+            f"ลูกค้า {booking['username']} อัปโหลดสลิปใหม่\n"
+            f"ห้องพัก: {booking['room_name']}\n"
+            "กรุณาเข้าสู่ระบบแอดมินเพื่อตรวจสอบสลิป"
+        )
+    )
     flash("อัปโหลดสลิปเรียบร้อยแล้ว กรุณารอแอดมินตรวจสอบ")
     return redirect("/my-bookings")
 
@@ -2398,6 +2504,10 @@ def block_room():
     conn.commit()
     conn.close()
 
+    notify_admin(
+        "บล็อกห้องเรียบร้อยแล้ว",
+        f"ห้อง {room_id} ถูกตั้งค่าไม่ว่างตั้งแต่ {start_date} ถึง {end_date}" + (f" หมายเหตุ: {note}" if note else "")
+    )
     flash("บล็อกห้องเรียบร้อยแล้ว")
     return redirect("/admin")
 
