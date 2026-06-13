@@ -1,6 +1,5 @@
 {% extends "base.html" %}
-{% block title %}การจองของฉัน</div>
-{% endblock %}
+{% block title %}การจองของฉัน | GoJames Vacation Home{% endblock %}
 {% block content %}
 
 <style>
@@ -116,11 +115,11 @@
 <p class="my-bookings-subtitle">ตรวจสอบรายการจอง ชำระเงิน หรือยกเลิกได้จากหน้านี้</p>
 
 {% macro segment_status_text(segment) -%}
-    {% if segment["status"] == "waiting_approval" %}รอแอดมินอนุมัติ
+    {% if segment["status"] == "waiting_approval" %}รอชำระเงิน
     {% elif segment["status"] == "approved" %}รอชำระเงิน
-    {% elif segment["status"] == "waiting_slip_approval" %}รอตรวจสอบสลิป
+    {% elif segment["status"] == "waiting_slip_approval" %}รอตรวจสอบการชำระเงิน
     {% elif segment["status"] == "deposit_paid" %}ชำระมัดจำแล้ว
-    {% elif segment["status"] == "waiting_remaining_slip_approval" %}รอตรวจสอบสลิปส่วนที่เหลือ
+    {% elif segment["status"] == "waiting_remaining_slip_approval" %}รอตรวจสอบการชำระเงินส่วนที่เหลือ
     {% elif segment["status"] == "remaining_counter_pending" %}รอชำระยอดคงเหลือที่เคาน์เตอร์
     {% elif segment["status"] == "counter_pending" %}รอชำระที่เคาน์เตอร์
     {% elif segment["status"] == "fully_paid" %}ชำระครบแล้ว
@@ -136,11 +135,11 @@
 {%- endmacro %}
 
 {% macro booking_status_badge(status) -%}
-    {% if status == "waiting_approval" %}<span class="status waiting_approval">รอแอดมินอนุมัติ</span>
+    {% if status == "waiting_approval" %}<span class="status waiting_approval">รอชำระเงิน</span>
     {% elif status == "approved" %}<span class="status approved">รอชำระเงิน</span>
-    {% elif status == "waiting_slip_approval" %}<span class="status waiting_slip_approval">รอตรวจสอบสลิป</span>
+    {% elif status == "waiting_slip_approval" %}<span class="status waiting_slip_approval">รอตรวจสอบการชำระเงิน</span>
     {% elif status == "deposit_paid" %}<span class="status deposit_paid">ชำระมัดจำแล้ว</span>
-    {% elif status == "waiting_remaining_slip_approval" %}<span class="status waiting_slip_approval">รอตรวจสอบสลิปส่วนที่เหลือ</span>
+    {% elif status == "waiting_remaining_slip_approval" %}<span class="status waiting_slip_approval">รอตรวจสอบการชำระเงินส่วนที่เหลือ</span>
     {% elif status == "remaining_counter_pending" %}<span class="status approved">รอชำระยอดคงเหลือที่เคาน์เตอร์</span>
     {% elif status == "counter_pending" %}<span class="status approved">รอชำระที่เคาน์เตอร์</span>
     {% elif status == "fully_paid" %}<span class="status fully_paid">ชำระเงินเรียบร้อย</span>
@@ -180,10 +179,10 @@
         {% if b["is_grouped"] %}
             <span class="muted" style="display:block;margin-top:6px;">ส่งคำขอยกเลิกแยกแต่ละช่วงในส่วนช่วงที่จอง</span>
         {% else %}
-            <a class="btn btn-warning" href="/cancel/{{ b['action_id'] }}" onclick="return confirm('ต้องการส่งคำขอยกเลิกการจองนี้ใช่หรือไม่? หากแอดมินอนุมัติ ระบบจะคืนเงินภายใน 2-4 วันทำการ')">ส่งคำขอยกเลิก</a>
+            <a class="btn btn-warning" href="/cancel/{{ b['action_id'] }}" onclick="return confirm('ต้องการส่งคำขอยกเลิกการจองนี้ใช่หรือไม่? หากผู้ดูแลระบบอนุมัติ ระบบจะคืนเงินภายใน 2-4 วันทำการ')">ส่งคำขอยกเลิก</a>
         {% endif %}
     {% elif b["status"] == "waiting_remaining_slip_approval" %}
-        <span class="muted">รอตรวจสอบสลิปส่วนที่เหลือ</span>
+        <span class="muted">รอตรวจสอบการชำระเงินส่วนที่เหลือ</span>
     {% if b["refund_amount"] and b["refund_amount"] > 0 %}<span class="muted" style="display:block;margin-bottom:6px;">ยอดคืน: {{ "%.2f"|format(b["refund_amount"]) }} บาท</span>{% endif %}{% if b["refund_method"] %}<span class="muted" style="display:block;margin-bottom:6px;">รับเงินคืนทาง {{ b["refund_method"] }} / {{ b["refund_account"] }}</span>{% endif %}
     {% if b["refund_amount"] and b["refund_amount"] > 0 %}<span class="muted" style="display:block;margin-bottom:6px;">ยอดคืน: {{ "%.2f"|format(b["refund_amount"]) }} บาท</span>{% endif %}{% if b["refund_method"] %}<span class="muted" style="display:block;margin-bottom:6px;">วิธีรับเงินคืน: {% if b["refund_method"] == "promptpay" %}PromptPay{% else %}บัญชีธนาคาร{% endif %}</span>{% endif %}{% if b["refund_bank"] %}<span class="muted" style="display:block;margin-bottom:6px;">ธนาคาร: {{ get_bank_meta(b["refund_bank"])["name"] }}</span>{% endif %}{% if b["refund_account"] %}<span class="muted" style="display:block;margin-bottom:6px;">ปลายทางคืนเงิน: {{ b["refund_account"] }}</span>{% endif %}
     {% elif b["status"] == "counter_pending" %}
@@ -193,14 +192,14 @@
         {% if b["is_grouped"] %}
             <span class="muted" style="display:block;margin-top:6px;">ส่งคำขอยกเลิกแยกแต่ละช่วงในส่วนช่วงที่จอง</span>
         {% else %}
-            <a class="btn btn-warning" href="/cancel/{{ b['action_id'] }}" onclick="return confirm('ต้องการส่งคำขอยกเลิกการจองนี้ใช่หรือไม่? หากแอดมินอนุมัติ ระบบจะคืนเงินภายใน 2-4 วันทำการ')">ส่งคำขอยกเลิก</a>
+            <a class="btn btn-warning" href="/cancel/{{ b['action_id'] }}" onclick="return confirm('ต้องการส่งคำขอยกเลิกการจองนี้ใช่หรือไม่? หากผู้ดูแลระบบอนุมัติ ระบบจะคืนเงินภายใน 2-4 วันทำการ')">ส่งคำขอยกเลิก</a>
         {% endif %}
         <span class="muted" style="display:block;margin-top:6px;">เลือกจ่ายยอดคงเหลือหน้าเคาน์เตอร์แล้ว</span>
     {% elif b["status"] == "fully_paid" %}
         {% if b["is_grouped"] %}
             <span class="muted">ส่งคำขอยกเลิกแยกแต่ละช่วงในส่วนช่วงที่จอง</span>
         {% else %}
-            <a class="btn btn-warning" href="/cancel/{{ b['action_id'] }}" onclick="return confirm('ต้องการส่งคำขอยกเลิกการจองนี้ใช่หรือไม่? หากแอดมินอนุมัติ ระบบจะคืนเงินภายใน 2-4 วันทำการ')">ส่งคำขอยกเลิก</a>
+            <a class="btn btn-warning" href="/cancel/{{ b['action_id'] }}" onclick="return confirm('ต้องการส่งคำขอยกเลิกการจองนี้ใช่หรือไม่? หากผู้ดูแลระบบอนุมัติ ระบบจะคืนเงินภายใน 2-4 วันทำการ')">ส่งคำขอยกเลิก</a>
         {% endif %}
     {% elif b["status"] == "checked_in" %}
         <span class="muted">หากต้องการเช็กเอาท์ กรุณาติดต่อหน้าเคาน์เตอร์</span>

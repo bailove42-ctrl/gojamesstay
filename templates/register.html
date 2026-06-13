@@ -1,6 +1,9 @@
 {% extends "base.html" %}
-{% block title %}สมัครสมาชิก{% endblock %}
+{% block title %}สมัครสมาชิก | GoJames Vacation Home{% endblock %}
 {% block content %}
+<style>
+.field-help{display:block;margin:6px 0 12px;color:#7a6b92;font-size:13px;line-height:1.35;}
+</style>
 <div class="card" style="max-width:460px;margin:auto;">
     <h2>สมัครสมาชิก</h2>
     <form method="post">
@@ -22,17 +25,18 @@
         </select>
 
         <label>เบอร์โทร</label>
-        <input name="phone" required>
+        <input id="phone" name="phone" type="tel" inputmode="numeric" maxlength="10" pattern="[0-9]{10}" placeholder="0812345678" required>
 
         <label>อีเมล</label>
         <input name="email" type="email" required>
 
         <label>ชื่อผู้ใช้</label>
-        <input name="username" required>
+        <input id="username" name="username" maxlength="16" pattern="[A-Za-z0-9_.]{6,16}" placeholder="เช่น abc123" autocomplete="username" required>
+        <small class="field-help">ใช้ภาษาอังกฤษ ตัวเลข _ หรือ . เท่านั้น (6-16 ตัวอักษร)</small>
 
         <label>รหัสผ่าน</label>
         <div class="password-wrap">
-            <input id="password" name="password" type="password" required>
+            <input id="password" name="password" type="password" minlength="8" pattern="(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d!@#$%^&*_.-]{8,}" autocomplete="new-password" required>
             <button type="button" class="eye-btn" onclick="togglePassword()">
                 <svg id="eye_icon1" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6d627f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"></path>
@@ -40,10 +44,11 @@
                 </svg>
             </button>
         </div>
+        <small class="field-help">อย่างน้อย 8 ตัวอักษร</small>
 
         <label>ยืนยันรหัสผ่าน</label>
         <div class="password-wrap">
-            <input id="confirm_password" name="confirm_password" type="password" required>
+            <input id="confirm_password" name="confirm_password" type="password" minlength="8" autocomplete="new-password" required>
             <button type="button" class="eye-btn" onclick="toggleConfirmPassword()">
                 <svg id="eye_icon2" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6d627f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"></path>
@@ -79,5 +84,20 @@ function toggleConfirmPassword(){
         icon.innerHTML=`<path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"></path><circle cx="12" cy="12" r="3"></circle>`;
     }
 }
+
+const usernameInput = document.getElementById("username");
+if (usernameInput) {
+    usernameInput.addEventListener("input", function () {
+        this.value = this.value.replace(/[^A-Za-z0-9_.]/g, "").slice(0, 30);
+    });
+}
+
+const phoneInput = document.getElementById("phone");
+if (phoneInput) {
+    phoneInput.addEventListener("input", function () {
+        this.value = this.value.replace(/\D/g, "").slice(0, 10);
+    });
+}
+
 </script>
 {% endblock %}

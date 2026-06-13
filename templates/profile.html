@@ -1,5 +1,14 @@
 {% extends "base.html" %}
-{% block title %}โปรไฟล์ของฉัน{% endblock %}
+{% block title %}โปรไฟล์ของฉัน | GoJames Vacation Home
+<script>
+const profilePhoneInput = document.getElementById("profile_phone");
+if (profilePhoneInput) {
+    profilePhoneInput.addEventListener("input", function () {
+        this.value = this.value.replace(/\D/g, "").slice(0, 10);
+    });
+}
+</script>
+{% endblock %}
 {% block content %}
 <div class="profile-page">
     <div class="profile-head card">
@@ -44,7 +53,7 @@
                     </div>
                     <div>
                         <label>เบอร์โทร</label>
-                        <input name="phone" value="{{ user['phone'] }}" required>
+                        <input id="profile_phone" name="phone" type="tel" inputmode="numeric" maxlength="10" pattern="[0-9]{10}" value="{{ user['phone'] }}" required>
                     </div>
                     <div>
                         <label>อีเมล</label>
@@ -168,4 +177,13 @@
     }
 }
 </style>
+
+<script>
+const profilePhoneInput = document.getElementById("profile_phone");
+if (profilePhoneInput) {
+    profilePhoneInput.addEventListener("input", function () {
+        this.value = this.value.replace(/\D/g, "").slice(0, 10);
+    });
+}
+</script>
 {% endblock %}

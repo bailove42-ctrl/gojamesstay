@@ -1,11 +1,21 @@
 {% extends "base.html" %}
-{% block title %}จัดการการจอง
-
+{% block title %}จัดการการจอง | GoJames ผู้ดูแลระบบ{% endblock %}
+{% block content %}
+<style>
 /* ===== KIKI ADMIN MOBILE ORDER FIX v2 ===== */
 .admin-dashboard{max-width:1180px !important;margin:0 auto 42px !important;}
 .admin-manage-grid{display:grid !important;grid-template-columns:minmax(0,1.2fr) minmax(300px,.8fr) !important;gap:18px !important;align-items:start !important;}
 .admin-form-card,.admin-list-card,.admin-bookings-panel{background:#fff;border:1px solid #e2d7f7;border-radius:22px;padding:20px;box-shadow:0 12px 28px rgba(43,22,77,.08);}
 .admin-bookings-panel{margin-top:18px;}
+
+.admin-guest-details{margin-top:12px;border:1px dashed #d9c8ff;border-radius:16px;background:#fbf8ff;padding:10px 12px;}
+.admin-guest-details summary{cursor:pointer;font-weight:800;color:#6d3fd6;list-style:none;}
+.admin-guest-details summary::-webkit-details-marker{display:none;}
+.admin-guest-detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px;}
+.admin-guest-detail-item{background:#fff;border:1px solid #eadfff;border-radius:12px;padding:8px 10px;min-width:0;word-break:break-word;}
+.admin-guest-detail-item strong{display:block;font-size:12px;color:#5b4a77;margin-bottom:3px;}
+.admin-guest-detail-item span{font-weight:700;color:#160b35;}
+@media(max-width:720px){.admin-guest-detail-grid{grid-template-columns:1fr;}}
 .admin-form-card form{display:grid;gap:10px;}
 .admin-form-card input,.admin-form-card select,.admin-form-card textarea{margin-bottom:0;}
 .admin-bookings-mobile{display:block !important;}
@@ -72,9 +82,7 @@
   .admin-booking-actions{grid-template-columns:1fr !important;gap:8px !important;}
   .admin-booking-actions .btn{min-height:44px !important;font-size:14px !important;}
 }
-{% endblock %}
-{% block content %}
-<style>
+
 .admin-room-status-grid{
     display:grid;
     grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
@@ -243,7 +251,7 @@ body{
 
 
 
-/* === Admin page hotel-style polish === */
+/* === ผู้ดูแลระบบ hotel-style polish === */
 .admin-dashboard{
     max-width:1180px;
     margin:0 auto 48px;
@@ -812,7 +820,7 @@ body{
 }
 
 
-/* ===== Admin small resort workflow polish ===== */
+/* ===== ผู้ดูแลระบบ small resort workflow polish ===== */
 .admin-guide-grid{
     display:grid;
     grid-template-columns:repeat(4,minmax(0,1fr));
@@ -1106,7 +1114,7 @@ form[action="/admin/walk-in"] .walkin-actions .btn{width:100% !important;min-wid
 @media(max-width:980px){.admin-report-grid{grid-template-columns:repeat(2,minmax(0,1fr)) !important;}}
 @media(max-width:640px){.admin-report-grid{grid-template-columns:1fr !important}.admin-report-card .value{font-size:21px !important}.admin-report-table{display:block !important;overflow-x:auto !important;white-space:nowrap !important;}}
 
-/* ===== Admin page simplification cleanup ===== */
+/* ===== ผู้ดูแลระบบ simplification cleanup ===== */
 .admin-page-head-clean{align-items:center !important;margin-bottom:18px !important;}
 .admin-page-head-clean .admin-page-title p{max-width:720px !important;margin-top:6px !important;}
 .admin-tools-menu{position:relative !important;align-self:flex-start !important;}
@@ -1135,6 +1143,172 @@ form[action="/admin/walk-in"] .walkin-actions .btn{width:100% !important;min-wid
   .admin-section-title{font-size:20px;}
   details.card summary{font-weight:900;padding:4px 0;}
 }
+
+.admin-room-manage-panel{margin-bottom:18px !important;}
+.admin-room-manage-grid{display:grid !important;grid-template-columns:1fr 1.2fr !important;gap:16px !important;align-items:start !important;}
+.admin-room-form-box,.admin-room-list-box{background:#fff !important;border:1px solid #eadfff !important;border-radius:20px !important;padding:16px !important;box-shadow:0 10px 24px rgba(50,22,88,.05) !important;}
+.admin-room-form-box h4,.admin-room-list-box h4{margin:0 0 12px !important;color:#211034 !important;font-size:18px !important;font-weight:950 !important;}
+.admin-room-form-box label{display:block !important;margin:10px 0 6px !important;font-weight:900 !important;color:#211034 !important;}
+.admin-room-form-box input,.admin-room-form-box textarea,.admin-room-form-box select{width:100% !important;border:1px solid #d8c4ff !important;border-radius:12px !important;padding:11px 12px !important;font-weight:700 !important;background:#fff !important;}
+.admin-room-form-row{display:grid !important;grid-template-columns:1fr 1fr !important;gap:10px !important;}
+.admin-room-manage-item{border:1px solid #eadfff !important;border-radius:18px !important;padding:14px !important;margin-bottom:12px !important;background:#fbf8ff !important;}
+.admin-room-manage-head{display:flex !important;justify-content:space-between !important;gap:10px !important;align-items:flex-start !important;margin-bottom:8px !important;}
+.admin-room-manage-title{font-weight:950 !important;color:#211034 !important;font-size:17px !important;}
+.admin-room-manage-meta{color:#6e5b83 !important;font-weight:800 !important;font-size:13px !important;}
+.admin-room-edit-details summary{cursor:pointer !important;color:#6f3bd8 !important;font-weight:950 !important;margin:8px 0 !important;}
+.admin-room-delete-row{margin-top:10px !important;}
+.admin-room-help{font-size:12px !important;color:#8a7a99 !important;font-weight:700 !important;margin-top:5px !important;}
+@media(max-width:900px){.admin-room-manage-grid{grid-template-columns:1fr !important}.admin-room-form-row{grid-template-columns:1fr !important}}
+
+
+/* ปุ่มดูหลักฐานการชำระเงิน */
+.slip-view-btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    min-height:36px;
+    padding:8px 14px;
+    border:0;
+    border-radius:12px;
+    background:linear-gradient(135deg,#7b4ce2,#9b6cff);
+    color:#fff;
+    font-size:13px;
+    font-weight:900;
+    text-decoration:none;
+    cursor:pointer;
+    box-shadow:0 8px 18px rgba(123,76,226,.22);
+    transition:transform .18s ease, box-shadow .18s ease, opacity .18s ease;
+    white-space:nowrap;
+}
+.slip-view-btn:hover{
+    transform:translateY(-1px);
+    box-shadow:0 10px 22px rgba(123,76,226,.3);
+    opacity:.96;
+}
+.slip-view-icon{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:18px;
+    height:18px;
+    border-radius:6px;
+    background:rgba(255,255,255,.18);
+    font-size:12px;
+    line-height:1;
+}
+.slip-modal{
+    position:fixed;
+    inset:0;
+    z-index:9999;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:18px;
+    background:rgba(24,12,42,.68);
+    backdrop-filter:blur(4px);
+}
+.slip-modal.is-open{
+    display:flex;
+}
+.slip-modal-card{
+    width:min(720px,96vw);
+    max-height:92vh;
+    background:#fff;
+    border-radius:22px;
+    border:1px solid #e7dcff;
+    box-shadow:0 28px 80px rgba(24,12,42,.28);
+    overflow:hidden;
+}
+.slip-modal-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:14px 18px;
+    background:linear-gradient(135deg,#2f1a4a,#7b38e5);
+    color:#fff;
+}
+.slip-modal-head strong{
+    font-size:16px;
+}
+.slip-modal-close{
+    border:0;
+    border-radius:10px;
+    background:rgba(255,255,255,.16);
+    color:#fff;
+    width:34px;
+    height:34px;
+    font-size:22px;
+    cursor:pointer;
+    line-height:1;
+}
+.slip-modal-body{
+    padding:16px;
+    background:#fbf8ff;
+    text-align:center;
+}
+.slip-modal-body img{
+    max-width:100%;
+    max-height:72vh;
+    border-radius:16px;
+    border:1px solid #eadfff;
+    background:#fff;
+    object-fit:contain;
+}
+.slip-modal-actions{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    padding:0 16px 16px;
+    background:#fbf8ff;
+}
+.slip-open-new{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:10px 14px;
+    border-radius:12px;
+    background:#fff;
+    border:1px solid #d9c8ff;
+    color:#6d3fd6;
+    font-weight:900;
+    text-decoration:none;
+}
+@media(max-width:768px){
+    .slip-view-btn{
+        width:100%;
+        min-height:40px;
+    }
+    .slip-modal{
+        padding:10px;
+    }
+}
+
+
+/* booking filters improved layout */
+.booking-filters-grid{
+ display:grid;
+ grid-template-columns:repeat(4,minmax(140px,1fr));
+ gap:12px;
+ align-items:end;
+}
+.booking-filters-grid .search-group{
+ grid-column:span 2;
+}
+.booking-filter-actions{
+ display:flex;gap:10px;align-items:end;
+}
+@media(max-width:900px){
+ .booking-filters-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+ .booking-filters-grid .search-group{grid-column:span 2;}
+}
+@media(max-width:600px){
+ .booking-filters-grid{grid-template-columns:1fr;}
+ .booking-filters-grid .search-group{grid-column:auto;}
+ .booking-filter-actions{flex-direction:column;}
+}
+
 </style>
 <div class="admin-dashboard">
 <div class="admin-page-head admin-page-head-clean">
@@ -1145,108 +1319,13 @@ form[action="/admin/walk-in"] .walkin-actions .btn{width:100% !important;min-wid
     <details class="admin-tools-menu">
         <summary>เครื่องมือเพิ่มเติม</summary>
         <div class="admin-tools-popover">
-            <a href="#admin-report-summary">รายงานและสรุปข้อมูล</a>
+            <a href="/admin/reports">รายงานและสรุปข้อมูล</a>
+            <a href="/admin/rooms">จัดการห้องพัก</a>
+            <a href="/admin/test-email">ทดสอบส่งอีเมล</a>
             <a href="/admin/export-refunds">ดาวน์โหลดรายการคืนเงิน Excel</a>
         </div>
     </details>
 </div>
-
-<details id="admin-report-summary" class="admin-panel admin-collapsible-card admin-report-panel">
-    <summary>รายงานและสรุปข้อมูล</summary>
-    <div style="padding:18px 20px 20px;">
-        <div class="admin-report-grid">
-            <div class="admin-report-card">
-                <div class="label">รายได้วันนี้</div>
-                <div class="value">{{ "{:,.2f}".format(report.today_revenue) }} บาท</div>
-                <div class="sub">ยอดชำระที่บันทึกวันนี้</div>
-            </div>
-            <div class="admin-report-card">
-                <div class="label">รายได้เดือนนี้</div>
-                <div class="value">{{ "{:,.2f}".format(report.month_revenue) }} บาท</div>
-                <div class="sub">รวมยอดชำระของเดือนปัจจุบัน</div>
-            </div>
-            <div class="admin-report-card">
-                <div class="label">รายได้รวมทั้งหมด</div>
-                <div class="value">{{ "{:,.2f}".format(report.total_revenue) }} บาท</div>
-                <div class="sub">รวมยอดชำระที่ไม่ถูกยกเลิก</div>
-            </div>
-            <div class="admin-report-card">
-                <div class="label">จำนวนลูกค้าที่จอง</div>
-                <div class="value">{{ report.customer_count }} คน</div>
-                <div class="sub">ไม่นับรายการ Walk-in ภายในระบบ</div>
-            </div>
-            <div class="admin-report-card">
-                <div class="label">การจองทั้งหมด</div>
-                <div class="value">{{ report.total_bookings }} รายการ</div>
-                <div class="sub">รวมทุกสถานะ</div>
-            </div>
-            <div class="admin-report-card">
-                <div class="label">รอดำเนินการ</div>
-                <div class="value">{{ report.pending_bookings }} รายการ</div>
-                <div class="sub">รออนุมัติ / รอสลิป / รอชำระ</div>
-            </div>
-            <div class="admin-report-card">
-                <div class="label">Walk-in ทั้งหมด</div>
-                <div class="value">{{ report.walkin_count }} รายการ</div>
-                <div class="sub">ลูกค้าหน้าเคาน์เตอร์</div>
-            </div>
-            <div class="admin-report-card">
-                <div class="label">กำลังเข้าพัก</div>
-                <div class="value">{{ report.checked_in_count }} ห้อง</div>
-                <div class="sub">สถานะเข้าพักแล้ว</div>
-            </div>
-            <div class="admin-report-card">
-                <div class="label">ห้องทั้งหมด</div>
-                <div class="value">{{ report.total_rooms }} ห้อง</div>
-                <div class="sub">เปิดให้จอง {{ report.open_rooms }} ห้อง</div>
-            </div>
-            <div class="admin-report-card">
-                <div class="label">ห้องว่างโดยประมาณวันนี้</div>
-                <div class="value">{{ report.available_today }} ห้อง</div>
-                <div class="sub">คำนวณจากห้องเปิดให้จอง - กำลังเข้าพัก</div>
-            </div>
-            <div class="admin-report-card">
-                <div class="label">เช็กเอาท์แล้ว</div>
-                <div class="value">{{ report.checked_out_count }} รายการ</div>
-                <div class="sub">รายการที่จบการเข้าพัก</div>
-            </div>
-            <div class="admin-report-card">
-                <div class="label">ห้องที่ถูกบล็อก</div>
-                <div class="value">{{ report.blocked_count }} รายการ</div>
-                <div class="sub">ช่วงวันที่ปิดไม่ให้จอง</div>
-            </div>
-        </div>
-
-        <h4 style="margin:20px 0 8px;color:#201135;font-size:17px;font-weight:950;">รายการล่าสุด</h4>
-        <table class="admin-report-table">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>ห้อง</th>
-                    <th>ผู้จอง</th>
-                    <th>สถานะ</th>
-                    <th>ยอดรวม</th>
-                    <th>สร้างเมื่อ</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in report.latest_bookings %}
-                <tr>
-                    <td>#{{ item.id }}</td>
-                    <td>{{ item.room_name }}</td>
-                    <td>{{ item.username }}</td>
-                    <td>{{ status_th(item.status) }}</td>
-                    <td>{{ "{:,.2f}".format(item.total or 0) }} บาท</td>
-                    <td>{{ item.created_at or '-' }}</td>
-                </tr>
-                {% else %}
-                <tr><td colspan="6" style="text-align:center;color:#7b6a8f;">ยังไม่มีรายการจอง</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        <div class="admin-report-note">หมายเหตุ: รายได้คำนวณจากยอดที่ระบบบันทึกไว้ในรายการจองที่ยังไม่ถูกยกเลิก</div>
-    </div>
-</details>
 
 <div class="admin-panel" style="margin-bottom:18px;">
     <div class="admin-panel-title">
@@ -1270,9 +1349,8 @@ form[action="/admin/walk-in"] .walkin-actions .btn{width:100% !important;min-wid
         </div>
         {% endfor %}
     </div>
-    <p class="muted admin-note">เมื่อซ่อมบำรุงเสร็จ แอดมินสามารถกด "เปิดให้จอง" เพื่อให้ลูกค้ากลับมาจองห้องได้ทันที</p>
+    <p class="muted admin-note">เมื่อซ่อมบำรุงเสร็จ ผู้ดูแลระบบสามารถกด "เปิดให้จอง" เพื่อให้ลูกค้ากลับมาจองห้องได้ทันที</p>
 </div>
-
 
 <div class="admin-manage-grid">
     
@@ -1303,7 +1381,7 @@ form[action="/admin/walk-in"] .walkin-actions .btn{width:100% !important;min-wid
             </div>
             <div class="walkin-field">
                 <label>เบอร์โทร</label>
-                <input name="guest_phone" placeholder="เช่น 0812345678">
+                <input id="guest_phone" name="guest_phone" type="tel" inputmode="numeric" maxlength="10" pattern="[0-9]{10}" placeholder="เช่น 0812345678">
             </div>
         </div>
 
@@ -1426,6 +1504,119 @@ form[action="/admin/walk-in"] .walkin-actions .btn{width:100% !important;min-wid
     </details>
 </div>
 
+
+
+<style>
+.booking-filter-panel{margin:18px 0;background:#fff;border:1px solid #e2d7f7;border-radius:22px;padding:20px;box-shadow:0 12px 28px rgba(43,22,77,.06)}
+.booking-filter-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}
+.booking-filter-head h3{margin:0;color:#16052f;font-size:20px;font-weight:800}
+.booking-filter-head p{margin:4px 0 0;color:#6a587f;font-size:14px;line-height:1.55}
+.booking-filter-count{background:#f1e8ff;color:#6f42c1;border-radius:999px;padding:8px 14px;font-size:13px;font-weight:800;white-space:nowrap}
+.booking-filter-form{display:flex;flex-direction:column;gap:14px}
+.booking-filter-row{display:grid;gap:12px;align-items:end}
+.booking-filter-row.top{grid-template-columns:repeat(4,minmax(0,1fr))}
+.booking-filter-row.bottom{grid-template-columns:1fr 1fr minmax(260px,2.2fr) auto auto}
+.booking-filter-field label{display:block;font-size:13px;font-weight:800;color:#4c3865;margin-bottom:7px;white-space:nowrap}
+.booking-filter-field select,.booking-filter-field input{width:100%;border:1px solid #d7c3fb;border-radius:13px;padding:10px 12px;font:inherit;color:#16052f;background:#fff;min-height:46px;box-sizing:border-box;box-shadow:0 6px 16px rgba(111,66,193,.04)}
+.booking-filter-field input::placeholder{color:#9a8bab}
+.booking-filter-actions{display:flex;gap:8px;align-items:end;height:46px}
+.booking-filter-actions .btn{height:46px;display:inline-flex;align-items:center;justify-content:center;border-radius:13px;white-space:nowrap;text-decoration:none;padding:0 18px}
+.booking-filter-reset{height:46px;display:inline-flex;align-items:center;justify-content:center;background:#f6f0ff;color:#6f42c1;border:1px solid #decfff;border-radius:13px;padding:0 16px;font-weight:800;text-decoration:none;white-space:nowrap;box-sizing:border-box}
+@media(max-width:1100px){.booking-filter-row.top{grid-template-columns:repeat(2,minmax(0,1fr))}.booking-filter-row.bottom{grid-template-columns:repeat(2,minmax(0,1fr))}.booking-filter-field.search-group{grid-column:1/-1}.booking-filter-actions{grid-column:1/-1;height:auto}.booking-filter-actions .btn,.booking-filter-reset{flex:1}}
+@media(max-width:700px){.booking-filter-panel{padding:16px}.booking-filter-head{display:block}.booking-filter-count{display:inline-block;margin-top:10px}.booking-filter-row.top,.booking-filter-row.bottom{grid-template-columns:1fr}.booking-filter-field.search-group{grid-column:auto}.booking-filter-actions{display:grid;grid-template-columns:1fr 1fr}.booking-filter-actions .btn,.booking-filter-reset{width:100%;box-sizing:border-box}}
+</style>
+
+<div class="booking-filter-panel">
+    <div class="booking-filter-head">
+        <div>
+            <h3>ตัวกรองรายการจอง</h3>
+            <p>เลือกดูรายการตามประเภท สถานะ ห้องพัก เดือน/ปี หรือค้นหาชื่อ เบอร์โทร และอีเมล</p>
+        </div>
+        <div class="booking-filter-count">พบ {{ booking_filters.result_count }} รายการ</div>
+    </div>
+    <form class="booking-filter-form" method="get" action="/admin">
+        <div class="booking-filter-row top">
+        <div class="booking-filter-field">
+            <label>ประเภท</label>
+            <select name="type">
+                <option value="all" {% if booking_filters.type == 'all' %}selected{% endif %}>ทั้งหมด</option>
+                <option value="online" {% if booking_filters.type == 'online' %}selected{% endif %}>จองออนไลน์</option>
+                <option value="walkin" {% if booking_filters.type == 'walkin' %}selected{% endif %}>Walk-in</option>
+            </select>
+        </div>
+        <div class="booking-filter-field">
+            <label>รูปแบบชำระเงิน</label>
+            <select name="payment_type">
+                <option value="all" {% if booking_filters.payment_type == 'all' %}selected{% endif %}>ทั้งหมด</option>
+                <option value="full" {% if booking_filters.payment_type == 'full' %}selected{% endif %}>จ่ายเต็ม 100%</option>
+                <option value="deposit" {% if booking_filters.payment_type == 'deposit' %}selected{% endif %}>มัดจำ 25%</option>
+            </select>
+        </div>
+        <div class="booking-filter-field">
+            <label>สถานะ</label>
+            <select name="status">
+                <option value="all" {% if booking_filters.status == 'all' %}selected{% endif %}>ทั้งหมด</option>
+                <option value="approved" {% if booking_filters.status == 'approved' %}selected{% endif %}>รอชำระเงิน</option>
+                <option value="waiting_slip_approval" {% if booking_filters.status == 'waiting_slip_approval' %}selected{% endif %}>รอตรวจสอบการชำระเงิน</option>
+                <option value="fully_paid" {% if booking_filters.status == 'fully_paid' %}selected{% endif %}>ชำระเงินครบแล้ว</option>
+                <option value="checked_in" {% if booking_filters.status == 'checked_in' %}selected{% endif %}>เข้าพักแล้ว</option>
+                <option value="checked_out" {% if booking_filters.status == 'checked_out' %}selected{% endif %}>เช็กเอาท์แล้ว</option>
+                <option value="cancel_requested" {% if booking_filters.status == 'cancel_requested' %}selected{% endif %}>รอจัดการการยกเลิก</option>
+                <option value="cancelled" {% if booking_filters.status == 'cancelled' %}selected{% endif %}>ยกเลิกแล้ว</option>
+                <option value="rejected" {% if booking_filters.status == 'rejected' %}selected{% endif %}>ปฏิเสธการจอง</option>
+                <option value="no_show" {% if booking_filters.status == 'no_show' %}selected{% endif %}>ลูกค้าไม่มา</option>
+            </select>
+        </div>
+        <div class="booking-filter-field">
+            <label>ห้องพัก</label>
+            <select name="room_id">
+                <option value="all" {% if booking_filters.room_id == 'all' %}selected{% endif %}>ทั้งหมด</option>
+                {% for room in rooms %}
+                    <option value="{{ room.id }}" {% if booking_filters.room_id|string == room.id|string %}selected{% endif %}>{{ room.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        </div>
+        <div class="booking-filter-row bottom">
+        <div class="booking-filter-field">
+            <label>เดือน</label>
+            <select name="month">
+                <option value="all" {% if booking_filters.month == 'all' %}selected{% endif %}>ทั้งหมด</option>
+                <option value="1" {% if booking_filters.month == '1' %}selected{% endif %}>มกราคม</option>
+                <option value="2" {% if booking_filters.month == '2' %}selected{% endif %}>กุมภาพันธ์</option>
+                <option value="3" {% if booking_filters.month == '3' %}selected{% endif %}>มีนาคม</option>
+                <option value="4" {% if booking_filters.month == '4' %}selected{% endif %}>เมษายน</option>
+                <option value="5" {% if booking_filters.month == '5' %}selected{% endif %}>พฤษภาคม</option>
+                <option value="6" {% if booking_filters.month == '6' %}selected{% endif %}>มิถุนายน</option>
+                <option value="7" {% if booking_filters.month == '7' %}selected{% endif %}>กรกฎาคม</option>
+                <option value="8" {% if booking_filters.month == '8' %}selected{% endif %}>สิงหาคม</option>
+                <option value="9" {% if booking_filters.month == '9' %}selected{% endif %}>กันยายน</option>
+                <option value="10" {% if booking_filters.month == '10' %}selected{% endif %}>ตุลาคม</option>
+                <option value="11" {% if booking_filters.month == '11' %}selected{% endif %}>พฤศจิกายน</option>
+                <option value="12" {% if booking_filters.month == '12' %}selected{% endif %}>ธันวาคม</option>
+            </select>
+        </div>
+        <div class="booking-filter-field">
+            <label>ปี</label>
+            <select name="year">
+                <option value="all" {% if booking_filters.year == 'all' %}selected{% endif %}>ทั้งหมด</option>
+                {% for y in booking_filters.years %}
+                    <option value="{{ y }}" {% if booking_filters.year == y %}selected{% endif %}>{{ y }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="booking-filter-field search-group">
+            <label>ค้นหา</label>
+            <input type="search" name="q" value="{{ booking_filters.q }}" placeholder="ชื่อ เบอร์โทร อีเมล หรือห้องพัก">
+        </div>
+        <div class="booking-filter-actions">
+            <button class="btn" type="submit">กรองรายการ</button>
+            <a class="booking-filter-reset" href="/admin">ล้างตัวกรอง</a>
+        </div>
+        </div>
+    </form>
+</div>
+
 <div class="admin-bookings-panel">
     <h3 class="admin-section-title">รายการจองทั้งหมด</h3>
     <div class="admin-bookings-desktop"><div class="admin-bookings-wrap">
@@ -1434,6 +1625,7 @@ form[action="/admin/walk-in"] .walkin-actions .btn{width:100% !important;min-wid
         <tr>
             <th>ID</th>
             <th>ผู้จอง</th>
+            <th>ข้อมูลติดต่อ</th>
             <th>ห้อง</th>
             <th>วันเข้า</th>
             <th>เวลาเข้า</th>
@@ -1441,7 +1633,7 @@ form[action="/admin/walk-in"] .walkin-actions .btn{width:100% !important;min-wid
             <th>เวลาออก</th>
             <th>ยอดชำระ</th>
             <th>สถานะ</th>
-            <th>สลิป</th>
+            <th>หลักฐานการชำระเงิน</th>
             <th>หมดเวลา</th>
             <th>คืนเงิน</th>
             <th>จัดการ</th>
@@ -1458,6 +1650,17 @@ form[action="/admin/walk-in"] .walkin-actions .btn{width:100% !important;min-wid
                     {{ b["username"] }}
                 {% endif %}
             </td>
+            <td>
+                <details class="admin-guest-details">
+                    <summary>ดูข้อมูลเพิ่มเติม</summary>
+                    <div class="admin-guest-detail-grid">
+                        <div class="admin-guest-detail-item"><strong>เบอร์โทรศัพท์</strong><span>{{ b["user_phone"] if b["user_phone"] else "-" }}</span></div>
+                        <div class="admin-guest-detail-item"><strong>อีเมล</strong><span>{{ b["user_email"] if b["user_email"] else "-" }}</span></div>
+                        <div class="admin-guest-detail-item"><strong>ชื่อผู้ใช้</strong><span>{{ b["username"] }}</span></div>
+                        <div class="admin-guest-detail-item"><strong>วันที่ทำรายการ</strong><span>{{ b["created_at"] if b["created_at"] else "-" }}</span></div>
+                    </div>
+                </details>
+            </td>
             <td>{{ b["room_name"] }}</td>
             <td>{{ b["checkin"] }}</td>
             <td>{{ b["checkin_time"] }}</td>
@@ -1466,15 +1669,15 @@ form[action="/admin/walk-in"] .walkin-actions .btn{width:100% !important;min-wid
             <td>{{ b["paid"] }}</td>
             <td>
                 {% if b["status"] == "waiting_approval" %}
-                    <span class="status waiting_approval">🟡 รออนุมัติการจอง</span>
+                    <span class="status waiting_approval">🟡 รอชำระเงิน</span>
                 {% elif b["status"] == "approved" %}
                     <span class="status approved">🟠 รอการชำระเงิน</span>
                 {% elif b["status"] == "waiting_slip_approval" %}
-                    <span class="status waiting_slip_approval">🟣 รอตรวจสอบสลิป</span>
+                    <span class="status waiting_slip_approval">🟣 รอตรวจสอบการชำระเงิน</span>
                 {% elif b["status"] == "deposit_paid" %}
                     <span class="status deposit_paid">🔵 ชำระมัดจำแล้ว</span>
                 {% elif b["status"] == "waiting_remaining_slip_approval" %}
-                    <span class="status waiting_slip_approval">🟣 รอตรวจสลิปส่วนที่เหลือ</span>
+                    <span class="status waiting_slip_approval">🟣 รอตรวจสอบการชำระเงินส่วนที่เหลือ</span>
                 {% elif b["status"] == "remaining_counter_pending" %}
                     <span class="status approved">🟠 รอชำระยอดคงเหลือหน้าเคาน์เตอร์</span>
                 {% elif b["status"] == "counter_pending" %}
@@ -1488,7 +1691,7 @@ form[action="/admin/walk-in"] .walkin-actions .btn{width:100% !important;min-wid
                 {% elif b["status"] == "no_show" %}
                     <span class="status no_show">⚠️ No Show / ลูกค้าไม่มา</span>
                 {% elif b["status"] == "cancel_requested" %}
-                    <span class="status waiting_slip_approval">🟣 รออนุมัติการยกเลิก</span>
+                    <span class="status waiting_slip_approval">🟣 รอจัดการการยกเลิก</span>
                 {% elif b["status"] == "refund_pending" %}
                     <span class="status approved">🟠 รอคืนเงิน</span>
                 {% elif b["status"] == "refunded" %}
@@ -1503,7 +1706,12 @@ form[action="/admin/walk-in"] .walkin-actions .btn{width:100% !important;min-wid
             </td>
             <td>
                 {% if b["slip_filename"] %}
-                    <a href="{{ url_for('static', filename='slips/' + b['slip_filename']) }}" target="_blank" class="slip-link">ดูสลิป</a>
+                    <button type="button"
+                            class="slip-view-btn"
+                            data-slip-url="{{ url_for('static', filename='slips/' + b['slip_filename']) }}">
+                        <span class="slip-view-icon">▣</span>
+                        <span>ดูสลิปการโอน</span>
+                    </button>
                 {% else %}
                     -
                 {% endif %}
@@ -1539,11 +1747,11 @@ form[action="/admin/walk-in"] .walkin-actions .btn{width:100% !important;min-wid
                     <a class="btn" href="/approve/{{ b['id'] }}">อนุมัติ</a>
                     <a class="btn btn-danger" href="/reject/{{ b['id'] }}">ปฏิเสธ</a>
                 {% elif b["status"] == "waiting_slip_approval" %}
-                    <a class="btn" href="/approve_slip/{{ b['id'] }}">อนุมัติสลิป</a>
-                    <a class="btn btn-danger" href="/reject_slip/{{ b['id'] }}">ปฏิเสธสลิป</a>
+                    <a class="btn" href="/approve_slip/{{ b['id'] }}">ยืนยันการชำระเงิน</a>
+                    <a class="btn btn-danger" href="/reject_slip/{{ b['id'] }}">ส่งกลับให้แก้ไข</a>
                 {% elif b["status"] == "waiting_remaining_slip_approval" %}
-                    <a class="btn" href="/approve_slip/{{ b['id'] }}">อนุมัติสลิปส่วนที่เหลือ</a>
-                    <a class="btn btn-danger" href="/reject_slip/{{ b['id'] }}">ปฏิเสธสลิป</a>
+                    <a class="btn" href="/approve_slip/{{ b['id'] }}">ยืนยันการชำระเงินส่วนที่เหลือ</a>
+                    <a class="btn btn-danger" href="/reject_slip/{{ b['id'] }}">ส่งกลับให้แก้ไข</a>
                 {% elif b["status"] == "remaining_counter_pending" %}
                     <a class="btn btn-warning" href="/admin/mark-counter-paid/{{ b['id'] }}">ยืนยันว่าจ่ายหน้าเคาน์เตอร์แล้ว</a>
                 {% elif b["status"] == "deposit_paid" %}
@@ -1599,15 +1807,15 @@ form[action="/admin/walk-in"] .walkin-actions .btn{width:100% !important;min-wid
             </div>
             <div class="admin-booking-status">
                 {% if b["status"] == "waiting_approval" %}
-                    <span class="status waiting_approval">🟡 รออนุมัติการจอง</span>
+                    <span class="status waiting_approval">🟡 รอชำระเงิน</span>
                 {% elif b["status"] == "approved" %}
                     <span class="status approved">🟠 รอการชำระเงิน</span>
                 {% elif b["status"] == "waiting_slip_approval" %}
-                    <span class="status waiting_slip_approval">🟣 รอตรวจสอบสลิป</span>
+                    <span class="status waiting_slip_approval">🟣 รอตรวจสอบการชำระเงิน</span>
                 {% elif b["status"] == "deposit_paid" %}
                     <span class="status deposit_paid">🔵 ชำระมัดจำแล้ว</span>
                 {% elif b["status"] == "waiting_remaining_slip_approval" %}
-                    <span class="status waiting_slip_approval">🟣 รอตรวจสลิปส่วนที่เหลือ</span>
+                    <span class="status waiting_slip_approval">🟣 รอตรวจสอบการชำระเงินส่วนที่เหลือ</span>
                 {% elif b["status"] == "remaining_counter_pending" %}
                     <span class="status approved">🟠 รอชำระยอดคงเหลือหน้าเคาน์เตอร์</span>
                 {% elif b["status"] == "counter_pending" %}
@@ -1621,7 +1829,7 @@ form[action="/admin/walk-in"] .walkin-actions .btn{width:100% !important;min-wid
                 {% elif b["status"] == "no_show" %}
                     <span class="status no_show">⚠️ No Show / ลูกค้าไม่มา</span>
                 {% elif b["status"] == "cancel_requested" %}
-                    <span class="status waiting_slip_approval">🟣 รออนุมัติการยกเลิก</span>
+                    <span class="status waiting_slip_approval">🟣 รอจัดการการยกเลิก</span>
                 {% elif b["status"] == "refund_pending" %}
                     <span class="status approved">🟠 รอคืนเงิน</span>
                 {% elif b["status"] == "refunded" %}
@@ -1662,14 +1870,31 @@ form[action="/admin/walk-in"] .walkin-actions .btn{width:100% !important;min-wid
                 {{ b["payment_deadline"] if b["payment_deadline"] else "-" }}
             </div>
             <div>
-                <strong>สลิป</strong>
+                <strong>หลักฐานการชำระเงิน</strong>
                 {% if b["slip_filename"] %}
-                    <a href="{{ url_for('static', filename='slips/' + b['slip_filename']) }}" target="_blank" class="slip-link">ดูสลิป</a>
+                    <button type="button"
+                            class="slip-view-btn"
+                            data-slip-url="{{ url_for('static', filename='slips/' + b['slip_filename']) }}">
+                        <span class="slip-view-icon">▣</span>
+                        <span>ดูสลิปการโอน</span>
+                    </button>
                 {% else %}
                     -
                 {% endif %}
             </div>
         </div>
+
+        <details class="admin-guest-details">
+            <summary>ดูข้อมูลผู้จองเพิ่มเติม</summary>
+            <div class="admin-guest-detail-grid">
+                <div class="admin-guest-detail-item"><strong>เบอร์โทรศัพท์</strong><span>{{ b["user_phone"] if b["user_phone"] else "-" }}</span></div>
+                <div class="admin-guest-detail-item"><strong>อีเมล</strong><span>{{ b["user_email"] if b["user_email"] else "-" }}</span></div>
+                <div class="admin-guest-detail-item"><strong>ชื่อผู้ใช้</strong><span>{{ b["username"] }}</span></div>
+                <div class="admin-guest-detail-item"><strong>ชื่อเล่น</strong><span>{{ b["user_nickname"] if b["user_nickname"] else "-" }}</span></div>
+                <div class="admin-guest-detail-item"><strong>ช่องทางจ่าย</strong><span>{{ b["payment_method"] if b["payment_method"] else b["paytype"] }}</span></div>
+                <div class="admin-guest-detail-item"><strong>วันที่ทำรายการ</strong><span>{{ b["created_at"] if b["created_at"] else "-" }}</span></div>
+            </div>
+        </details>
 
         <div class="admin-booking-refund">
             <div class="admin-refund-amount">
@@ -1705,11 +1930,11 @@ form[action="/admin/walk-in"] .walkin-actions .btn{width:100% !important;min-wid
                 <a class="btn" href="/approve/{{ b['id'] }}">อนุมัติ</a>
                 <a class="btn btn-danger" href="/reject/{{ b['id'] }}">ปฏิเสธ</a>
             {% elif b["status"] == "waiting_slip_approval" %}
-                <a class="btn" href="/approve_slip/{{ b['id'] }}">อนุมัติสลิป</a>
-                <a class="btn btn-danger" href="/reject_slip/{{ b['id'] }}">ปฏิเสธสลิป</a>
+                <a class="btn" href="/approve_slip/{{ b['id'] }}">ยืนยันการชำระเงิน</a>
+                <a class="btn btn-danger" href="/reject_slip/{{ b['id'] }}">ส่งกลับให้แก้ไข</a>
             {% elif b["status"] == "waiting_remaining_slip_approval" %}
-                <a class="btn" href="/approve_slip/{{ b['id'] }}">อนุมัติสลิปส่วนที่เหลือ</a>
-                <a class="btn btn-danger" href="/reject_slip/{{ b['id'] }}">ปฏิเสธสลิป</a>
+                <a class="btn" href="/approve_slip/{{ b['id'] }}">ยืนยันการชำระเงินส่วนที่เหลือ</a>
+                <a class="btn btn-danger" href="/reject_slip/{{ b['id'] }}">ส่งกลับให้แก้ไข</a>
             {% elif b["status"] == "remaining_counter_pending" %}
                 <a class="btn btn-warning" href="/admin/mark-counter-paid/{{ b['id'] }}">ยืนยันว่าจ่ายหน้าเคาน์เตอร์แล้ว</a>
             {% elif b["status"] == "counter_pending" %}
@@ -1766,5 +1991,77 @@ form[action="/admin/walk-in"] .walkin-actions .btn{width:100% !important;min-wid
 
 </div>
 </div>
+
+
+<div class="slip-modal" id="slipModal" aria-hidden="true">
+    <div class="slip-modal-card" role="dialog" aria-modal="true" aria-label="หลักฐานการชำระเงิน">
+        <div class="slip-modal-head">
+            <strong>หลักฐานการชำระเงิน</strong>
+            <button type="button" class="slip-modal-close" id="slipModalClose" aria-label="ปิด">&times;</button>
+        </div>
+        <div class="slip-modal-body">
+            <img id="slipModalImage" src="" alt="หลักฐานการชำระเงิน">
+        </div>
+        <div class="slip-modal-actions">
+            <a id="slipModalOpenNew" class="slip-open-new" href="#" target="_blank" rel="noopener">เปิดรูปในแท็บใหม่</a>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const guestPhoneInput = document.getElementById("guest_phone");
+    if (guestPhoneInput) {
+        guestPhoneInput.addEventListener("input", function () {
+            this.value = this.value.replace(/\D/g, "").slice(0, 10);
+        });
+    }
+
+    const slipModal = document.getElementById("slipModal");
+    const slipModalImage = document.getElementById("slipModalImage");
+    const slipModalOpenNew = document.getElementById("slipModalOpenNew");
+    const slipModalClose = document.getElementById("slipModalClose");
+
+    function openSlipModal(url) {
+        if (!slipModal || !slipModalImage || !slipModalOpenNew) {
+            window.open(url, "_blank");
+            return;
+        }
+        slipModalImage.src = url;
+        slipModalOpenNew.href = url;
+        slipModal.classList.add("is-open");
+        slipModal.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
+    }
+
+    function closeSlipModal() {
+        if (!slipModal || !slipModalImage) return;
+        slipModal.classList.remove("is-open");
+        slipModal.setAttribute("aria-hidden", "true");
+        slipModalImage.src = "";
+        document.body.style.overflow = "";
+    }
+
+    document.querySelectorAll(".slip-view-btn").forEach(function (btn) {
+        btn.addEventListener("click", function (event) {
+            event.preventDefault();
+            const url = btn.getAttribute("data-slip-url");
+            if (url) openSlipModal(url);
+        });
+    });
+
+    if (slipModalClose) {
+        slipModalClose.addEventListener("click", closeSlipModal);
+    }
+    if (slipModal) {
+        slipModal.addEventListener("click", function (event) {
+            if (event.target === slipModal) closeSlipModal();
+        });
+    }
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") closeSlipModal();
+    });
+});
+</script>
 {% endblock %}
 

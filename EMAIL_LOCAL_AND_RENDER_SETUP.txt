@@ -1,0 +1,61 @@
+วิธีตั้งค่าระบบส่งอีเมลให้ใช้ได้ทั้งบนเครื่องและ Render
+
+1) ใช้ Gmail App Password เท่านั้น
+- เข้า Google Account ของอีเมลผู้ส่ง
+- เปิด 2-Step Verification
+- สร้าง App Password
+- จะได้รหัส 16 ตัว เช่น abcd efgh ijkl mnop
+- นำไปใส่ใน EMAIL_PASSWORD ได้เลย ระบบจะตัดช่องว่างให้อัตโนมัติ
+
+2) ตั้งค่าบน Render
+ไปที่ Render > Web Service > Environment แล้วเพิ่ม/เช็กค่าเหล่านี้
+
+SECRET_KEY=ข้อความสุ่มยาวๆ
+APP_BASE_URL=https://gojamesstay.onrender.com
+EMAIL_SENDER=gojames.booking@gmail.com
+EMAIL_PASSWORD=Google App Password 16 ตัว
+ADMIN_EMAIL=อีเมลแอดมินที่ต้องการรับแจ้งเตือน
+SMTP_SERVER=smtp.gmail.com
+SMTP_PORT=465
+SMTP_USE_SSL=1
+PROMPTPAY_ID=0953087210
+
+หลังแก้ Environment Variables ให้กด Save Changes แล้ว Manual Deploy > Deploy latest commit
+
+3) ตั้งค่าตอนรันในเครื่อง
+สร้างไฟล์ชื่อ .env ไว้ในโฟลเดอร์เดียวกับ app.py แล้วใส่ค่าประมาณนี้
+
+SECRET_KEY=gojamesstay_local_secret_key
+APP_BASE_URL=http://127.0.0.1:5000
+EMAIL_SENDER=gojames.booking@gmail.com
+EMAIL_PASSWORD=Google App Password 16 ตัว
+ADMIN_EMAIL=gojames.booking@gmail.com
+SMTP_SERVER=smtp.gmail.com
+SMTP_PORT=465
+SMTP_USE_SSL=1
+PROMPTPAY_ID=0953087210
+
+จากนั้นรัน
+python app.py
+
+4) วิธีทดสอบว่าเมลใช้งานได้หรือไม่
+- เข้าสู่ระบบด้วยบัญชีแอดมิน
+- เปิดหน้า /admin
+- กด เครื่องมือเพิ่มเติม > ทดสอบส่งอีเมล
+- ถ้าสำเร็จ จะมีข้อความแจ้งบนเว็บและมีอีเมลเข้า ADMIN_EMAIL
+- ถ้าไม่สำเร็จ ให้ดูข้อความ Error ใน Console หรือ Render Logs
+
+5) เหตุการณ์ที่ระบบจะส่งอีเมล
+- ลืมรหัสผ่าน / รีเซ็ตรหัสผ่าน
+- ลูกค้าสร้างคำขอจอง
+- แอดมินอนุมัติ/ปฏิเสธการจอง
+- ลูกค้าเลือกจ่ายหน้าเคาน์เตอร์
+- ลูกค้าอัปโหลดสลิป
+- แอดมินยืนยัน/ปฏิเสธสลิป
+- เช็กอิน / เช็กเอาท์
+- ยกเลิกการจอง / ขอคืนเงินบางส่วน
+
+หมายเหตุ
+- ถ้าใช้ Gmail ต้องใช้ App Password ไม่ใช่รหัสผ่าน Gmail ปกติ
+- ถ้า Repo เป็น Public ห้ามอัปโหลดไฟล์ .env จริงขึ้น GitHub
+- ZIP นี้ไม่มี database.db, .env และ __pycache__

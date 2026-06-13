@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}ปฏิทินห้องพัก{% endblock %}
+{% block title %}ปฏิทินห้องพัก | GoJames ผู้ดูแลระบบ{% endblock %}
 {% block content %}
 <div class="calendar-page-head">
     <div>
@@ -83,7 +83,7 @@ onclick="showRoomAction(this)"
 </div>
 
 <p class="muted" style="margin-top:12px;">
-สีเขียว = ว่าง สีฟ้า = มีผู้จอง สีม่วง = มีผู้พักอยู่ สีชมพู = แอดมินตั้งค่าไม่ว่างรายวัน
+สีเขียว = ว่าง สีฟ้า = มีผู้จอง สีม่วง = มีผู้พักอยู่ สีชมพู = ผู้ดูแลระบบตั้งค่าไม่ว่างรายวัน
 </p>
 </div>
 
@@ -201,7 +201,7 @@ function showRoomAction(btn){
 
     if (source === "booking") {
         actions = `
-            <div class="warning-text">วันนี้มีรายการจองหรือมีผู้พักอยู่ จึงไม่สามารถตั้งเป็นไม่ว่าง/ว่างจากปฏิทินนี้ได้ กรุณาจัดการรายการจองที่หน้าแอดมิน</div>
+            <div class="warning-text">วันนี้มีรายการจองหรือมีผู้พักอยู่ จึงไม่สามารถตั้งเป็นไม่ว่าง/ว่างจากปฏิทินนี้ได้ กรุณาจัดการรายการจองที่หน้าผู้ดูแลระบบ</div>
             <div class="action-row"><a class="calendar-action-btn btn-open" href="/admin">ไปหน้าจัดการการจอง</a></div>
         `;
     } else if (source === "room_closed") {

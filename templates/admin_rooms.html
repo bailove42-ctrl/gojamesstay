@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+{% block title %}จัดการห้องพัก | GoJames ผู้ดูแลระบบ{% endblock %}
+{% block content %}
+
+{% macro admin_amenity_icon(label) -%}
+{% set key_map = {
+    'Wi-Fi ฟรี':'wifi','เครื่องปรับอากาศ':'air','โทรทัศน์':'tv','ตู้เย็น':'fridge','เครื่องทำน้ำอุ่น':'shower','กาต้มน้ำไฟฟ้า':'kettle','ไดร์เป่าผม':'dryer','ผ้าเช็ดตัว':'towel','สบู่ / แชมพู':'soap','ห้องน้ำส่วนตัว':'bath','เตียงใหญ่ 1 เตียง':'bed','เตียงเดี่ยว 2 เตียง':'bed','เตียงเสริมได้':'bed','ที่จอดรถฟรี':'parking','กล้องวงจรปิด (CCTV)':'camera','สวนพักผ่อน':'tree','พื้นที่นั่งเล่นส่วนกลาง':'sofa','ระเบียงหน้าห้อง':'balcony','มุมถ่ายรูป':'camera','อาหารเช้า':'utensils','ห้องสำหรับครอบครัว':'family','พักได้หลายคน':'family','นำสัตว์เลี้ยงเข้าได้':'paw','สูบบุหรี่ได้':'smoking','เตาปิ้งย่าง':'grill','คาราโอเกะ':'microphone','โต๊ะทำงาน':'desk','ตู้เสื้อผ้า':'wardrobe'
+} %}
+{% set icon = key_map.get(label, 'check') %}
+<span class="amenity-admin-icon" aria-hidden="true">
+{% if icon == 'wifi' %}<svg viewBox="0 0 24 24"><path d="M5 13a10 10 0 0 1 14 0"/><path d="M8.5 16.5a5 5 0 0 1 7 0"/><path d="M12 20h.01"/></svg>
+{% elif icon == 'air' %}<svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="6" rx="2"/><path d="M7 14v1.5"/><path d="M12 14v2.5"/><path d="M17 14v1.5"/><path d="M8 18h8"/></svg>
+{% elif icon == 'tv' %}<svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="11" rx="2"/><path d="M8 20h8"/><path d="M12 16v4"/></svg>
+{% elif icon == 'fridge' %}<svg viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="18" rx="2"/><path d="M7 10h10"/><path d="M10 7v1"/><path d="M10 13v1"/></svg>
+{% elif icon == 'shower' %}<svg viewBox="0 0 24 24"><path d="M8 7a4 4 0 0 1 8 0"/><path d="M16 7h2v3"/><path d="M8 12h8"/><path d="M9 16h.01"/><path d="M12 16h.01"/><path d="M15 16h.01"/></svg>
+{% elif icon == 'kettle' %}<svg viewBox="0 0 24 24"><path d="M7 9h9a4 4 0 0 1 0 8H8a4 4 0 0 1-1-8Z"/><path d="M6 10l-3 2"/><path d="M9 9V6h5v3"/><path d="M18 11h1a2 2 0 0 1 0 4h-1"/></svg>
+{% elif icon == 'dryer' %}<svg viewBox="0 0 24 24"><circle cx="9" cy="10" r="4"/><path d="M13 10h7v3h-7"/><path d="M8 14l-2 7"/><path d="M11 14l2 7"/></svg>
+{% elif icon == 'towel' %}<svg viewBox="0 0 24 24"><path d="M7 4h10a2 2 0 0 1 2 2v12"/><path d="M7 4a3 3 0 0 0-3 3v11a2 2 0 0 0 2 2h11"/><path d="M7 8h10"/></svg>
+{% elif icon == 'soap' %}<svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="8" rx="4"/><path d="M9 7h.01"/><path d="M13 5h.01"/><path d="M16 8h.01"/></svg>
+{% elif icon == 'bath' %}<svg viewBox="0 0 24 24"><path d="M6 12h12v3a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4v-3Z"/><path d="M4 12h16"/><path d="M8 19l-1 2"/><path d="M16 19l1 2"/><path d="M9 8a3 3 0 0 1 6 0v4"/></svg>
+{% elif icon == 'bed' %}<svg viewBox="0 0 24 24"><path d="M4 11V6"/><path d="M4 18v-7h16v7"/><path d="M20 11V9a3 3 0 0 0-3-3H9"/><path d="M4 14h16"/><path d="M6 18v-2"/><path d="M18 18v-2"/></svg>
+{% elif icon == 'parking' %}<svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="16" rx="3"/><path d="M10 17V7h4a3 3 0 0 1 0 6h-4"/></svg>
+{% elif icon == 'camera' %}<svg viewBox="0 0 24 24"><rect x="4" y="6" width="10" height="8" rx="2"/><path d="M14 9l6-3v8l-6-3"/><path d="M8 18h8"/><path d="M12 14v4"/></svg>
+{% elif icon == 'tree' %}<svg viewBox="0 0 24 24"><path d="M12 21v-6"/><path d="M8 15h8l-2-4h3l-5-8-5 8h3l-2 4Z"/></svg>
+{% elif icon == 'sofa' %}<svg viewBox="0 0 24 24"><path d="M6 11V8a3 3 0 0 1 3-3h6a3 3 0 0 1 3 3v3"/><path d="M4 13h16v5H4z"/><path d="M4 18v2"/><path d="M20 18v2"/></svg>
+{% elif icon == 'utensils' %}<svg viewBox="0 0 24 24"><path d="M7 3v8"/><path d="M5 3v4"/><path d="M9 3v4"/><path d="M7 11v10"/><path d="M17 3v18"/><path d="M17 3a4 7 0 0 1 0 14"/></svg>
+{% elif icon == 'family' %}<svg viewBox="0 0 24 24"><circle cx="9" cy="7" r="3"/><circle cx="17" cy="9" r="2"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M14 20a4 4 0 0 1 7 0"/></svg>
+{% elif icon == 'paw' %}<svg viewBox="0 0 24 24"><path d="M8 13a4 4 0 0 0 8 0c0-2-2-4-4-4s-4 2-4 4Z"/><path d="M6 8h.01"/><path d="M10 5h.01"/><path d="M14 5h.01"/><path d="M18 8h.01"/></svg>
+{% elif icon == 'smoking' %}<svg viewBox="0 0 24 24"><path d="M4 16h10"/><path d="M18 16h2"/><path d="M4 19h16"/><path d="M15 10c3 0 3-5 0-5"/></svg>
+{% elif icon == 'balcony' %}<svg viewBox="0 0 24 24"><path d="M5 11h14"/><path d="M6 11v9"/><path d="M18 11v9"/><path d="M4 20h16"/><path d="M8 11V5h8v6"/></svg>
+{% elif icon == 'desk' %}<svg viewBox="0 0 24 24"><path d="M4 9h16"/><path d="M6 9v11"/><path d="M18 9v11"/><path d="M8 13h8"/><path d="M9 4h6v5"/></svg>
+{% elif icon == 'wardrobe' %}<svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M12 3v18"/><path d="M9 11h.01"/><path d="M15 11h.01"/></svg>
+{% elif icon == 'grill' %}<svg viewBox="0 0 24 24"><path d="M6 10h12"/><path d="M7 10a5 5 0 0 0 10 0"/><path d="M9 15l-2 5"/><path d="M15 15l2 5"/><path d="M10 5c0 1-1 1.5-1 2.5"/><path d="M14 5c0 1 1 1.5 1 2.5"/></svg>
+{% elif icon == 'microphone' %}<svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/><path d="M8 21h8"/></svg>
+{% else %}<svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
+{% endif %}
+</span>
+{%- endmacro %}
+
+<style>
+.admin-rooms-page{max-width:1180px;margin:0 auto 42px;}
+.admin-rooms-head{position:relative;overflow:hidden;display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:18px;background:linear-gradient(135deg,#7b5ac8 0%,#8b6fd6 58%,#a78bfa 100%);border:1px solid #e2d7f7;border-radius:24px;padding:26px 28px;box-shadow:0 18px 42px rgba(91,54,150,.14);}
+.admin-rooms-head::before{content:"";position:absolute;left:-70px;top:-90px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.08);}
+.admin-rooms-head::after{content:"";position:absolute;right:-80px;bottom:-110px;width:260px;height:260px;border-radius:50%;background:rgba(255,255,255,.07);}
+.admin-rooms-head>div,.admin-rooms-head>a{position:relative;z-index:1;}
+.admin-rooms-head h2{margin:0 0 6px;color:#fff!important;font-size:28px;font-weight:950;}
+.admin-rooms-head p{margin:0;color:rgba(255,255,255,.92);font-weight:800;line-height:1.5;}
+.admin-rooms-grid{display:grid;grid-template-columns:minmax(320px,.9fr) minmax(0,1.1fr);gap:18px;align-items:start;}
+.admin-room-panel{background:#fff;border:1px solid #e2d7f7;border-radius:22px;padding:20px;box-shadow:0 12px 28px rgba(43,22,77,.08);}
+.admin-room-panel h3{margin:0 0 12px;color:#211034;font-size:20px;font-weight:950;}
+.admin-room-panel label{display:block;margin:10px 0 6px;font-weight:900;color:#211034;}
+.admin-room-panel input,.admin-room-panel textarea,.admin-room-panel select{width:100%;border:1px solid #d8c4ff;border-radius:12px;padding:11px 12px;font-weight:700;background:#fff;}
+.admin-room-form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.amenity-section{border:1px solid #eadfff;background:#fbf8ff;border-radius:16px;padding:12px;margin:10px 0;}
+.amenity-section-title{font-weight:950;color:#5b34b7;margin-bottom:8px;}
+.amenity-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+.amenity-check{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #eadfff;border-radius:12px;padding:9px 11px;font-weight:850;color:#211034;cursor:pointer;min-height:46px;transition:.18s;font-size:14px;}
+.amenity-admin-icon{width:30px;height:30px;border-radius:10px;background:#efe8ff;color:#6f3bd8;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;}
+.amenity-admin-icon svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;}
+.amenity-check span:last-child{line-height:1.35;}
+.amenity-check:hover{border-color:#b794ff;background:#fffaff;box-shadow:0 8px 18px rgba(111,66,193,.08);}
+.amenity-check:has(input:checked){border-color:#a78bfa;background:#f5efff;}
+.amenity-check input{width:auto;margin:0;accent-color:#8b5cf6;}
+.admin-room-help{font-size:12px;color:#8a7a99;font-weight:700;margin-top:5px;line-height:1.5;}
+.admin-room-card{border:1px solid #eadfff;border-radius:20px;background:#fbf8ff;padding:15px;margin-bottom:14px;}
+.admin-room-card-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:8px;}
+.admin-room-title{font-weight:950;color:#211034;font-size:18px;}
+.admin-room-meta{color:#6e5b83;font-weight:800;font-size:13px;margin-top:2px;}
+.status-pill{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;padding:7px 10px;font-weight:950;font-size:12px;white-space:nowrap;}
+.status-pill.open{background:#d4f6df;color:#17663a;}
+.status-pill.closed{background:#ffd6de;color:#8d2246;}
+.status-pill.deleted{background:#eee;color:#666;}
+.admin-room-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+.admin-room-actions .btn{margin:0;}
+.admin-room-edit-details{margin-top:10px;}
+.admin-room-edit-details summary{cursor:pointer;color:#6f3bd8;font-weight:950;margin:8px 0;}
+.admin-room-delete-row{margin-top:10px;}
+.admin-rooms-head .btn{background:#fff!important;color:#5b21b6!important;border:none;box-shadow:0 10px 24px rgba(36,17,63,.14);}
+@media(max-width:900px){.admin-rooms-head{display:block}.admin-rooms-grid,.admin-room-form-row,.amenity-grid{grid-template-columns:1fr}.admin-room-panel{padding:15px;border-radius:18px}.admin-rooms-head{padding:16px;border-radius:18px}.admin-rooms-head .btn{width:100%;margin-top:12px}.admin-room-card-head{display:block}.status-pill{margin-top:8px}}
+</style>
+
+<div class="admin-rooms-page">
+    <div class="admin-rooms-head">
+        <div>
+            <h2>จัดการห้องพัก</h2>
+            <p>เพิ่ม แก้ไข ปิดใช้งาน หรือลบ/ซ่อนห้องพัก เพื่อรองรับการขยายจำนวนห้องในอนาคต</p>
+        </div>
+        <a class="btn btn-secondary" href="/admin">กลับหน้าจัดการการจอง</a>
+    </div>
+
+    <div class="admin-rooms-grid">
+        <div class="admin-room-panel">
+            <h3>เพิ่มห้องพักใหม่</h3>
+            <form method="post" action="/admin/rooms/add" enctype="multipart/form-data">
+                <label>ชื่อห้อง</label>
+                <input name="name" placeholder="เช่น ห้อง Jasmine" required>
+
+                <div class="admin-room-form-row">
+                    <div>
+                        <label>ราคาต่อคืน</label>
+                        <input name="price" type="number" step="0.01" min="0" placeholder="เช่น 800" required>
+                    </div>
+                    <div>
+                        <label>สถานะ</label>
+                        <select name="is_open">
+                            <option value="1">เปิดให้จอง</option>
+                            <option value="0">ยังไม่พร้อมให้บริการ</option>
+                        </select>
+                    </div>
+                </div>
+
+                <label>รายละเอียดห้อง</label>
+                <textarea name="detail" rows="4" placeholder="อธิบายบรรยากาศและรายละเอียดห้องพัก"></textarea>
+
+                <label>สิ่งอำนวยความสะดวก</label>
+                {% for group, options in amenity_options %}
+                <div class="amenity-section">
+                    <div class="amenity-section-title">{{ group }}</div>
+                    <div class="amenity-grid">
+                        {% for option in options %}
+                        <label class="amenity-check"><input type="checkbox" name="amenities_options" value="{{ option }}"> {{ admin_amenity_icon(option) }} <span>{{ option }}</span></label>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+
+                <label>สิ่งอำนวยความสะดวกเพิ่มเติม (ถ้ามี)</label>
+                <textarea name="amenities_extra" rows="2" placeholder="เช่น เตาปิ้งย่าง&#10;คาราโอเกะ"></textarea>
+                <div class="admin-room-help">กรอกเพิ่มเติมอย่างละบรรทัด เฉพาะสิ่งที่ไม่มีในตัวเลือกด้านบน</div>
+
+                <label>รูปหน้าปก</label>
+                <input type="file" name="cover_file" accept="image/*">
+                <div class="admin-room-help">ถ้าไม่อัปโหลด ระบบจะใช้รูปเริ่มต้นให้ก่อน</div>
+
+                <label>รูปเพิ่มเติม</label>
+                <input type="file" name="image_files" accept="image/*" multiple>
+
+                <label>หมายเหตุสถานะห้อง</label>
+                <input name="maintenance_note" placeholder="เช่น ห้องกำลังปรับปรุง / จะเปิดให้จองเร็ว ๆ นี้">
+
+                <button class="btn" type="submit" style="margin-top:14px;width:100%;">เพิ่มห้องพัก</button>
+            </form>
+        </div>
+
+        <div class="admin-room-panel">
+            <h3>รายการห้องพักทั้งหมด</h3>
+            {% for room in rooms %}
+            <div class="admin-room-card">
+                <div class="admin-room-card-head">
+                    <div>
+                        <div class="admin-room-title">{{ room.name }}</div>
+                        <div class="admin-room-meta">ราคา {{ "{:,.2f}".format(room.price or 0) }} บาท/คืน · ID #{{ room.id }}</div>
+                        {% if room.get('is_deleted') %}<div class="admin-room-meta">ห้องนี้ถูกซ่อนจากหน้าลูกค้าแล้ว</div>{% endif %}
+                    </div>
+                    {% if room.get('is_deleted') %}
+                        <span class="status-pill deleted">ซ่อนแล้ว</span>
+                    {% elif room.get('is_open', True) %}
+                        <span class="status-pill open">เปิดให้จอง</span>
+                    {% else %}
+                        <span class="status-pill closed">ปิดใช้งาน</span>
+                    {% endif %}
+                </div>
+
+                <details class="admin-room-edit-details">
+                    <summary>แก้ไขข้อมูลห้อง</summary>
+                    <form method="post" action="/admin/rooms/{{ room.id }}/edit" enctype="multipart/form-data">
+                        <label>ชื่อห้อง</label>
+                        <input name="name" value="{{ room.name }}" required>
+
+                        <div class="admin-room-form-row">
+                            <div>
+                                <label>ราคาต่อคืน</label>
+                                <input name="price" type="number" step="0.01" min="0" value="{{ room.price }}" required>
+                            </div>
+                            <div>
+                                <label>สถานะ</label>
+                                <select name="is_open">
+                                    <option value="1" {% if room.get('is_open', True) %}selected{% endif %}>เปิดให้จอง</option>
+                                    <option value="0" {% if not room.get('is_open', True) %}selected{% endif %}>ยังไม่พร้อมให้บริการ</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <label>รายละเอียดห้อง</label>
+                        <textarea name="detail" rows="4">{{ room.detail }}</textarea>
+
+                        <label>สิ่งอำนวยความสะดวก</label>
+                        {% for group, options in amenity_options %}
+                        <div class="amenity-section">
+                            <div class="amenity-section-title">{{ group }}</div>
+                            <div class="amenity-grid">
+                                {% for option in options %}
+                                <label class="amenity-check"><input type="checkbox" name="amenities_options" value="{{ option }}" {% if option in room.amenity_labels %}checked{% endif %}> {{ admin_amenity_icon(option) }} <span>{{ option }}</span></label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endfor %}
+
+                        <label>สิ่งอำนวยความสะดวกเพิ่มเติม (ถ้ามี)</label>
+                        <textarea name="amenities_extra" rows="2" placeholder="กรอกเพิ่มเติมอย่างละบรรทัด">{% for item in room.amenities %}{% if item.label not in KNOWN_AMENITY_LABELS %}{{ item.label }}{% if not loop.last %}
+{% endif %}{% endif %}{% endfor %}</textarea>
+
+                        <label>ชื่อไฟล์รูปหน้าปก</label>
+                        <input name="cover" value="{{ room.cover }}">
+                        <input type="file" name="cover_file" accept="image/*" style="margin-top:8px;">
+
+                        <label>ชื่อไฟล์รูปเพิ่มเติม</label>
+                        <textarea name="images" rows="2">{{ room.images|join(', ') }}</textarea>
+                        <input type="file" name="image_files" accept="image/*" multiple style="margin-top:8px;">
+
+                        <label>หมายเหตุสถานะห้อง</label>
+                        <input name="maintenance_note" value="{{ room.maintenance_note or '' }}">
+
+                        <button class="btn" type="submit" style="margin-top:12px;">บันทึกการแก้ไข</button>
+                    </form>
+                </details>
+
+                <form class="admin-room-delete-row" method="post" action="/admin/rooms/{{ room.id }}/delete" onsubmit="return confirm('ยืนยันการลบห้องนี้หรือไม่? หากมีประวัติการจอง ระบบจะซ่อนห้องแทนการลบถาวร');">
+                    <button class="btn btn-danger" type="submit">ลบ/ซ่อนห้อง</button>
+                </form>
+            </div>
+            {% else %}
+            <div class="card center muted">ยังไม่มีข้อมูลห้องพัก</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

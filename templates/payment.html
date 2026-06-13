@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}ชำระเงิน{% endblock %}
+{% block title %}ชำระเงิน | GoJames Vacation Home{% endblock %}
 {% block content %}
 
 <div class="payment-page card">
@@ -62,7 +62,7 @@
 
     {% if booking["payment_deadline"] and payment_mode != "remaining" %}
     <div class="payment-deadline">
-        กรุณาชำระและอัปโหลดสลิปภายใน 15 นาที
+        กรุณาชำระและอัปโหลดหลักฐานการชำระเงินภายใน 15 นาที
         <b>หมดเวลา: {{ booking["payment_deadline"] }}</b>
     </div>
     {% endif %}
@@ -75,7 +75,7 @@
             <label class="payment-method-option active" data-method-card="promptpay">
                 <input type="radio" name="payment_method" value="promptpay" checked>
                 <span>PromptPay QR</span>
-                <small>สแกนจ่ายและแนบสลิป</small>
+                <small>สแกนจ่ายและแนบหลักฐานการชำระเงิน</small>
             </label>
             <label class="payment-method-option" data-method-card="bank_transfer">
                 <input type="radio" name="payment_method" value="bank_transfer">
@@ -107,7 +107,7 @@
             <h3>สแกนจ่ายด้วย PromptPay</h3>
             <img class="qr" src="{{ url_for('static', filename=qr_filename) }}" alt="PromptPay QR Code">
             <div class="account-name">ชื่อบัญชี: <b>ธเนศ สมโพยม</b></div>
-            <p class="muted">สแกน QR แล้วแนบสลิปด้านล่างเพื่อให้แอดมินตรวจสอบ</p>
+            <p class="muted">สแกน QR แล้วแนบหลักฐานการชำระเงินด้านล่างเพื่อให้ผู้ดูแลระบบตรวจสอบ</p>
         </div>
 
         <div class="payment-method-panel" data-panel="bank_transfer" hidden>
@@ -126,14 +126,14 @@
                     <strong>{{ bank_account_name or "ธเนศ สมโพยม" }}</strong>
                 </div>
             </div>
-            <p class="muted">โอนเงินเข้าบัญชีนี้ แล้วแนบสลิปด้านล่างเพื่อรอแอดมินตรวจสอบ</p>
+            <p class="muted">โอนเงินเข้าบัญชีนี้ แล้วแนบหลักฐานการชำระเงินด้านล่างเพื่อรอผู้ดูแลระบบตรวจสอบ</p>
         </div>
 
         <div class="payment-method-panel counter-panel" data-panel="counter" hidden>
             <h3>ชำระหน้าเคาน์เตอร์</h3>
             <div class="counter-wait-box">
-                <strong>ไม่ต้องอัปโหลดสลิปตอนนี้</strong>
-                <span>ระบบจะบันทึกว่าเลือกชำระที่หน้าเคาน์เตอร์ แอดมินจะรับเงินและยืนยันตอนเข้าพัก</span>
+                <strong>ไม่ต้องอัปโหลดหลักฐานการชำระเงินตอนนี้</strong>
+                <span>ระบบจะบันทึกว่าเลือกชำระที่หน้าเคาน์เตอร์ ผู้ดูแลระบบจะรับเงินและยืนยันตอนเข้าพัก</span>
             </div>
         </div>
 
@@ -141,7 +141,7 @@
             <h3>สแกนจ่ายยอดคงเหลือ</h3>
             <img class="qr" src="{{ url_for('static', filename=qr_filename) }}" alt="PromptPay QR Code">
             <div class="account-name">ชื่อบัญชี: <b>ธเนศ สมโพยม</b></div>
-            <p class="muted">สแกน QR แล้วแนบสลิปเพื่อให้แอดมินตรวจสอบยอดคงเหลือ</p>
+            <p class="muted">สแกน QR แล้วแนบหลักฐานการชำระเงินเพื่อให้ผู้ดูแลระบบตรวจสอบยอดคงเหลือ</p>
         </div>
 
         <div class="payment-method-panel counter-panel" data-panel="remaining_counter" hidden>
@@ -153,13 +153,13 @@
         </div>
 
         <div class="slip-upload-box" id="slipUploadBox">
-            <label>แนบสลิปการชำระเงิน</label>
+            <label>แนบหลักฐานการชำระเงิน</label>
             <input id="slipInput" type="file" name="slip" accept=".png,.jpg,.jpeg,.webp" {% if payment_mode != "remaining" %}required{% endif %}>
             <p class="muted">รองรับไฟล์ .png .jpg .jpeg .webp</p>
         </div>
 
         <button class="btn payment-submit-btn" id="paymentSubmitBtn" type="submit">
-            {% if payment_mode == "remaining" %}ยืนยันการชำระยอดคงเหลือ{% else %}อัปโหลดสลิป{% endif %}
+            {% if payment_mode == "remaining" %}ยืนยันการชำระยอดคงเหลือ{% else %}อัปโหลดหลักฐานการชำระเงิน{% endif %}
         </button>
     </form>
 
@@ -460,8 +460,8 @@
                     : 'บันทึกว่าชำระหน้าเคาน์เตอร์';
             } else {
                 submitBtn.textContent = paymentMode === 'remaining'
-                    ? 'อัปโหลดสลิปยอดคงเหลือ'
-                    : 'อัปโหลดสลิป';
+                    ? 'อัปโหลดหลักฐานการชำระเงินยอดคงเหลือ'
+                    : 'อัปโหลดหลักฐานการชำระเงิน';
             }
         }
     }

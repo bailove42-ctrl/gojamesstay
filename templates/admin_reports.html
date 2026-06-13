@@ -1,0 +1,434 @@
+{% extends "base.html" %}
+{% block title %}รายงานและสรุปข้อมูลย้อนหลัง | GoJames Admin{% endblock %}
+
+{% block content %}
+<style>
+.report-page-wrap{
+    max-width:1180px;
+    margin:24px auto;
+    padding:0 18px 34px;
+}
+.report-head{
+    position:relative;
+    overflow:hidden;
+    background:linear-gradient(135deg,#7b5ac8 0%,#8b6fd6 55%,#a78bfa 100%);
+    color:#fff;
+    border-radius:26px;
+    padding:30px 32px;
+    box-shadow:0 18px 42px rgba(91,54,150,.14);
+    display:flex;
+    justify-content:space-between;
+    gap:22px;
+    align-items:center;
+    flex-wrap:wrap;
+}
+.report-head::before{
+    content:"";
+    position:absolute;
+    inset:-80px auto auto -90px;
+    width:260px;
+    height:260px;
+    border-radius:50%;
+    background:rgba(255,255,255,.08);
+}
+.report-head::after{
+    content:"";
+    position:absolute;
+    right:-70px;
+    bottom:-100px;
+    width:300px;
+    height:300px;
+    border-radius:50%;
+    background:rgba(255,255,255,.07);
+}
+.report-head-main,
+.report-head-actions{
+    position:relative;
+    z-index:1;
+}
+.report-kicker{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:7px 12px;
+    border-radius:999px;
+    background:rgba(255,255,255,.20);
+    color:#fff;
+    font-weight:900;
+    font-size:13px;
+    margin-bottom:12px;
+}
+.report-head h1{
+    margin:0 0 8px;
+    font-size:30px;
+    line-height:1.25;
+    color:#fff!important;
+    letter-spacing:-.2px;
+}
+.report-head p{
+    margin:0;
+    color:rgba(255,255,255,.90);
+    font-weight:700;
+    max-width:640px;
+}
+.report-filter{
+    margin:18px 0;
+    background:white;
+    border:1px solid #eadcff;
+    border-radius:22px;
+    padding:18px;
+    display:flex;
+    align-items:end;
+    gap:14px;
+    flex-wrap:wrap;
+    box-shadow:0 10px 28px rgba(91,54,150,.06);
+}
+.report-field{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    min-width:180px;
+}
+.report-field label{
+    font-weight:900;
+    color:#2b1748;
+}
+.report-field select{
+    padding:12px 14px;
+    border:1px solid #d8c2ff;
+    border-radius:14px;
+    font-weight:800;
+    background:#fff;
+    color:#24113f;
+}
+.report-btn{
+    border:none;
+    border-radius:14px;
+    padding:13px 18px;
+    background:linear-gradient(135deg,#7c3aed,#6d28d9);
+    color:white!important;
+    font-weight:950;
+    text-decoration:none;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    cursor:pointer;
+    min-height:46px;
+    box-shadow:0 10px 22px rgba(124,58,237,.20);
+}
+.report-btn.secondary{
+    background:#fff;
+    color:#5b21b6!important;
+    box-shadow:0 10px 24px rgba(36,17,63,.16);
+}
+.report-btn:hover{
+    transform:translateY(-1px);
+}
+
+.report-filter-note{
+    width:100%;
+    color:#8a7a9c;
+    font-weight:700;
+    font-size:12px;
+    margin-top:-4px;
+}
+.report-section-title{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+    margin-bottom:14px;
+}
+.report-section-title h3{
+    margin:0;
+    color:#24113f;
+    font-size:20px;
+}
+.report-period-badge{
+    display:inline-flex;
+    padding:8px 12px;
+    border-radius:999px;
+    background:#f3edff;
+    color:#6d28d9;
+    font-weight:900;
+    font-size:13px;
+}
+.report-grid{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:14px;
+}
+.report-card{
+    background:linear-gradient(180deg,#fff 0%,#fbf8ff 100%);
+    border:1px solid #eadcff;
+    border-radius:22px;
+    padding:18px;
+    box-shadow:0 12px 30px rgba(91,54,150,.08);
+    min-height:126px;
+}
+.report-card-head{
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+.report-card-icon{
+    width:36px;
+    height:36px;
+    border-radius:13px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    background:#f0e7ff;
+    color:#6d28d9;
+    font-weight:1000;
+    font-size:17px;
+    flex:0 0 auto;
+}
+.report-card .label{
+    color:#715f8a;
+    font-weight:900;
+    font-size:13px;
+}
+.report-card .value{
+    color:#24113f;
+    font-weight:1000;
+    font-size:26px;
+    margin:12px 0 5px;
+    line-height:1.2;
+}
+.report-card .sub{
+    color:#8a7a9c;
+    font-weight:700;
+    font-size:12px;
+    line-height:1.45;
+}
+.report-section{
+    margin-top:18px;
+    background:white;
+    border:1px solid #eadcff;
+    border-radius:22px;
+    padding:18px;
+    box-shadow:0 12px 30px rgba(91,54,150,.06);
+}
+.report-table{
+    width:100%;
+    border-collapse:separate;
+    border-spacing:0;
+    overflow:hidden;
+    border-radius:16px;
+    border:1px solid #f0e8ff;
+}
+.report-table th,.report-table td{
+    padding:13px 14px;
+    border-bottom:1px solid #f0e8ff;
+    text-align:left;
+    vertical-align:top;
+}
+.report-table tr:last-child td{border-bottom:none;}
+.report-table th{
+    background:#f4ecff;
+    color:#2b1748;
+    font-weight:950;
+}
+.report-empty{
+    text-align:center!important;
+    color:#8a7a9c;
+    padding:24px!important;
+}
+@media(max-width:900px){
+    .report-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+}
+@media(max-width:600px){
+    .report-page-wrap{padding:0 12px 28px;margin:16px auto;}
+    .report-head{padding:24px 20px;border-radius:22px;}
+    .report-head h1{font-size:23px;}
+    .report-head p{font-size:14px;}
+    .report-grid{grid-template-columns:1fr;}
+    .report-filter{display:block;}
+    .report-field{margin-bottom:12px;}
+    .report-btn{width:100%;margin-top:6px;}
+    .report-table{display:block;overflow-x:auto;white-space:nowrap;}
+}
+</style>
+
+<div class="report-page-wrap">
+    <div class="report-head">
+        <div class="report-head-main">
+            <div class="report-kicker">รายงานสำหรับผู้ดูแลระบบ</div>
+            <h1>รายงานและสรุปข้อมูลย้อนหลัง</h1>
+            <p>ดูรายได้ จำนวนการจอง Walk-in และสถิติการเข้าพักย้อนหลังตามเดือนที่เลือก</p>
+        </div>
+        <div class="report-head-actions">
+            <a href="/admin" class="report-btn secondary">กลับหน้าจัดการการจอง</a>
+        </div>
+    </div>
+
+    <form class="report-filter" method="get" action="/admin/reports">
+        <div class="report-field">
+            <label for="month">เดือน</label>
+            <select id="month" name="month">
+                {% set month_names = ["", "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"] %}
+                {% for m in available_months %}
+                    <option value="{{ m }}" {% if m == selected_month %}selected{% endif %}>{{ month_names[m] }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="report-field">
+            <label for="year">ปี</label>
+            <select id="year" name="year" data-current-year="{{ current_year }}" data-current-month="{{ current_month }}">
+                {% for y in years %}
+                    <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button class="report-btn" type="submit">แสดงรายงาน</button>
+        <div class="report-filter-note">เลือกดูได้เฉพาะเดือนปัจจุบันและเดือนย้อนหลังเท่านั้น</div>
+    </form>
+
+    <div class="report-section" style="margin-top:0;">
+        <div class="report-section-title">
+            <h3>สรุปประจำเดือน</h3>
+            <span class="report-period-badge">{{ report.period_text }}</span>
+        </div>
+        <div class="report-grid">
+            <div class="report-card">
+                <div class="report-card-head"><span class="report-card-icon">฿</span><div class="label">รายได้ที่รับแล้ว</div></div>
+                <div class="value">{{ "{:,.2f}".format(report.revenue_received) }} บาท</div>
+                <div class="sub">นับเฉพาะยอดที่ยืนยันการชำระเงินแล้ว เช่น มัดจำ 25% จะนับเฉพาะยอดมัดจำ</div>
+            </div>
+            <div class="report-card">
+                <div class="report-card-head"><span class="report-card-icon">รวม</span><div class="label">ยอดจองรวม</div></div>
+                <div class="value">{{ "{:,.2f}".format(report.booking_total) }} บาท</div>
+                <div class="sub">มูลค่ารวมของรายการจองที่ยังเกี่ยวข้องกับการให้บริการ</div>
+            </div>
+            <div class="report-card">
+                <div class="report-card-head"><span class="report-card-icon">ค้าง</span><div class="label">ยอดค้างชำระ</div></div>
+                <div class="value">{{ "{:,.2f}".format(report.outstanding_revenue) }} บาท</div>
+                <div class="sub">ยอดที่ยังต้องรับเพิ่มจากลูกค้า เช่น ส่วนที่เหลือหลังมัดจำ</div>
+            </div>
+            <div class="report-card">
+                <div class="report-card-head"><span class="report-card-icon">จ</span><div class="label">จำนวนการจอง</div></div>
+                <div class="value">{{ report.booking_count }} รายการ</div>
+                <div class="sub">รวมรายการที่ยังไม่ถูกยกเลิก</div>
+            </div>
+            <div class="report-card">
+                <div class="report-card-head"><span class="report-card-icon">W</span><div class="label">Walk-in</div></div>
+                <div class="value">{{ report.walkin_count }} รายการ</div>
+                <div class="sub">รายการจากหน้าเคาน์เตอร์</div>
+            </div>
+            <div class="report-card">
+                <div class="report-card-head"><span class="report-card-icon">ค</span><div class="label">ลูกค้าที่จองออนไลน์</div></div>
+                <div class="value">{{ report.customer_count }} คน</div>
+                <div class="sub">ไม่นับบัญชี Walk-in</div>
+            </div>
+            <div class="report-card">
+                <div class="report-card-head"><span class="report-card-icon">คืน</span><div class="label">จำนวนคืนเข้าพัก</div></div>
+                <div class="value">{{ report.total_nights }} คืน</div>
+                <div class="sub">รวมจำนวนคืนจากการจอง</div>
+            </div>
+            <div class="report-card">
+                <div class="report-card-head"><span class="report-card-icon">ห้อง</span><div class="label">ห้องที่ถูกจองมากที่สุด</div></div>
+                <div class="value">{{ report.top_room }}</div>
+                <div class="sub">อ้างอิงจากจำนวนรายการในเดือนนี้</div>
+            </div>
+            <div class="report-card">
+                <div class="report-card-head"><span class="report-card-icon">บ</span><div class="label">ห้องที่ถูกบล็อก</div></div>
+                <div class="value">{{ report.blocked_count }} รายการ</div>
+                <div class="sub">ช่วงวันที่ปิดไม่ให้จอง</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="report-section">
+        <div class="report-section-title"><h3>รายได้รายวัน</h3></div>
+        <table class="report-table">
+            <thead>
+                <tr>
+                    <th>วันที่</th>
+                    <th>จำนวนรายการ</th>
+                    <th>ยอดจองรวม</th>
+                    <th>รับแล้ว</th>
+                    <th>ค้างชำระ</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in report.daily_rows %}
+                <tr>
+                    <td>{{ row.day }}</td>
+                    <td>{{ row.count }} รายการ</td>
+                    <td>{{ "{:,.2f}".format(row.booking_total) }} บาท</td>
+                    <td>{{ "{:,.2f}".format(row.revenue_received) }} บาท</td>
+                    <td>{{ "{:,.2f}".format(row.outstanding_revenue) }} บาท</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5" class="report-empty">ยังไม่มีรายการรายได้ในเดือนนี้</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="report-section">
+        <div class="report-section-title"><h3>รายการจองล่าสุดในเดือนนี้</h3></div>
+        <table class="report-table">
+            <thead>
+                <tr>
+                    <th>ห้อง</th>
+                    <th>ผู้จอง</th>
+                    <th>วันที่เข้าพัก</th>
+                    <th>วันที่ออก</th>
+                    <th>สถานะ</th>
+                    <th>ยอดรวม</th>
+                    <th>รับแล้ว</th>
+                    <th>ค้างชำระ</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in report.latest_bookings %}
+                <tr>
+                    <td>{{ item.room_name }}</td>
+                    <td>{{ item.username }}</td>
+                    <td>{{ item.checkin }}</td>
+                    <td>{{ item.checkout }}</td>
+                    <td>{{ status_th(item.status) }}</td>
+                    <td>{{ "{:,.2f}".format(item.total) }} บาท</td>
+                    <td>{{ "{:,.2f}".format(item.paid) }} บาท</td>
+                    <td>{{ "{:,.2f}".format(item.remaining_due) }} บาท</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="8" class="report-empty">ยังไม่มีรายการจองในเดือนนี้</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+<script>
+(function(){
+    const monthSelect = document.getElementById("month");
+    const yearSelect = document.getElementById("year");
+    if(!monthSelect || !yearSelect) return;
+
+    const monthNames = ["", "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+    const currentYear = parseInt(yearSelect.dataset.currentYear || new Date().getFullYear(), 10);
+    const currentMonth = parseInt(yearSelect.dataset.currentMonth || (new Date().getMonth()+1), 10);
+
+    function rebuildMonths(){
+        const selectedYear = parseInt(yearSelect.value, 10);
+        const oldValue = parseInt(monthSelect.value || "1", 10);
+        const maxMonth = selectedYear === currentYear ? currentMonth : 12;
+        monthSelect.innerHTML = "";
+        for(let m = 1; m <= maxMonth; m++){
+            const opt = document.createElement("option");
+            opt.value = String(m);
+            opt.textContent = monthNames[m];
+            if(m === Math.min(oldValue, maxMonth)) opt.selected = true;
+            monthSelect.appendChild(opt);
+        }
+    }
+    yearSelect.addEventListener("change", rebuildMonths);
+})();
+</script>
+{% endblock %}

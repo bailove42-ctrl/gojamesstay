@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}จองห้องพัก{% endblock %}
+{% block title %}จองห้องพัก | GoJames Vacation Home{% endblock %}
 {% block content %}
 
 {% macro amenity_icon(icon) -%}
@@ -7,12 +7,42 @@
 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13a10 10 0 0 1 14 0"/><path d="M8.5 16.5a5 5 0 0 1 7 0"/><path d="M12 20h.01"/></svg>
 {% elif icon == 'air' %}
 <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="6" rx="2"/><path d="M7 14v1.5"/><path d="M12 14v2.5"/><path d="M17 14v1.5"/><path d="M8 18h8"/></svg>
+{% elif icon == 'tv' %}
+<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="11" rx="2"/><path d="M8 20h8"/><path d="M12 16v4"/></svg>
 {% elif icon == 'fridge' %}
 <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="3" width="10" height="18" rx="2"/><path d="M7 10h10"/><path d="M10 7v1"/><path d="M10 13v1"/></svg>
+{% elif icon == 'shower' %}
+<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 7a4 4 0 0 1 8 0"/><path d="M16 7h2v3"/><path d="M8 12h8"/><path d="M9 16h.01"/><path d="M12 16h.01"/><path d="M15 16h.01"/><path d="M10 20h.01"/><path d="M14 20h.01"/></svg>
+{% elif icon == 'kettle' %}
+<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9h9a4 4 0 0 1 0 8H8a4 4 0 0 1-1-8Z"/><path d="M6 10l-3 2"/><path d="M9 9V6h5v3"/><path d="M18 11h1a2 2 0 0 1 0 4h-1"/></svg>
+{% elif icon == 'dryer' %}
+<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="10" r="4"/><path d="M13 10h7v3h-7"/><path d="M8 14l-2 7"/><path d="M11 14l2 7"/></svg>
+{% elif icon == 'towel' %}
+<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h10a2 2 0 0 1 2 2v12"/><path d="M7 4a3 3 0 0 0-3 3v11a2 2 0 0 0 2 2h11"/><path d="M7 8h10"/></svg>
+{% elif icon == 'soap' %}
+<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="8" rx="4"/><path d="M9 7h.01"/><path d="M13 5h.01"/><path d="M16 8h.01"/></svg>
 {% elif icon == 'bed' %}
 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11V6"/><path d="M4 18v-7h16v7"/><path d="M20 11V9a3 3 0 0 0-3-3H9"/><path d="M4 14h16"/><path d="M6 18v-2"/><path d="M18 18v-2"/></svg>
 {% elif icon == 'bath' %}
 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12h12v3a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4v-3Z"/><path d="M4 12h16"/><path d="M8 19l-1 2"/><path d="M16 19l1 2"/><path d="M9 8a3 3 0 0 1 6 0v4"/><path d="M15 8h2"/></svg>
+{% elif icon == 'parking' %}
+<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="16" rx="3"/><path d="M10 17V7h4a3 3 0 0 1 0 6h-4"/></svg>
+{% elif icon == 'camera' %}
+<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="6" width="10" height="8" rx="2"/><path d="M14 9l6-3v8l-6-3"/><path d="M8 18h8"/><path d="M12 14v4"/></svg>
+{% elif icon == 'tree' %}
+<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21v-6"/><path d="M8 15h8l-2-4h3l-5-8-5 8h3l-2 4Z"/></svg>
+{% elif icon == 'sofa' %}
+<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 11V8a3 3 0 0 1 3-3h6a3 3 0 0 1 3 3v3"/><path d="M4 13h16v5H4z"/><path d="M4 18v2"/><path d="M20 18v2"/></svg>
+{% elif icon == 'utensils' %}
+<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v8"/><path d="M5 3v4"/><path d="M9 3v4"/><path d="M7 11v10"/><path d="M17 3v18"/><path d="M17 3a4 7 0 0 1 0 14"/></svg>
+{% elif icon == 'family' %}
+<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="7" r="3"/><circle cx="17" cy="9" r="2"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M14 20a4 4 0 0 1 7 0"/></svg>
+{% elif icon == 'paw' %}
+<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 13a4 4 0 0 0 8 0c0-2-2-4-4-4s-4 2-4 4Z"/><path d="M6 8h.01"/><path d="M10 5h.01"/><path d="M14 5h.01"/><path d="M18 8h.01"/></svg>
+{% elif icon == 'smoking' %}
+<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 16h10"/><path d="M18 16h2"/><path d="M4 19h16"/><path d="M15 10c3 0 3-5 0-5"/></svg>
+{% else %}
+<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
 {% endif %}
 {%- endmacro %}
 
@@ -73,6 +103,7 @@
         </section>
         {% endif %}
 
+        {% if session.get("role") != "admin" %}
         <section class="hotel-section booking-panel">
             <div class="section-title-row">
                 <div>
@@ -135,6 +166,20 @@
                 <button class="btn submit-booking-btn" type="submit">ส่งคำขอจอง</button>
             </form>
         </section>
+        {% else %}
+        <section class="hotel-section admin-detail-only">
+            <div class="admin-detail-icon" aria-hidden="true">👁️</div>
+            <div class="admin-detail-content">
+                <span class="admin-detail-badge">โหมดดูรายละเอียด</span>
+                <h3>ผู้ดูแลระบบสามารถดูรายละเอียดห้องพักได้เท่านั้น</h3>
+                <p>หน้านี้ใช้สำหรับตรวจสอบข้อมูลห้อง รูปภาพ ราคา และสิ่งอำนวยความสะดวก หากต้องการจัดการการจองหรือเพิ่ม Walk-in ให้กลับไปที่หน้าจัดการการจอง</p>
+                <div class="admin-detail-actions">
+                    <a href="/admin" class="btn">กลับหน้าจัดการการจอง</a>
+                    <a href="/" class="btn admin-light-btn">กลับหน้าหลัก</a>
+                </div>
+            </div>
+        </section>
+        {% endif %}
     </div>
 </div>
 
@@ -675,6 +720,86 @@
     }
 }
 
+
+/* ===== Admin room detail view ===== */
+.admin-detail-only{
+    display:flex;
+    align-items:flex-start;
+    gap:18px;
+    padding:22px !important;
+    background:linear-gradient(135deg,#ffffff 0%,#f6f0ff 100%) !important;
+    border:1px solid #ddcff8 !important;
+    border-radius:22px !important;
+    box-shadow:0 14px 32px rgba(92,55,158,.08) !important;
+}
+.admin-detail-icon{
+    width:54px;
+    height:54px;
+    flex:0 0 54px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:18px;
+    background:linear-gradient(135deg,#7a4ce0,#9a73ec);
+    color:#fff;
+    box-shadow:0 10px 22px rgba(122,76,224,.24);
+    font-size:24px;
+}
+.admin-detail-content{min-width:0;}
+.admin-detail-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:7px 12px;
+    border-radius:999px;
+    background:#efe6ff;
+    color:#6f42c1;
+    font-size:13px;
+    font-weight:900;
+    margin-bottom:10px;
+}
+.admin-detail-content h3{
+    margin:0 0 8px !important;
+    color:#24143a !important;
+    font-size:24px !important;
+    letter-spacing:-.02em;
+}
+.admin-detail-content p{
+    margin:0 !important;
+    color:#625873 !important;
+    line-height:1.7 !important;
+    max-width:720px;
+    font-weight:600;
+}
+.admin-detail-actions{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-top:16px;
+}
+.admin-light-btn{
+    background:#fff !important;
+    color:#6f42c1 !important;
+    border:1px solid #d8c7f4 !important;
+    box-shadow:none !important;
+}
+.admin-light-btn:hover{
+    background:#f6efff !important;
+}
+@media(max-width:760px){
+    .admin-detail-only{
+        flex-direction:column;
+        padding:18px !important;
+    }
+    .admin-detail-content h3{
+        font-size:21px !important;
+    }
+    .admin-detail-actions .btn{
+        width:100%;
+        justify-content:center;
+    }
+}
+
 </style>
 
 <script>
@@ -801,9 +926,12 @@ function setupSegment(segmentEl) {
     }
 
     function updateCheckinTimeOptions() {
-        fillSelectOptions(checkinTimeSelect, checkinTimeOptions);
-        if (checkinTimeOptions.includes(standardCheckinTime)) {
+        const options = (checkinInput.value === todayStr) ? todayTimeOptions : checkinTimeOptions;
+        fillSelectOptions(checkinTimeSelect, options);
+        if (options.includes(standardCheckinTime)) {
             checkinTimeSelect.value = standardCheckinTime;
+        } else if (options.length > 0) {
+            checkinTimeSelect.value = options[0];
         }
     }
 
@@ -948,18 +1076,28 @@ function syncExtraSegments() {
 }
 
 window.addEventListener("load", () => {
-    setupSegment(document.querySelector('#segmentsContainer .segment-card'));
+    const firstSegment = document.querySelector('#segmentsContainer .segment-card');
+    const addSegmentBtn = document.getElementById("addSegmentBtn");
+    const bookingForm = document.getElementById("bookingForm");
+    const segmentsContainer = document.getElementById("segmentsContainer");
 
-    document.getElementById("addSegmentBtn").addEventListener("click", () => {
+    // ผู้ดูแลระบบเห็นเฉพาะรายละเอียดห้อง จึงไม่มีฟอร์มจองในหน้านี้
+    if (!firstSegment || !addSegmentBtn || !bookingForm || !segmentsContainer) {
+        return;
+    }
+
+    setupSegment(firstSegment);
+
+    addSegmentBtn.addEventListener("click", () => {
         const currentExtras = document.querySelectorAll("#segmentsContainer .extra-segment").length;
         const nextIndex = currentExtras + 1;
         const extra = createExtraSegment(nextIndex);
-        document.getElementById("segmentsContainer").appendChild(extra);
+        segmentsContainer.appendChild(extra);
         setupSegment(extra);
         updateBookingSummary();
     });
 
-    document.getElementById("bookingForm").addEventListener("submit", () => {
+    bookingForm.addEventListener("submit", () => {
         syncExtraSegments();
     });
 
